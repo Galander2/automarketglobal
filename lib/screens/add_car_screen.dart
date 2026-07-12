@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter_application_1_car_sales/repositories/car_repository.dart';
+import '../repositories/car_repository.dart';
 
 class AddCarScreen extends StatefulWidget {
   const AddCarScreen({super.key});

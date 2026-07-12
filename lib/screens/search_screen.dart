@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1_car_sales/l10n/app_localizations.dart';
-import 'package:flutter_application_1_car_sales/core/router/app_routes.dart';
-import 'package:flutter_application_1_car_sales/models/car.dart';
-import 'package:flutter_application_1_car_sales/widgets/car_card.dart';
+import '../l10n/app_localizations.dart';
+import '../core/router/app_routes.dart';
+import '../models/car.dart';
+import '../widgets/car_card.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});

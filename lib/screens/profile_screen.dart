@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1_car_sales/core/router/app_routes.dart';
-import 'package:flutter_application_1_car_sales/l10n/app_localizations.dart';
+import '../core/router/app_routes.dart';
+import '../l10n/app_localizations.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});

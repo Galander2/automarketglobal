@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1_car_sales/repositories/car_repository.dart';
-import 'package:flutter_application_1_car_sales/models/car.dart';
-import 'package:flutter_application_1_car_sales/widgets/car_card.dart';
-import 'package:flutter_application_1_car_sales/screens/car_details_screen.dart';
+import '../repositories/car_repository.dart';
+import '../models/car.dart';
+import '../widgets/car_card.dart';
+import 'car_details_screen.dart';
 
 class CountriesScreen extends StatelessWidget {
   const CountriesScreen({super.key});

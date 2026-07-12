@@ -68,6 +68,11 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const AdminComplaintsScreen());
       case AppRoutes.adminMarkets:
         return MaterialPageRoute(builder: (_) => const AdminMarketsScreen());
+      case AppRoutes.adminSettings:
+        return MaterialPageRoute(builder: (_) => Scaffold(
+          appBar: AppBar(title: const Text('Настройки')),
+          body: const Center(child: Text('Настройки в разработке')),
+        ));
       default:
         return MaterialPageRoute(builder: (_) => Scaffold(body: Center(child: Text('Нет маршрута: ${settings.name}'))));
     }
