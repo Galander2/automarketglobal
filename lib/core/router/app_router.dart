@@ -11,7 +11,6 @@ import '../../screens/dealers_screen.dart';
 import '../../screens/wallet_screen.dart';
 import '../../screens/delivery_screen.dart';
 import '../../screens/my_publications_screen.dart';
-import '../../screens/admin_screen.dart';
 import '../../screens/ai_vin_check_screen.dart';
 import '../../screens/language_selection_screen.dart';
 import '../../screens/search_filters_screen.dart';

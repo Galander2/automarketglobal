@@ -111,8 +111,8 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+          const Padding(
+  padding: EdgeInsets.symmetric(horizontal: 16),
             child: const Text(
               'Страна',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),

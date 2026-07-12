@@ -324,7 +324,8 @@ class _AddCarScreenState extends State<AddCarScreen> {
             const SizedBox(height: 16),
             
             DropdownButtonFormField<String>(
-              value: _selectedCountry,
+  initialValue: _selectedCountry,
+  // ...
               decoration: const InputDecoration(
                 labelText: 'Страна',
                 border: OutlineInputBorder(),
