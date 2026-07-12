@@ -31,3 +31,5 @@ htmlcov/
 *.tmp
 *.temp
 ```
+.flutter-plugins-dependencies
+*.iml
