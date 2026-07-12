@@ -13,7 +13,7 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
-  String _selectedCountry = 'Все';
+  String _selectedCountry = 'All';
 
   final List<Car> _cars = [
     Car(
@@ -23,12 +23,13 @@ class _SearchScreenState extends State<SearchScreen> {
       price: '25000',
       year: 2020,
       mileage: 45000,
-      city: 'Душанбе',
-      route: 'Корея → Таджикистан',
+      city: 'Dushanbe',
+      route: 'Korea -> Tajikistan',
+      country: 'Tajikistan',
       status: CarStatus.approved,
       imageUrl: 'https://example.com/camry.jpg',
       createdAt: DateTime.now(),
-      description: 'Отличное состояние',
+      description: 'Excellent condition',
       vin: '1HGBH41JXMN109186',
     ),
     Car(
@@ -38,12 +39,14 @@ class _SearchScreenState extends State<SearchScreen> {
       price: '23000',
       year: 2019,
       mileage: 52000,
-      city: 'Ташкент',
-      route: 'Япония → Узбекистан',
+      city: 'Tashkent',
+      route: 'Japan -> Uzbekistan',
+      country: 'Uzbekistan',
       status: CarStatus.approved,
       imageUrl: 'https://example.com/accord.jpg',
       createdAt: DateTime.now(),
-      description: 'Полный привод',
+      description: 'Full drive',
+      vin: '1HGBH41JXMN109187',
     ),
     Car(
       id: '3',
@@ -52,11 +55,14 @@ class _SearchScreenState extends State<SearchScreen> {
       price: '45000',
       year: 2021,
       mileage: 28000,
-      city: 'Алматы',
-      route: 'Корея → Казахстан',
+      city: 'Almaty',
+      route: 'Korea -> Kazakhstan',
+      country: 'Kazakhstan',
       status: CarStatus.approved,
       imageUrl: 'https://example.com/lexus.jpg',
       createdAt: DateTime.now(),
+      description: '',
+      vin: '1HGBH41JXMN109188',
     ),
   ];
 
@@ -83,7 +89,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 AppRoutes.searchFilters,
               );
               if (result != null) {
-                // Применяем фильтры
+                // Apply filters
               }
             },
           ),
@@ -97,7 +103,7 @@ class _SearchScreenState extends State<SearchScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Поиск автомобилей...',
+                hintText: 'Search cars...',
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.clear),
@@ -112,9 +118,9 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
           const Padding(
-  padding: EdgeInsets.symmetric(horizontal: 16),
-            child: const Text(
-              'Страна',
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'Country',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
@@ -124,7 +130,7 @@ class _SearchScreenState extends State<SearchScreen> {
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: ['Все', 'Таджикистан', 'Узбекистан', 'Казахстан', 'Кыргызстан']
+              children: ['All', 'Tajikistan', 'Uzbekistan', 'Kazakhstan', 'Kyrgyzstan']
                   .map((country) {
                 final isSelected = _selectedCountry == country;
                 return Padding(
@@ -134,7 +140,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     selected: isSelected,
                     onSelected: (selected) {
                       setState(() {
-                        _selectedCountry = selected ? country : 'Все';
+                        _selectedCountry = selected ? country : 'All';
                       });
                     },
                   ),
@@ -146,7 +152,7 @@ class _SearchScreenState extends State<SearchScreen> {
           Expanded(
             child: _cars.isEmpty
                 ? const Center(
-                    child: Text('Нет автомобилей'),
+                    child: Text('No cars'),
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),

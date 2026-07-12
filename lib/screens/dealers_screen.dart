@@ -39,7 +39,7 @@ class DealersScreen extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 32,
-                      backgroundColor: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                      backgroundColor: const Color(0xFF2563EB).withOpacity(0.1),
                       child: Text(
                         dealer['name'].toString().substring(0, 1),
                         style: const TextStyle(

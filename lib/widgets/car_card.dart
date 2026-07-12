@@ -19,7 +19,7 @@ class CarCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withOpacity(0.06),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -113,7 +113,7 @@ class CarCard extends StatelessWidget {
                     const SizedBox(width: 16),
                     _SpecItem(
                       icon: Icons.speed,
-                      text: '${car.mileage} км',
+                      text: '${car.mileage} km',
                     ),
                     const SizedBox(width: 16),
                     _SpecItem(
@@ -134,7 +134,7 @@ class CarCard extends StatelessWidget {
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2563EB).withValues(alpha: 0.08),
+                          color: const Color(0xFF2563EB).withOpacity(0.08),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(

@@ -15,6 +15,7 @@ class Car {
   final int mileage;
   final String city;
   final String route;
+  final String country;
   final CarStatus status;
   final String imageUrl;
   final List<String> images;
@@ -31,6 +32,7 @@ class Car {
     required this.mileage,
     required this.city,
     required this.route,
+    required this.country,
     required this.status,
     required this.imageUrl,
     this.images = const [],

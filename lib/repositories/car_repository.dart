@@ -215,17 +215,21 @@ class CarRepository {
       id: doc.id,
       sellerId: data['sellerId'] ?? '',
       title: data['title'] ?? '',
-      price: (data['price'] ?? 0).toDouble(),
+      price: (data['price'] ?? 0).toString(),
       year: (data['year'] ?? 0).toInt(),
       mileage: (data['mileage'] ?? 0).toInt(),
       city: data['city'] ?? '',
       route: data['route'] ?? '',
+      country: data['country'] ?? '',
       description: data['description'] ?? '',
       vin: data['vin'] ?? '',
       imageUrl: data['imageUrl'] ?? '',
       images: List<String>.from(data['images'] ?? []),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      status: data['status'] ?? 'pending',
+      status: CarStatus.values.firstWhere(
+        (e) => e.name == data['status'],
+        orElse: () => CarStatus.pending,
+      ),
     );
   }
 }

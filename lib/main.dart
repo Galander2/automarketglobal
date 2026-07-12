@@ -327,13 +327,13 @@ class _AddMenuTile extends StatelessWidget {
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: Colors.black.withValues(alpha: 0.06),
+          color: Colors.black.withOpacity(0.06),
         ),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
-          backgroundColor: const Color(0xFF2563EB).withValues(alpha: 0.10),
+          backgroundColor: const Color(0xFF2563EB).withOpacity(0.10),
           child: Icon(icon, color: const Color(0xFF2563EB)),
         ),
         title: Text(

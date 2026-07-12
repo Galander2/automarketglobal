@@ -83,7 +83,7 @@ class CarDetailsScreen extends StatelessWidget {
                         child: _SpecCard(
                           icon: Icons.speed,
                           title: 'Пробег',
-                          value: '${car.mileage} км',
+                          value: '${car.mileage} km',
                         ),
                       ),
                     ],
@@ -162,7 +162,7 @@ class CarDetailsScreen extends StatelessWidget {
           color: Theme.of(context).scaffoldBackgroundColor,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
+              color: Colors.black.withOpacity(0.08),
               blurRadius: 18,
               offset: const Offset(0, -6),
             ),
@@ -217,7 +217,7 @@ class _SpecCard extends StatelessWidget {
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: Colors.black.withValues(alpha: 0.06),
+          color: Colors.black.withOpacity(0.06),
         ),
       ),
       child: Column(
@@ -265,13 +265,13 @@ class _CheckTile extends StatelessWidget {
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.black.withValues(alpha: 0.06),
+          color: Colors.black.withOpacity(0.06),
         ),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: const Color(0xFF2563EB).withValues(alpha: 0.10),
+            backgroundColor: const Color(0xFF2563EB).withOpacity(0.10),
             child: const Icon(
               Icons.security,
               color: Color(0xFF2563EB),
@@ -336,7 +336,7 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
