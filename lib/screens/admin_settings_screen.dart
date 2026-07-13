@@ -361,7 +361,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                onPressed: value > 1 ? () => onChanged(value - 10) : null,
+                onPressed: value > 10 ? () => onChanged(value - 10) : null,
                 icon: const Icon(Icons.remove_circle_outline),
                 color: const Color(0xFF2563EB),
               ),
