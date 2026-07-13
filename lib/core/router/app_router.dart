@@ -21,6 +21,7 @@ import '../../screens/admin_dealers_screen.dart';
 import '../../screens/admin_reports_screen.dart';
 import '../../screens/admin_complaints_screen.dart';
 import '../../screens/admin_markets_screen.dart';
+import '../../screens/admin_settings_screen.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -69,10 +70,7 @@ class AppRouter {
       case AppRoutes.adminMarkets:
         return MaterialPageRoute(builder: (_) => const AdminMarketsScreen());
       case AppRoutes.adminSettings:
-        return MaterialPageRoute(builder: (_) => Scaffold(
-          appBar: AppBar(title: const Text('Настройки')),
-          body: const Center(child: Text('Настройки в разработке')),
-        ));
+        return MaterialPageRoute(builder: (_) => const AdminSettingsScreen());
       default:
         return MaterialPageRoute(builder: (_) => Scaffold(body: Center(child: Text('Нет маршрута: ${settings.name}'))));
     }

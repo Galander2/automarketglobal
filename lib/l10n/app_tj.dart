@@ -1,7 +1,7 @@
 class AppTj {
   static const String appName = 'Auto Market Global';
   static const String home = 'Асосӣ';
-  static const String search = 'устуҷӯ';
+  static const String search = 'чустуҷӯ';
   static const String favorites = 'Интихобшуда';
   static const String profile = 'Профил';
   static const String verifiedCars = 'Мошинҳои тасдиқшуда';
