@@ -104,6 +104,14 @@ class ProfileScreen extends StatelessWidget {
               );
             },
           ),
+          _ProfileMenuItem(
+            icon: Icons.admin_panel_settings,
+            title: 'Админ-панель',
+            subtitle: 'Управление системой',
+            onTap: () {
+              Navigator.pushNamed(context, AppRoutes.admin);
+            },
+          ),
           const SizedBox(height: 24),
 
           OutlinedButton.icon(
