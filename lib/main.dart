@@ -7,6 +7,7 @@ import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 import 'services/language_service.dart';
 import 'repositories/auth_repository.dart';
+import 'provider/settings_provider.dart';
 import 'core/router/app_routes.dart';
 import 'core/router/app_router.dart';
 import 'screens/auth_screen.dart';
@@ -34,6 +35,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => LanguageService()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],
       child: const AutoMarketApp(),
     ),
