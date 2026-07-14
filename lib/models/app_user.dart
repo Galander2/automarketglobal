@@ -80,10 +80,18 @@ class AppUser {
       country: map['country'],
       city: map['city'],
       isVerified: map['isVerified'] ?? false,
-      createdAt: map['createdAt'] as DateTime?,
-      updatedAt: map['updatedAt'] as DateTime?,
-      lastLogin: map['lastLogin'] as DateTime?,
+      createdAt: _convertToDateTime(map['createdAt']),
+      updatedAt: _convertToDateTime(map['updatedAt']),
+      lastLogin: _convertToDateTime(map['lastLogin']),
     );
+  }
+
+  /// Безопасное преобразование Timestamp или DateTime в DateTime
+  static DateTime? _convertToDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    return null;
   }
 
   AppUser copyWith({
