@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 import 'services/language_service.dart';
+import 'repositories/auth_repository.dart';
 import 'core/router/app_routes.dart';
 import 'core/router/app_router.dart';
 import 'screens/auth_screen.dart';
@@ -30,8 +30,11 @@ void main() async {
   );
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => LanguageService(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => LanguageService()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
       child: const AutoMarketApp(),
     ),
   );
@@ -48,16 +51,16 @@ class AutoMarketApp extends StatelessWidget {
       onGenerateRoute: AppRouter.generateRoute,
       locale: context.watch<LanguageService>().locale,
       supportedLocales: const [
-  Locale('ru'),
-  Locale('en'),
-  Locale('tj'),
-  Locale('uz'),
-  Locale('zh'),
-  Locale('ky'),
-  Locale('kk'),
-  Locale('ar'),
-  Locale('ko'),
-],
+        Locale('ru'),
+        Locale('en'),
+        Locale('tj'),
+        Locale('uz'),
+        Locale('zh'),
+        Locale('ky'),
+        Locale('kk'),
+        Locale('ar'),
+        Locale('ko'),
+      ],
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -76,10 +79,9 @@ class AutoMarketApp extends StatelessWidget {
           elevation: 0,
         ),
       ),
-      home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+      home: Consumer<AuthProvider>(
+        builder: (context, authProvider, _) {
+          if (authProvider.isCheckingAuth) {
             return const Scaffold(
               body: Center(
                 child: CircularProgressIndicator(),
@@ -87,7 +89,7 @@ class AutoMarketApp extends StatelessWidget {
             );
           }
 
-          if (snapshot.hasData && snapshot.data != null) {
+          if (authProvider.isAuthenticated) {
             return const MainShell();
           }
 
