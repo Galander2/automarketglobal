@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../provider/settings_provider.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -8,21 +10,12 @@ class AdminSettingsScreen extends StatefulWidget {
 }
 
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
-  bool _notificationsEnabled = true;
-  bool _emailNotifications = true;
-  bool _pushNotifications = false;
-  bool _maintenanceMode = false;
-  bool _newUserApprovalRequired = false;
-  bool _carModerationEnabled = true;
-  String _selectedLanguage = 'ru';
-  String _selectedTheme = 'system';
-  int _itemsPerPage = 20;
-  final _controller = TextEditingController();
+  late SettingsProvider _settingsProvider;
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _settingsProvider = context.read<SettingsProvider>();
   }
 
   @override
@@ -32,225 +25,205 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         title: const Text('Настройки'),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildSectionTitle('Общие настройки'),
-          _buildSettingsCard([
-            _buildSwitchTile(
-              title: 'Уведомления',
-              subtitle: 'Включить систему уведомлений',
-              value: _notificationsEnabled,
-              onChanged: (value) {
-                setState(() {
-                  _notificationsEnabled = value;
-                });
-              },
-            ),
-            _buildDivider(),
-            _buildSwitchTile(
-              title: 'Email уведомления',
-              subtitle: 'Получать уведомления на email',
-              value: _emailNotifications,
-              onChanged: (value) {
-                setState(() {
-                  _emailNotifications = value;
-                });
-              },
-            ),
-            _buildDivider(),
-            _buildSwitchTile(
-              title: 'Push уведомления',
-              subtitle: 'Отправлять push-уведомления',
-              value: _pushNotifications,
-              onChanged: (value) {
-                setState(() {
-                  _pushNotifications = value;
-                });
-              },
-            ),
-          ]),
-          const SizedBox(height: 24),
-          _buildSectionTitle('Модерация'),
-          _buildSettingsCard([
-            _buildSwitchTile(
-              title: 'Режим обслуживания',
-              subtitle: 'Временно отключить доступ пользователям',
-              value: _maintenanceMode,
-              onChanged: (value) {
-                setState(() {
-                  _maintenanceMode = value;
-                });
-              },
-            ),
-            _buildDivider(),
-            _buildSwitchTile(
-              title: 'Проверка новых пользователей',
-              subtitle: 'Требовать подтверждение регистрации',
-              value: _newUserApprovalRequired,
-              onChanged: (value) {
-                setState(() {
-                  _newUserApprovalRequired = value;
-                });
-              },
-            ),
-            _buildDivider(),
-            _buildSwitchTile(
-              title: 'Модерация объявлений',
-              subtitle: 'Проверять объявления перед публикацией',
-              value: _carModerationEnabled,
-              onChanged: (value) {
-                setState(() {
-                  _carModerationEnabled = value;
-                });
-              },
-            ),
-          ]),
-          const SizedBox(height: 24),
-          _buildSectionTitle('Интерфейс'),
-          _buildSettingsCard([
-            _buildDropdownTile(
-              title: 'Язык',
-              subtitle: 'Выберите язык интерфейса',
-              value: _selectedLanguage,
-              items: const [
-                DropdownMenuItem(value: 'ru', child: Text('Русский')),
-                DropdownMenuItem(value: 'en', child: Text('English')),
-                DropdownMenuItem(value: 'es', child: Text('Español')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedLanguage = value!;
-                });
-              },
-            ),
-            _buildDivider(),
-            _buildDropdownTile(
-              title: 'Тема',
-              subtitle: 'Выберите тему оформления',
-              value: _selectedTheme,
-              items: const [
-                DropdownMenuItem(value: 'system', child: Text('Системная')),
-                DropdownMenuItem(value: 'light', child: Text('Светлая')),
-                DropdownMenuItem(value: 'dark', child: Text('Тёмная')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _selectedTheme = value!;
-                });
-              },
-            ),
-            _buildDivider(),
-            _buildNumberTile(
-              title: 'Элементов на страницу',
-              subtitle: 'Количество записей в таблицах',
-              value: _itemsPerPage,
-              onChanged: (value) {
-                setState(() {
-                  _itemsPerPage = value;
-                });
-              },
-            ),
-          ]),
-          const SizedBox(height: 24),
-          _buildSectionTitle('Данные'),
-          _buildSettingsCard([
-            ListTile(
-              leading: const Icon(Icons.backup, color: Color(0xFF2563EB)),
-              title: const Text('Резервное копирование'),
-              subtitle: const Text('Создать резервную копию данных'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {
-                _showSnackBar('Резервное копирование начато');
-              },
-            ),
-            _buildDivider(),
-            ListTile(
-              leading: const Icon(Icons.restore, color: Color(0xFF10B981)),
-              title: const Text('Восстановление'),
-              subtitle: const Text('Восстановить данные из копии'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {
-                _showSnackBar('Открыто меню восстановления');
-              },
-            ),
-            _buildDivider(),
-            ListTile(
-              leading: const Icon(Icons.delete_outline, color: Color(0xFFEF4444)),
-              title: const Text('Очистка кэша'),
-              subtitle: const Text('Удалить временные файлы'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {
-                _showConfirmDialog(
-                  'Очистка кэша',
-                  'Вы уверены, что хотите очистить кэш?',
-                  () {
-                    _showSnackBar('Кэш очищен');
+      body: Consumer<SettingsProvider>(
+        builder: (context, provider, _) {
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              _buildSectionTitle('Общие настройки'),
+              _buildSettingsCard([
+                _buildSwitchTile(
+                  title: 'Уведомления',
+                  subtitle: 'Включить систему уведомлений',
+                  value: provider.notificationsEnabled,
+                  onChanged: (value) {
+                    provider.setNotificationsEnabled(value);
                   },
-                );
-              },
-            ),
-          ]),
-          const SizedBox(height: 24),
-          _buildSectionTitle('Безопасность'),
-          _buildSettingsCard([
-            ListTile(
-              leading: const Icon(Icons.lock, color: Color(0xFF8B5CF6)),
-              title: const Text('Сменить пароль'),
-              subtitle: const Text('Изменить пароль администратора'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {
-                _showChangePasswordDialog();
-              },
-            ),
-            _buildDivider(),
-            ListTile(
-              leading: const Icon(Icons.security, color: Color(0xFFF59E0B)),
-              title: const Text('Двухфакторная аутентификация'),
-              subtitle: const Text('Настроить 2FA'),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () {
-                _showSnackBar('Настройка 2FA в разработке');
-              },
-            ),
-          ]),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: () {
-              _showSnackBar('Настройки сохранены');
-            },
-            icon: const Icon(Icons.save),
-            label: const Text('Сохранить настройки'),
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 48),
-              backgroundColor: const Color(0xFF2563EB),
-              foregroundColor: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 16),
-          OutlinedButton.icon(
-            onPressed: () {
-              setState(() {
-                _notificationsEnabled = true;
-                _emailNotifications = true;
-                _pushNotifications = false;
-                _maintenanceMode = false;
-                _newUserApprovalRequired = false;
-                _carModerationEnabled = true;
-                _selectedLanguage = 'ru';
-                _selectedTheme = 'system';
-                _itemsPerPage = 20;
-              });
-              _showSnackBar('Настройки сброшены');
-            },
-            icon: const Icon(Icons.refresh),
-            label: const Text('Сбросить настройки'),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 48),
-            ),
-          ),
-          const SizedBox(height: 32),
-        ],
+                ),
+                _buildDivider(),
+                _buildSwitchTile(
+                  title: 'Email уведомления',
+                  subtitle: 'Получать уведомления на email',
+                  value: provider.emailNotifications,
+                  onChanged: (value) {
+                    provider.setEmailNotifications(value);
+                  },
+                ),
+                _buildDivider(),
+                _buildSwitchTile(
+                  title: 'Push уведомления',
+                  subtitle: 'Отправлять push-уведомления',
+                  value: provider.pushNotifications,
+                  onChanged: (value) {
+                    provider.setPushNotifications(value);
+                  },
+                ),
+              ]),
+              const SizedBox(height: 24),
+              _buildSectionTitle('Модерация'),
+              _buildSettingsCard([
+                _buildSwitchTile(
+                  title: 'Режим обслуживания',
+                  subtitle: 'Временно отключить доступ пользователям',
+                  value: provider.maintenanceMode,
+                  onChanged: (value) {
+                    provider.setMaintenanceMode(value);
+                  },
+                ),
+                _buildDivider(),
+                _buildSwitchTile(
+                  title: 'Проверка новых пользователей',
+                  subtitle: 'Требовать подтверждение регистрации',
+                  value: provider.newUserApprovalRequired,
+                  onChanged: (value) {
+                    provider.setNewUserApprovalRequired(value);
+                  },
+                ),
+                _buildDivider(),
+                _buildSwitchTile(
+                  title: 'Модерация объявлений',
+                  subtitle: 'Проверять объявления перед публикацией',
+                  value: provider.carModerationEnabled,
+                  onChanged: (value) {
+                    provider.setCarModerationEnabled(value);
+                  },
+                ),
+              ]),
+              const SizedBox(height: 24),
+              _buildSectionTitle('Интерфейс'),
+              _buildSettingsCard([
+                _buildDropdownTile(
+                  title: 'Язык',
+                  subtitle: 'Выберите язык интерфейса',
+                  value: provider.selectedLanguage,
+                  items: const [
+                    DropdownMenuItem(value: 'ru', child: Text('Русский')),
+                    DropdownMenuItem(value: 'en', child: Text('English')),
+                    DropdownMenuItem(value: 'es', child: Text('Español')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      provider.setSelectedLanguage(value);
+                    }
+                  },
+                ),
+                _buildDivider(),
+                _buildDropdownTile(
+                  title: 'Тема',
+                  subtitle: 'Выберите тему оформления',
+                  value: provider.selectedTheme,
+                  items: const [
+                    DropdownMenuItem(value: 'system', child: Text('Системная')),
+                    DropdownMenuItem(value: 'light', child: Text('Светлая')),
+                    DropdownMenuItem(value: 'dark', child: Text('Тёмная')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      provider.setSelectedTheme(value);
+                    }
+                  },
+                ),
+                _buildDivider(),
+                _buildNumberTile(
+                  title: 'Элементов на страницу',
+                  subtitle: 'Количество записей в таблицах',
+                  value: provider.itemsPerPage,
+                  onChanged: (value) {
+                    provider.setItemsPerPage(value);
+                  },
+                ),
+              ]),
+              const SizedBox(height: 24),
+              _buildSectionTitle('Данные'),
+              _buildSettingsCard([
+                ListTile(
+                  leading: const Icon(Icons.backup, color: Color(0xFF2563EB)),
+                  title: const Text('Резервное копирование'),
+                  subtitle: const Text('Создать резервную копию данных'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    _showSnackBar('Резервное копирование начато');
+                  },
+                ),
+                _buildDivider(),
+                ListTile(
+                  leading: const Icon(Icons.restore, color: Color(0xFF10B981)),
+                  title: const Text('Восстановление'),
+                  subtitle: const Text('Восстановить данные из копии'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    _showSnackBar('Открыто меню восстановления');
+                  },
+                ),
+                _buildDivider(),
+                ListTile(
+                  leading: const Icon(Icons.delete_outline, color: Color(0xFFEF4444)),
+                  title: const Text('Очистка кэша'),
+                  subtitle: const Text('Удалить временные файлы'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    _showConfirmDialog(
+                      'Очистка кэша',
+                      'Вы уверены, что хотите очистить кэш?',
+                      () {
+                        _showSnackBar('Кэш очищен');
+                      },
+                    );
+                  },
+                ),
+              ]),
+              const SizedBox(height: 24),
+              _buildSectionTitle('Безопасность'),
+              _buildSettingsCard([
+                ListTile(
+                  leading: const Icon(Icons.lock, color: Color(0xFF8B5CF6)),
+                  title: const Text('Сменить пароль'),
+                  subtitle: const Text('Изменить пароль администратора'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    _showChangePasswordDialog();
+                  },
+                ),
+                _buildDivider(),
+                ListTile(
+                  leading: const Icon(Icons.security, color: Color(0xFFF59E0B)),
+                  title: const Text('Двухфакторная аутентификация'),
+                  subtitle: const Text('Настроить 2FA'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    _showSnackBar('Настройка 2FA в разработке');
+                  },
+                ),
+              ]),
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: () {
+                  _showSnackBar('Настройки сохранены');
+                },
+                icon: const Icon(Icons.save),
+                label: const Text('Сохранить настройки'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                  backgroundColor: const Color(0xFF2563EB),
+                  foregroundColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  await provider.resetToDefaults();
+                  _showSnackBar('Настройки сброшены');
+                },
+                icon: const Icon(Icons.refresh),
+                label: const Text('Сбросить настройки'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          );
+        },
       ),
     );
   }

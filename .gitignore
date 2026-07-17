@@ -1,14 +1,12 @@
 ```
-# Build artifacts
-build/
-.dart_tool/
-*.g.dart
-
 # Dependencies
-pubspec.lock
+.pub/
+.build/
+.dart_tool/
 
-# Logs
+# Logs and temp files
 *.log
+*.tmp
 
 # Environment
 .env
@@ -16,12 +14,22 @@ pubspec.lock
 *.env.*
 
 # IDE files
-.vscode/
 .idea/
+.vscode/
 *.swp
 *.swo
 
-# OS files
+# OS generated files
 .DS_Store
 Thumbs.db
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# Build outputs
+build/
+dist/
+target/
 ```
