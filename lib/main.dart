@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 import 'services/language_service.dart';
+import 'services/settings_service.dart';
 import 'repositories/auth_repository.dart';
 import 'provider/settings_provider.dart';
 import 'core/router/app_routes.dart';
@@ -30,10 +31,14 @@ void main() async {
     ),
   );
 
+  final settingsService = SettingsService();
+  await settingsService.initialize();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => LanguageService()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider(settingsService)),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],

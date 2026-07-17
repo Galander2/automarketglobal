@@ -1,77 +1,313 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../core/router/app_routes.dart';
+import '../models/admin_stats.dart';
+import '../data/admin_stats_data.dart';
 
-class AdminDashboardScreen extends StatelessWidget {
+class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
   @override
+  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+}
+
+class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  AdminStats? _stats;
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    try {
+      setState(() => _isLoading = true);
+      
+      // Load stats from Firestore
+      final statsDoc = await FirebaseFirestore.instance
+          .collection('admin')
+          .doc('stats')
+          .get();
+
+      if (statsDoc.exists) {
+        final data = statsDoc.data()!;
+        setState(() {
+          _stats = AdminStats(
+            totalUsers: data['totalUsers'] ?? 0,
+            totalDealers: data['totalDealers'] ?? 0,
+            totalCars: data['totalCars'] ?? 0,
+            pendingCars: data['pendingCars'] ?? 0,
+            approvedCars: data['approvedCars'] ?? 0,
+            soldCars: data['soldCars'] ?? 0,
+            platformRevenue: (data['platformRevenue'] ?? 0).toDouble(),
+            todayVisits: data['todayVisits'] ?? 0,
+          );
+        });
+      } else {
+        // Use mock data if no stats in Firestore
+        setState(() => _stats = AdminStatsData.getStats());
+      }
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _stats = AdminStatsData.getStats();
+      });
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Админ панель'),
-        centerTitle: true,
-      ),
-      body: GridView.count(
-        crossAxisCount: 2,
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final stats = _stats ?? AdminStatsData.getStats();
+
+    return RefreshIndicator(
+      onRefresh: _loadStats,
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        children: [
-          _AdminCard(
-            icon: Icons.people,
-            title: 'Пользователи',
-            subtitle: 'Управление пользователями',
-            color: const Color(0xFF2563EB),
-            onTap: () {
-              Navigator.pushNamed(context, AppRoutes.adminUsers);
-            },
-          ),
-          _AdminCard(
-            icon: Icons.car_rental,
-            title: 'Автомобили',
-            subtitle: 'Модерация объявлений',
-            color: const Color(0xFF10B981),
-            onTap: () {
-              Navigator.pushNamed(context, AppRoutes.adminCars);
-            },
-          ),
-          _AdminCard(
-            icon: Icons.store,
-            title: 'Дилеры',
-            subtitle: 'Управление дилерами',
-            color: const Color(0xFF8B5CF6),
-            onTap: () {
-              Navigator.pushNamed(context, AppRoutes.adminDealers);
-            },
-          ),
-          _AdminCard(
-            icon: Icons.bar_chart,
-            title: 'Отчёты',
-            subtitle: 'Статистика и аналитика',
-            color: const Color(0xFFF59E0B),
-            onTap: () {
-              Navigator.pushNamed(context, AppRoutes.adminReports);
-            },
-          ),
-          _AdminCard(
-            icon: Icons.chat,
-            title: 'Жалобы',
-            subtitle: 'Рассмотрение жалоб',
-            color: const Color(0xFFEF4444),
-            onTap: () {
-              Navigator.pushNamed(context, AppRoutes.adminComplaints);
-            },
-          ),
-          _AdminCard(
-            icon: Icons.settings,
-            title: 'Настройки',
-            subtitle: 'Настройки системы',
-            color: const Color(0xFF6B7280),
-            onTap: () {
-              Navigator.pushNamed(context, AppRoutes.adminSettings);
-            },
-          ),
-        ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
+            const SizedBox(height: 24),
+            _buildQuickStats(stats),
+            const SizedBox(height: 24),
+            _buildMainGrid(context),
+            const SizedBox(height: 24),
+            _buildChartsSection(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Админ панель',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              'Управление платформой',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+        IconButton.filled(
+          onPressed: _loadStats,
+          icon: const Icon(Icons.refresh),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickStats(AdminStats stats) {
+    return Row(
+      children: [
+        Expanded(child: _buildStatCard('Пользователи', stats.totalUsers.toString(), Icons.people, const Color(0xFF2563EB))),
+        const SizedBox(width: 12),
+        Expanded(child: _buildStatCard('Дилеры', stats.totalDealers.toString(), Icons.store, const Color(0xFF10B981))),
+        const SizedBox(width: 12),
+        Expanded(child: _buildStatCard('Авто', stats.totalCars.toString(), Icons.directions_car, const Color(0xFFF59E0B))),
+        const SizedBox(width: 12),
+        Expanded(child: _buildStatCard('Продано', stats.soldCars.toString(), Icons.check_circle, const Color(0xFF8B5CF6))),
+      ],
+    );
+  }
+
+  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey[200]!),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMainGrid(BuildContext context) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      children: [
+        _AdminCard(
+          icon: Icons.people,
+          title: 'Пользователи',
+          subtitle: 'Управление пользователями',
+          color: const Color(0xFF2563EB),
+          onTap: () {
+            Navigator.pushNamed(context, AppRoutes.adminUsers);
+          },
+        ),
+        _AdminCard(
+          icon: Icons.car_rental,
+          title: 'Автомобили',
+          subtitle: 'Модерация объявлений',
+          color: const Color(0xFF10B981),
+          onTap: () {
+            Navigator.pushNamed(context, AppRoutes.adminCars);
+          },
+        ),
+        _AdminCard(
+          icon: Icons.store,
+          title: 'Дилеры',
+          subtitle: 'Управление дилерами',
+          color: const Color(0xFF8B5CF6),
+          onTap: () {
+            Navigator.pushNamed(context, AppRoutes.adminDealers);
+          },
+        ),
+        _AdminCard(
+          icon: Icons.bar_chart,
+          title: 'Отчёты',
+          subtitle: 'Статистика и аналитика',
+          color: const Color(0xFFF59E0B),
+          onTap: () {
+            Navigator.pushNamed(context, AppRoutes.adminReports);
+          },
+        ),
+        _AdminCard(
+          icon: Icons.chat,
+          title: 'Жалобы',
+          subtitle: 'Рассмотрение жалоб',
+          color: const Color(0xFFEF4444),
+          onTap: () {
+            Navigator.pushNamed(context, AppRoutes.adminComplaints);
+          },
+        ),
+        _AdminCard(
+          icon: Icons.settings,
+          title: 'Настройки',
+          subtitle: 'Настройки системы',
+          color: const Color(0xFF6B7280),
+          onTap: () {
+            Navigator.pushNamed(context, AppRoutes.adminSettings);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChartsSection() {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey[200]!),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Активность за неделю',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildMiniChart(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniChart() {
+    final days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+    final values = [65, 78, 52, 89, 73, 45, 82];
+    
+    return SizedBox(
+      height: 150,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: List.generate(7, (index) {
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Container(
+                width: 30,
+                height: (values[index] / 100) * 100,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      const Color(0xFF2563EB).withOpacity(0.8),
+                      const Color(0xFF2563EB).withOpacity(0.3),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                days[index],
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          );
+        }),
       ),
     );
   }
@@ -95,9 +331,10 @@ class _AdminCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
+      elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey[200]!),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -109,9 +346,9 @@ class _AdminCard extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-  color.withOpacity(0.1),
-  color.withOpacity(0.05),
-],
+                color.withOpacity(0.1),
+                color.withOpacity(0.05),
+              ],
             ),
           ),
           child: Column(
@@ -123,7 +360,7 @@ class _AdminCard extends StatelessWidget {
                   color: color.withOpacity(0.2),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 40, color: color),
+                child: Icon(icon, size: 32, color: color),
               ),
               const SizedBox(height: 12),
               Text(
