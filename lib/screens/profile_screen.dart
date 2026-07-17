@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../repositories/auth_repository.dart';
 import '../core/router/app_routes.dart';
 import '../l10n/app_localizations.dart';
+import '../services/language_service.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -8,6 +11,8 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final authProvider = context.watch<AuthProvider>();
+    final user = authProvider.currentUser;
 
     return Scaffold(
       appBar: AppBar(
@@ -17,36 +22,81 @@ class ProfileScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 50,
-            backgroundColor: Color(0xFF2563EB),
-            child: Icon(
-              Icons.person,
-              size: 50,
-              color: Colors.white,
-            ),
+            backgroundColor: const Color(0xFF2563EB),
+            child: user?.avatar != null
+                ? ClipOval(
+                    child: Image.network(
+                      user!.avatar!,
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.person,
+                        size: 50,
+                        color: Colors.white,
+                      ),
+                    ),
+                  )
+                : const Icon(
+                    Icons.person,
+                    size: 50,
+                    color: Colors.white,
+                  ),
           ),
           const SizedBox(height: 16),
-          const Center(
+          Center(
             child: Text(
-              'Гость',
-              style: TextStyle(
+              user?.fullName ?? 'Гость',
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          const Center(
+          Center(
             child: Text(
-              'user@example.com',
+              user?.email ?? '',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey,
+                color: Colors.grey[600],
               ),
             ),
           ),
+          if (user?.role != null) ...[
+            const SizedBox(height: 4),
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _getRoleColor(user!.role).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _getRoleColor(user.role),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  _getRoleTitle(user.role),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _getRoleColor(user.role),
+                  ),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 32),
 
+          _ProfileMenuItem(
+            icon: Icons.person_outline,
+            title: 'Редактировать профиль',
+            onTap: () {
+              Navigator.pushNamed(context, '/profile/edit');
+            },
+          ),
           _ProfileMenuItem(
             icon: Icons.car_rental,
             title: l10n.translate('myPublications'),
@@ -80,36 +130,51 @@ class ProfileScreen extends StatelessWidget {
           _ProfileMenuItem(
             icon: Icons.language,
             title: l10n.translate('language'),
-            subtitle: 'Русский / English / Тоҷикӣ / O\'zbek',
+            subtitle: context.watch<LanguageService>().getLanguageName(),
             onTap: () {
               Navigator.pushNamed(context, AppRoutes.languageSelection);
             },
           ),
 
-          _ProfileMenuItem(
-            icon: Icons.settings,
-            title: l10n.translate('settings'),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Настройки откроются позже')),
-              );
-            },
-          ),
-          _ProfileMenuItem(
-            icon: Icons.help_outline,
-            title: l10n.translate('help'),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Помощь откроется позже')),
-              );
-            },
-          ),
+          // Админ-панель (только для админов)
+          if (authProvider.isAdmin) ...[
+            _ProfileMenuItem(
+              icon: Icons.admin_panel_settings,
+              title: 'Админ-панель',
+              subtitle: 'Управление системой',
+              onTap: () {
+                Navigator.pushNamed(context, AppRoutes.admin);
+              },
+            ),
+          ],
+
           const SizedBox(height: 24),
 
           OutlinedButton.icon(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Выход из аккаунта')),
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Выход из аккаунта'),
+                  content: const Text('Вы уверены, что хотите выйти?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Отмена'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        authProvider.signOut();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Выйти'),
+                    ),
+                  ],
+                ),
               );
             },
             icon: const Icon(Icons.logout),
@@ -126,6 +191,35 @@ class ProfileScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Color _getRoleColor(dynamic role) {
+    switch (role.toString()) {
+      case 'UserRole.admin':
+      case 'UserRole.superAdmin':
+        return Colors.red;
+      case 'UserRole.dealer':
+        return Colors.purple;
+      case 'UserRole.seller':
+        return Colors.orange;
+      default:
+        return Colors.blue;
+    }
+  }
+
+  String _getRoleTitle(dynamic role) {
+    switch (role.toString()) {
+      case 'UserRole.admin':
+        return 'Администратор';
+      case 'UserRole.superAdmin':
+        return 'Владелец платформы';
+      case 'UserRole.dealer':
+        return 'Дилер';
+      case 'UserRole.seller':
+        return 'Продавец';
+      default:
+        return 'Пользователь';
+    }
   }
 }
 
