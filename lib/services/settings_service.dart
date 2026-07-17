@@ -6,7 +6,7 @@ class SettingsService {
   final String _settingsDocId = 'app_settings';
   
   AdminSettings? _cachedSettings;
-  StreamSubscription<DocumentSnapshot>? _subscription;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _subscription;
   bool _isInitialized = false;
 
   SettingsService({FirebaseFirestore? firestore})
