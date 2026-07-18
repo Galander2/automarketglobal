@@ -40,7 +40,6 @@ void main() async {
         ChangeNotifierProvider(create: (_) => LanguageService()),
         ChangeNotifierProvider(create: (_) => SettingsProvider(settingsService)),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],
       child: const AutoMarketApp(),
     ),
