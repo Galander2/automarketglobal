@@ -1,3 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+/// Модель настроек администратора
 class AdminSettings {
   final bool notificationsEnabled;
   final bool emailNotificationsEnabled;
@@ -6,7 +9,7 @@ class AdminSettings {
   final bool requireUserVerification;
   final bool moderateListings;
   final String language;
-  final String themeMode;
+  final String themeMode; // 'light', 'dark', 'system'
   final int itemsPerPage;
   final DateTime? updatedAt;
   final String? updatedBy;
@@ -25,26 +28,24 @@ class AdminSettings {
     this.updatedBy,
   });
 
-  factory AdminSettings.defaults() {
-    return const AdminSettings();
-  }
-
+  /// Создать из Firestore документа
   factory AdminSettings.fromMap(Map<String, dynamic> map) {
     return AdminSettings(
-      notificationsEnabled: map['notificationsEnabled'] as bool? ?? true,
-      emailNotificationsEnabled: map['emailNotificationsEnabled'] as bool? ?? true,
-      pushNotificationsEnabled: map['pushNotificationsEnabled'] as bool? ?? true,
-      maintenanceMode: map['maintenanceMode'] as bool? ?? false,
-      requireUserVerification: map['requireUserVerification'] as bool? ?? false,
-      moderateListings: map['moderateListings'] as bool? ?? false,
-      language: map['language'] as String? ?? 'ru',
-      themeMode: map['themeMode'] as String? ?? 'system',
-      itemsPerPage: map['itemsPerPage'] as int? ?? 20,
-      updatedAt: map['updatedAt'] as DateTime?,
-      updatedBy: map['updatedBy'] as String?,
+      notificationsEnabled: map['notificationsEnabled'] ?? true,
+      emailNotificationsEnabled: map['emailNotificationsEnabled'] ?? true,
+      pushNotificationsEnabled: map['pushNotificationsEnabled'] ?? true,
+      maintenanceMode: map['maintenanceMode'] ?? false,
+      requireUserVerification: map['requireUserVerification'] ?? false,
+      moderateListings: map['moderateListings'] ?? false,
+      language: map['language'] ?? 'ru',
+      themeMode: map['themeMode'] ?? 'system',
+      itemsPerPage: (map['itemsPerPage'] ?? 20).toInt(),
+      updatedAt: _parseTimestamp(map['updatedAt']),
+      updatedBy: map['updatedBy'],
     );
   }
 
+  /// Преобразовать в Map для Firestore
   Map<String, dynamic> toMap() {
     return {
       'notificationsEnabled': notificationsEnabled,
@@ -56,11 +57,12 @@ class AdminSettings {
       'language': language,
       'themeMode': themeMode,
       'itemsPerPage': itemsPerPage,
-      if (updatedAt != null) 'updatedAt': updatedAt,
+      if (updatedAt != null) 'updatedAt': Timestamp.fromDate(updatedAt!),
       if (updatedBy != null) 'updatedBy': updatedBy,
     };
   }
 
+  /// Копия с изменениями
   AdminSettings copyWith({
     bool? notificationsEnabled,
     bool? emailNotificationsEnabled,
@@ -76,10 +78,13 @@ class AdminSettings {
   }) {
     return AdminSettings(
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
-      emailNotificationsEnabled: emailNotificationsEnabled ?? this.emailNotificationsEnabled,
-      pushNotificationsEnabled: pushNotificationsEnabled ?? this.pushNotificationsEnabled,
+      emailNotificationsEnabled:
+          emailNotificationsEnabled ?? this.emailNotificationsEnabled,
+      pushNotificationsEnabled:
+          pushNotificationsEnabled ?? this.pushNotificationsEnabled,
       maintenanceMode: maintenanceMode ?? this.maintenanceMode,
-      requireUserVerification: requireUserVerification ?? this.requireUserVerification,
+      requireUserVerification:
+          requireUserVerification ?? this.requireUserVerification,
       moderateListings: moderateListings ?? this.moderateListings,
       language: language ?? this.language,
       themeMode: themeMode ?? this.themeMode,
@@ -88,4 +93,15 @@ class AdminSettings {
       updatedBy: updatedBy ?? this.updatedBy,
     );
   }
+
+  /// Безопасное преобразование Timestamp/DateTime
+  static DateTime? _parseTimestamp(dynamic value) {
+    if (value == null) return null;
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    return null;
+  }
+
+  /// Значения по умолчанию
+  static AdminSettings defaults() => const AdminSettings();
 }

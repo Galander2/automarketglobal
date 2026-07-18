@@ -1,52 +1,29 @@
 ```
-# Build artifacts
-*.o
-*.obj
-*.a
-*.lib
-*.so
-*.dylib
-*.dll
-
-# Dependencies
-**/node_modules/
-**/.venv/
-**/venv/
-**/.env
-**/.env.*
-**/.env.local
+# Dart/Flutter build artifacts
+.dart_tool/
+.build/
+pubspec.lock
 
 # IDE files
-.vscode/
 .idea/
+.vscode/
 *.swp
 *.swo
-*.tmp
 
 # Logs
 *.log
 
-# Coverage
-coverage/
-htmlcov/
-.coverage
-
-# Distribution / packaging
-dist/
-build/
-*.tar.gz
-*.whl
-*.egg-info/
-
-# Dart/Flutter specific
-.dart_tool/
-.packages
-.pub/
-*.g.dart
-*.freezed.dart
-
-# Environment variables
+# Environment
 .env
 .env.local
-.env.*
+*.env.*
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Temporary files
+*.tmp
+.DS_Store
+Thumbs.db
 ```
