@@ -37,8 +37,15 @@ class AppRouter {
       case AppRoutes.addCar:
         return MaterialPageRoute(builder: (_) => const AddCarScreen());
       case AppRoutes.carDetails:
-        final args = settings.arguments as Map<String, dynamic>;
-        return MaterialPageRoute(builder: (_) => CarDetailsScreen(car: args['car']));
+        final args = settings.arguments;
+        if (args is Map<String, dynamic>) {
+          final car = args['car'];
+          if (car == null) {
+            return _errorRoute('Отсутствует аргумент car');
+          }
+          return MaterialPageRoute(builder: (_) => CarDetailsScreen(car: car));
+        }
+        return _errorRoute('Неверный тип аргументов для carDetails');
       case AppRoutes.countries:
         return MaterialPageRoute(builder: (_) => const CountriesScreen());
       case AppRoutes.dealers:
@@ -72,7 +79,17 @@ class AppRouter {
       case AppRoutes.adminSettings:
         return MaterialPageRoute(builder: (_) => const AdminSettingsScreen());
       default:
-        return MaterialPageRoute(builder: (_) => Scaffold(body: Center(child: Text('Нет маршрута: ${settings.name}'))));
+        return _errorRoute('Нет маршрута: ${settings.name}');
     }
+  }
+
+  static Route<dynamic> _errorRoute(String message) {
+    return MaterialPageRoute(
+      builder: (_) => Scaffold(
+        body: Center(
+          child: Text(message),
+        ),
+      ),
+    );
   }
 }

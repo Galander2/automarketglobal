@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import '../models/admin_settings.dart';
 
+/// Сервис для работы с настройками приложения в Firestore
 class SettingsService {
   final FirebaseFirestore _firestore;
   final String _settingsDocId = 'app_settings';
@@ -20,18 +21,18 @@ class SettingsService {
   }
 
   bool get notificationsEnabled => settings.notificationsEnabled;
-  bool get emailNotifications => settings.emailNotifications;
-  bool get pushNotifications => settings.pushNotifications;
+  bool get emailNotifications => settings.emailNotificationsEnabled;
+  bool get pushNotifications => settings.pushNotificationsEnabled;
   bool get maintenanceMode => settings.maintenanceMode;
-  bool get newUserApprovalRequired => settings.newUserApprovalRequired;
-  bool get carModerationEnabled => settings.carModerationEnabled;
-  String get selectedLanguage => settings.selectedLanguage;
-  String get selectedTheme => settings.selectedTheme;
+  bool get newUserApprovalRequired => settings.requireUserVerification;
+  bool get carModerationEnabled => settings.moderateListings;
+  String get selectedLanguage => settings.language;
+  String get selectedTheme => settings.themeMode;
   int get itemsPerPage => settings.itemsPerPage;
-  double get commissionRate => settings.commissionRate;
-  String? get bannerUrl => settings.bannerUrl;
-  List<String> get supportedCountries => settings.supportedCountries;
-  List<String> get categories => settings.categories;
+  double get commissionRate => 0.05; // Default value, not in new model
+  String? get bannerUrl => null; // Not in new model
+  List<String> get supportedCountries => const ['TJ', 'UZ', 'KG', 'KZ']; // Default
+  List<String> get categories => const ['Седан', 'Внедорожник', 'Хэтчбек', 'Купе', 'Кабриолет']; // Default
 
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -65,11 +66,11 @@ class SettingsService {
   }
 
   Future<void> setEmailNotifications(bool value) async {
-    await _updateSettings({'emailNotifications': value});
+    await _updateSettings({'emailNotificationsEnabled': value});
   }
 
   Future<void> setPushNotifications(bool value) async {
-    await _updateSettings({'pushNotifications': value});
+    await _updateSettings({'pushNotificationsEnabled': value});
   }
 
   Future<void> setMaintenanceMode(bool value) async {
@@ -77,19 +78,19 @@ class SettingsService {
   }
 
   Future<void> setNewUserApprovalRequired(bool value) async {
-    await _updateSettings({'newUserApprovalRequired': value});
+    await _updateSettings({'requireUserVerification': value});
   }
 
   Future<void> setCarModerationEnabled(bool value) async {
-    await _updateSettings({'carModerationEnabled': value});
+    await _updateSettings({'moderateListings': value});
   }
 
   Future<void> setSelectedLanguage(String value) async {
-    await _updateSettings({'selectedLanguage': value});
+    await _updateSettings({'language': value});
   }
 
   Future<void> setSelectedTheme(String value) async {
-    await _updateSettings({'selectedTheme': value});
+    await _updateSettings({'themeMode': value});
   }
 
   Future<void> setItemsPerPage(int value) async {
@@ -97,10 +98,12 @@ class SettingsService {
   }
 
   Future<void> setCommissionRate(double value) async {
+    // Not supported in new model, but kept for compatibility
     await _updateSettings({'commissionRate': value});
   }
 
   Future<void> setBannerUrl(String? value) async {
+    // Not supported in new model, but kept for compatibility
     await _updateSettings({'bannerUrl': value});
   }
 
@@ -133,18 +136,12 @@ class SettingsService {
   Future<void> resetToDefaults() async {
     final defaults = AdminSettings.defaults();
     await saveSettings(defaults);
-import '../models/admin_settings.dart';
-
-/// Сервис для работы с настройками администратора в Firestore
-class SettingsService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static const String _collectionPath = 'admin_settings';
-  static const String _docId = 'global';
+  }
 
   /// Получить документ настроек
   Future<AdminSettings> getSettings() async {
     try {
-      final doc = await _firestore.collection(_collectionPath).doc(_docId).get();
+      final doc = await _firestore.collection('settings').doc(_settingsDocId).get();
       
       if (doc.exists) {
         return AdminSettings.fromMap(doc.data()!);
@@ -158,7 +155,7 @@ class SettingsService {
   }
 
   /// Сохранить настройки
-  Future<void> saveSettings(AdminSettings settings, String adminUid) async {
+  Future<void> saveSettingsWithAdmin(AdminSettings settings, String adminUid) async {
     try {
       final updatedSettings = settings.copyWith(
         updatedAt: DateTime.now(),
@@ -166,8 +163,8 @@ class SettingsService {
       );
 
       await _firestore
-          .collection(_collectionPath)
-          .doc(_docId)
+          .collection('settings')
+          .doc(_settingsDocId)
           .set(updatedSettings.toMap(), SetOptions(merge: true));
     } catch (e) {
       throw Exception('Ошибка сохранения настроек: ${e.toString()}');
@@ -183,8 +180,8 @@ class SettingsService {
       );
 
       await _firestore
-          .collection(_collectionPath)
-          .doc(_docId)
+          .collection('settings')
+          .doc(_settingsDocId)
           .set(defaults.toMap());
     } catch (e) {
       throw Exception('Ошибка сброса настроек: ${e.toString()}');
@@ -194,8 +191,8 @@ class SettingsService {
   /// Слушать изменения настроек в реальном времени
   Stream<AdminSettings> watchSettings() {
     return _firestore
-        .collection(_collectionPath)
-        .doc(_docId)
+        .collection('settings')
+        .doc(_settingsDocId)
         .snapshots()
         .map((snapshot) {
       if (snapshot.exists) {
