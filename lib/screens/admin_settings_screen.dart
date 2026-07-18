@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../provider/settings_provider.dart';
 import '../models/admin_settings.dart';
-import '../provider/settings_provider.dart';
-import '../repositories/auth_repository.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -13,17 +11,13 @@ class AdminSettingsScreen extends StatefulWidget {
 }
 
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
-  late SettingsProvider _settingsProvider;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _settingsProvider = context.read<SettingsProvider>();
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SettingsProvider>().loadSettings();
+      if (mounted) {
+        context.read<SettingsProvider>().loadSettings();
+      }
     });
   }
 
@@ -35,25 +29,14 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         centerTitle: true,
       ),
       body: Consumer<SettingsProvider>(
-        builder: (context, provider, _) {
+        builder: (context, settingsProvider, _) {
+          if (settingsProvider.isLoading && settingsProvider.settings == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final settings = settingsProvider.settings ?? AdminSettings.defaults();
+
           return ListView(
-    return Consumer2<SettingsProvider, AuthProvider>(
-      builder: (context, settingsProvider, authProvider, _) {
-        if (settingsProvider.isLoading && settingsProvider.settings == null) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        final settings = settingsProvider.settings ?? AdminSettings.defaults();
-        final adminUid = authProvider.currentUser?.uid ?? '';
-
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Настройки'),
-            centerTitle: true,
-          ),
-          body: ListView(
             padding: const EdgeInsets.all(16),
             children: [
               _buildSectionTitle('Общие настройки'),
@@ -61,15 +44,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 _buildSwitchTile(
                   title: 'Уведомления',
                   subtitle: 'Включить систему уведомлений',
-                  value: provider.notificationsEnabled,
-                  onChanged: (value) {
-                    provider.setNotificationsEnabled(value);
                   value: settings.notificationsEnabled,
                   onChanged: (value) {
                     settingsProvider.updateField(
                       'notificationsEnabled',
                       value,
-                      adminUid,
+                      '',
                     );
                   },
                 ),
@@ -77,15 +57,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 _buildSwitchTile(
                   title: 'Email уведомления',
                   subtitle: 'Получать уведомления на email',
-                  value: provider.emailNotifications,
-                  onChanged: (value) {
-                    provider.setEmailNotifications(value);
                   value: settings.emailNotificationsEnabled,
                   onChanged: (value) {
                     settingsProvider.updateField(
                       'emailNotificationsEnabled',
                       value,
-                      adminUid,
+                      '',
                     );
                   },
                 ),
@@ -93,15 +70,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 _buildSwitchTile(
                   title: 'Push уведомления',
                   subtitle: 'Отправлять push-уведомления',
-                  value: provider.pushNotifications,
-                  onChanged: (value) {
-                    provider.setPushNotifications(value);
                   value: settings.pushNotificationsEnabled,
                   onChanged: (value) {
                     settingsProvider.updateField(
                       'pushNotificationsEnabled',
                       value,
-                      adminUid,
+                      '',
                     );
                   },
                 ),
@@ -112,15 +86,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 _buildSwitchTile(
                   title: 'Режим обслуживания',
                   subtitle: 'Временно отключить доступ пользователям',
-                  value: provider.maintenanceMode,
-                  onChanged: (value) {
-                    provider.setMaintenanceMode(value);
                   value: settings.maintenanceMode,
                   onChanged: (value) {
                     settingsProvider.updateField(
                       'maintenanceMode',
                       value,
-                      adminUid,
+                      '',
                     );
                   },
                 ),
@@ -128,15 +99,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 _buildSwitchTile(
                   title: 'Проверка новых пользователей',
                   subtitle: 'Требовать подтверждение регистрации',
-                  value: provider.newUserApprovalRequired,
-                  onChanged: (value) {
-                    provider.setNewUserApprovalRequired(value);
                   value: settings.requireUserVerification,
                   onChanged: (value) {
                     settingsProvider.updateField(
                       'requireUserVerification',
                       value,
-                      adminUid,
+                      '',
                     );
                   },
                 ),
@@ -144,15 +112,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 _buildSwitchTile(
                   title: 'Модерация объявлений',
                   subtitle: 'Проверять объявления перед публикацией',
-                  value: provider.carModerationEnabled,
-                  onChanged: (value) {
-                    provider.setCarModerationEnabled(value);
                   value: settings.moderateListings,
                   onChanged: (value) {
                     settingsProvider.updateField(
                       'moderateListings',
                       value,
-                      adminUid,
+                      '',
                     );
                   },
                 ),
@@ -163,7 +128,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 _buildDropdownTile(
                   title: 'Язык',
                   subtitle: 'Выберите язык интерфейса',
-                  value: provider.selectedLanguage,
                   value: settings.language,
                   items: const [
                     DropdownMenuItem(value: 'ru', child: Text('Русский')),
@@ -172,8 +136,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   ],
                   onChanged: (value) {
                     if (value != null) {
-                      provider.setSelectedLanguage(value);
-                      settingsProvider.updateField('language', value, adminUid);
+                      settingsProvider.updateField('language', value, '');
                     }
                   },
                 ),
@@ -181,7 +144,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 _buildDropdownTile(
                   title: 'Тема',
                   subtitle: 'Выберите тему оформления',
-                  value: provider.selectedTheme,
                   value: settings.themeMode,
                   items: const [
                     DropdownMenuItem(value: 'system', child: Text('Системная')),
@@ -190,8 +152,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   ],
                   onChanged: (value) {
                     if (value != null) {
-                      provider.setSelectedTheme(value);
-                      settingsProvider.updateField('themeMode', value, adminUid);
+                      settingsProvider.updateField('themeMode', value, '');
                     }
                   },
                 ),
@@ -199,15 +160,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 _buildNumberTile(
                   title: 'Элементов на страницу',
                   subtitle: 'Количество записей в таблицах',
-                  value: provider.itemsPerPage,
-                  onChanged: (value) {
-                    provider.setItemsPerPage(value);
                   value: settings.itemsPerPage,
                   onChanged: (value) {
                     settingsProvider.updateField(
                       'itemsPerPage',
                       value,
-                      adminUid,
+                      '',
                     );
                   },
                 ),
@@ -218,10 +176,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 ListTile(
                   leading: const Icon(Icons.backup, color: Color(0xFF2563EB)),
                   title: const Text('Резервное копирование'),
-                  subtitle: const Text('Создать резервную копию данных'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    _showSnackBar('Резервное копирование начато');
                   subtitle: const Text('Требуется серверная настройка'),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
@@ -232,10 +186,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 ListTile(
                   leading: const Icon(Icons.restore, color: Color(0xFF10B981)),
                   title: const Text('Восстановление'),
-                  subtitle: const Text('Восстановить данные из копии'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    _showSnackBar('Открыто меню восстановления');
                   subtitle: const Text('Требуется серверная настройка'),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
@@ -244,23 +194,20 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 ),
                 _buildDivider(),
                 ListTile(
-                  leading: const Icon(Icons.delete_outline, color: Color(0xFFEF4444)),
                   leading:
                       const Icon(Icons.delete_outline, color: Color(0xFFEF4444)),
                   title: const Text('Очистка кэша'),
                   subtitle: const Text('Удалить временные файлы'),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    _showConfirmDialog(
+                  onTap: () async {
+                    final confirmed = await _showConfirmDialog(
                       'Очистка кэша',
                       'Вы уверены, что хотите очистить кэш?',
-                      () {
-                      () async {
-                        // Очистка кэша приложения
-                        await _clearCache();
-                        _showSnackBar('Кэш очищен');
-                      },
                     );
+                    if (confirmed && mounted) {
+                      await _clearCache();
+                      _showSnackBar('Кэш очищен');
+                    }
                   },
                 ),
               ]),
@@ -278,16 +225,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 ),
                 _buildDivider(),
                 ListTile(
-                  leading: const Icon(Icons.security, color: Color(0xFFF59E0B)),
-                  title: const Text('Двухфакторная аутентификация'),
-                  subtitle: const Text('Настроить 2FA'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () {
-                    _showSnackBar('Настройка 2FA в разработке');
                   leading:
                       const Icon(Icons.security, color: Color(0xFFF59E0B)),
                   title: const Text('Двухфакторная аутентификация'),
-                  subtitle: const Text('Требуется настройка Firebase Console'),
+                  subtitle:
+                      const Text('Требуется настройка Firebase Console'),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     _showSnackBar(
@@ -299,13 +241,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               ElevatedButton.icon(
                 onPressed: () {
                   _showSnackBar('Настройки сохранены');
-                onPressed: () async {
-                  try {
-                    await settingsProvider.saveSettings(settings, adminUid);
-                    _showSnackBar('Настройки сохранены');
-                  } catch (e) {
-                    _showSnackBar('Ошибка сохранения: ${e.toString()}');
-                  }
                 },
                 icon: const Icon(Icons.save),
                 label: const Text('Сохранить настройки'),
@@ -318,12 +253,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               const SizedBox(height: 16),
               OutlinedButton.icon(
                 onPressed: () async {
-                  await provider.resetToDefaults();
-                  _showSnackBar('Настройки сброшены');
                   final confirmed = await _showResetConfirmDialog();
                   if (confirmed && mounted) {
                     try {
-                      await settingsProvider.resetSettings(adminUid);
+                      await settingsProvider.resetSettings('');
                       _showSnackBar('Настройки сброшены');
                     } catch (e) {
                       _showSnackBar('Ошибка сброса: ${e.toString()}');
@@ -341,9 +274,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           );
         },
       ),
-          ),
-        );
-      },
     );
   }
 
@@ -478,13 +408,40 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<bool> _showConfirmDialog(String title, String message) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Отмена'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2563EB),
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Подтвердить'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   Future<bool> _showResetConfirmDialog() async {
