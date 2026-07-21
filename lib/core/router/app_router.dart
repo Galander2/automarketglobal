@@ -39,6 +39,9 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const AddCarScreen());
       case AppRoutes.carDetails:
         final args = settings.arguments;
+        if (args == null) {
+          return _errorRoute('Отсутствует или повреждён аргумент car');
+        }
         if (args is Map<String, dynamic>) {
           final car = args['car'];
           if (car is! Car) {
