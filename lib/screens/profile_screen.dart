@@ -15,10 +15,7 @@ class ProfileScreen extends StatelessWidget {
     final user = authProvider.currentUser;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.translate('profile')),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text(l10n.translate('profile')), centerTitle: true),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -39,43 +36,33 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                   )
-                : const Icon(
-                    Icons.person,
-                    size: 50,
-                    color: Colors.white,
-                  ),
+                : const Icon(Icons.person, size: 50, color: Colors.white),
           ),
           const SizedBox(height: 16),
           Center(
             child: Text(
               user?.fullName ?? 'Гость',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
           ),
           Center(
             child: Text(
               user?.email ?? '',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
           ),
           if (user?.role != null) ...[
             const SizedBox(height: 4),
             Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: _getRoleColor(user!.role).withOpacity(0.1),
+                  color: _getRoleColor(user!.role).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _getRoleColor(user.role),
-                    width: 1,
-                  ),
+                  border: Border.all(color: _getRoleColor(user.role), width: 1),
                 ),
                 child: Text(
                   _getRoleTitle(user.role),
@@ -269,19 +256,13 @@ class _ProfileMenuItem extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         subtitle!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                color: Colors.grey[400],
-              ),
+              Icon(Icons.chevron_right, color: Colors.grey[400]),
             ],
           ),
         ),

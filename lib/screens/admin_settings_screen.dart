@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../provider/settings_provider.dart';
-import '../provider/auth_provider.dart'; // Убедитесь, что этот файл существует
+import '../repositories/auth_repository.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
-  const AdminSettingsScreen({Key? key}) : super(key: key);
+  const AdminSettingsScreen({super.key});
 
   @override
   State<AdminSettingsScreen> createState() => _AdminSettingsScreenState();
@@ -14,14 +14,61 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   @override
   void initState() {
     super.initState();
-    // Запускаем прослушивание настроек при инициализации
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<SettingsProvider>();
-      provider.startListening();
+      if (mounted) {
+        context.read<SettingsProvider>().loadSettings();
+      }
     });
   }
 
-  Future<void> _showConfirmDialog(String title, String message, VoidCallback onConfirm) async {
+  Future<void> _updateField(
+    SettingsProvider provider,
+    String field,
+    Object value,
+  ) async {
+    final adminUid = context.read<AuthProvider>().currentUser?.uid;
+    if (adminUid == null) {
+      _showMessage('Сессия администратора недоступна', isError: true);
+      return;
+    }
+
+    try {
+      await provider.updateField(field, value, adminUid);
+    } catch (error) {
+      _showMessage('Не удалось сохранить настройку: $error', isError: true);
+    }
+  }
+
+  Future<void> _resetSettings(SettingsProvider provider) async {
+    final adminUid = context.read<AuthProvider>().currentUser?.uid;
+    if (adminUid == null) {
+      _showMessage('Сессия администратора недоступна', isError: true);
+      return;
+    }
+
+    try {
+      await provider.resetSettings(adminUid);
+      _showMessage('Настройки сброшены');
+    } catch (error) {
+      _showMessage('Не удалось сбросить настройки: $error', isError: true);
+    }
+  }
+
+  void _showMessage(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
+      ),
+    );
+  }
+
+  Future<void> _showConfirmDialog(
+    String title,
+    String message,
+    VoidCallback onConfirm,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -35,7 +82,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Подтвердить', style: TextStyle(color: Colors.white)),
+            child: const Text(
+              'Подтвердить',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -90,40 +140,46 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 icon: Icons.notifications_outlined,
                 title: 'Уведомления включены',
                 value: settings.notificationsEnabled,
-                onChanged: (value) => provider.updateSetting(notificationsEnabled: value),
+                onChanged: (value) =>
+                    _updateField(provider, 'notificationsEnabled', value),
               ),
               _buildSwitchTile(
                 icon: Icons.email_outlined,
                 title: 'Email уведомления',
                 value: settings.emailNotificationsEnabled,
-                onChanged: (value) => provider.updateSetting(emailNotificationsEnabled: value),
+                onChanged: (value) =>
+                    _updateField(provider, 'emailNotificationsEnabled', value),
               ),
               _buildSwitchTile(
                 icon: Icons.phone_android_outlined,
                 title: 'Push уведомления',
                 value: settings.pushNotificationsEnabled,
-                onChanged: (value) => provider.updateSetting(pushNotificationsEnabled: value),
+                onChanged: (value) =>
+                    _updateField(provider, 'pushNotificationsEnabled', value),
               ),
-              
+
               const SizedBox(height: 24),
               _buildSectionTitle('Безопасность и модерация'),
               _buildSwitchTile(
                 icon: Icons.build_outlined,
                 title: 'Режим обслуживания',
                 value: settings.maintenanceMode,
-                onChanged: (value) => provider.updateSetting(maintenanceMode: value),
+                onChanged: (value) =>
+                    _updateField(provider, 'maintenanceMode', value),
               ),
               _buildSwitchTile(
                 icon: Icons.person_check_outlined,
                 title: 'Проверка новых пользователей',
                 value: settings.requireUserVerification,
-                onChanged: (value) => provider.updateSetting(requireUserVerification: value),
+                onChanged: (value) =>
+                    _updateField(provider, 'requireUserVerification', value),
               ),
               _buildSwitchTile(
                 icon: Icons.car_crash_outlined,
                 title: 'Модерация объявлений',
                 value: settings.moderateListings,
-                onChanged: (value) => provider.updateSetting(moderateListings: value),
+                onChanged: (value) =>
+                    _updateField(provider, 'moderateListings', value),
               ),
 
               const SizedBox(height: 24),
@@ -132,21 +188,40 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 icon: Icons.language_outlined,
                 title: 'Язык',
                 value: settings.language,
-                items: const ['ru', 'en', 'de'],
-                onChanged: (value) => provider.updateSetting(language: value!),
+                items: const [
+                  'ru',
+                  'en',
+                  'tj',
+                  'uz',
+                  'zh',
+                  'ky',
+                  'kk',
+                  'ar',
+                  'ko',
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    _updateField(provider, 'language', value);
+                  }
+                },
               ),
               _buildDropdownTile(
                 icon: Icons.palette_outlined,
                 title: 'Тема',
                 value: settings.themeMode,
                 items: const ['system', 'light', 'dark'],
-                onChanged: (value) => provider.updateSetting(themeMode: value!),
+                onChanged: (value) {
+                  if (value != null) {
+                    _updateField(provider, 'themeMode', value);
+                  }
+                },
               ),
               _buildNumberTile(
                 icon: Icons.list_alt_outlined,
                 title: 'Элементов на странице',
                 value: settings.itemsPerPage,
-                onChanged: (value) => provider.updateSetting(itemsPerPage: value),
+                onChanged: (value) =>
+                    _updateField(provider, 'itemsPerPage', value),
               ),
 
               const SizedBox(height: 32),
@@ -203,7 +278,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         trailing: DropdownButton<String>(
           value: value,
           underline: const SizedBox(),
-          items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+          items: items
+              .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+              .toList(),
           onChanged: onChanged,
         ),
       ),
@@ -221,17 +298,24 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       child: ListTile(
         leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
         title: Text(title),
-        trailing: SizedBox(
-          width: 100,
-          child: TextField(
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(border: OutlineInputBorder()),
-            controller: TextEditingController(text: value.toString()),
-            onSubmitted: (val) {
-              final parsed = int.tryParse(val);
-              if (parsed != null) onChanged(parsed);
-            },
-          ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: 'Уменьшить',
+              onPressed: value > 10 ? () => onChanged(value - 10) : null,
+              icon: const Icon(Icons.remove_circle_outline),
+            ),
+            SizedBox(
+              width: 36,
+              child: Text(value.toString(), textAlign: TextAlign.center),
+            ),
+            IconButton(
+              tooltip: 'Увеличить',
+              onPressed: value < 100 ? () => onChanged(value + 10) : null,
+              icon: const Icon(Icons.add_circle_outline),
+            ),
+          ],
         ),
       ),
     );
@@ -249,11 +333,19 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               children: [
                 Icon(Icons.warning_amber_rounded, color: Colors.red.shade700),
                 const SizedBox(width: 8),
-                Text('Опасная зона', style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold)),
+                Text(
+                  'Опасная зона',
+                  style: TextStyle(
+                    color: Colors.red.shade700,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),
-            const Text('Сброс всех настроек к значениям по умолчанию. Это действие нельзя отменить.'),
+            const Text(
+              'Сброс всех настроек к значениям по умолчанию. Это действие нельзя отменить.',
+            ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
@@ -267,7 +359,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 onPressed: () => _showConfirmDialog(
                   'Сброс настроек',
                   'Вы уверены? Все текущие настройки будут удалены.',
-                  () => provider.resetToDefaults(),
+                  () => _resetSettings(provider),
                 ),
               ),
             ),

@@ -12,6 +12,7 @@ class AdminReportsScreen extends StatefulWidget {
 class _AdminReportsScreenState extends State<AdminReportsScreen> {
   Map<String, dynamic>? _analytics;
   bool _isLoading = true;
+  String? _loadError;
 
   @override
   void initState() {
@@ -20,21 +21,28 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   }
 
   Future<void> _loadAnalytics() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _loadError = null;
+      });
+    }
+
     try {
-      setState(() => _isLoading = true);
-      
       final snapshot = await FirebaseFirestore.instance
           .collection('analytics')
           .doc('main')
           .get();
 
-      if (snapshot.exists) {
-        setState(() => _analytics = snapshot.data());
-      }
-    } catch (e) {
-      // Ignore error, use mock data
+      if (!mounted) return;
+      setState(() => _analytics = snapshot.data());
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _loadError = error.toString());
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -45,10 +53,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Отчёты'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Отчёты'), centerTitle: true),
       body: RefreshIndicator(
         onRefresh: _loadAnalytics,
         child: SingleChildScrollView(
@@ -68,7 +73,9 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
                 childAspectRatio: 1.5,
-                children: adminReports.map((report) => _buildStatCard(report)).toList(),
+                children: adminReports
+                    .map((report) => _buildStatCard(report))
+                    .toList(),
               ),
               const SizedBox(height: 24),
               const Text(
@@ -76,6 +83,16 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
+              if (_loadError != null) ...[
+                Card(
+                  color: Colors.red.shade50,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text('Не удалось загрузить аналитику: $_loadError'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
               _buildAnalyticsSection(),
             ],
           ),
@@ -108,18 +125,12 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
             const SizedBox(height: 4),
             Text(
               report.title,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
             const SizedBox(height: 2),
             Text(
               report.subtitle,
-              style: TextStyle(
-                fontSize: 10,
-                color: Colors.grey[400],
-              ),
+              style: TextStyle(fontSize: 10, color: Colors.grey[400]),
             ),
           ],
         ),
@@ -128,30 +139,34 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
   }
 
   Widget _buildAnalyticsSection() {
-    return Column(
-      children: [
-        _buildAnalyticsCard(
-          title: 'Популярные автомобили',
-          icon: Icons.directions_car,
-          color: Colors.blue,
-          items: ['Toyota Camry', 'Hyundai Sonata', 'BMW X5', 'Mercedes E-Class'],
+    final analytics = _analytics;
+    if (analytics == null || analytics.isEmpty) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Text('Аналитические данные пока отсутствуют'),
         ),
-        const SizedBox(height: 12),
-        _buildAnalyticsCard(
-          title: 'Активность пользователей',
-          icon: Icons.people,
-          color: Colors.green,
-          items: ['Просмотров сегодня: 1,234', 'Избранное: 567', 'Продаж за неделю: 89'],
-        ),
-        const SizedBox(height: 12),
-        _buildAnalyticsCard(
-          title: 'Доходы платформы',
-          icon: Icons.attach_money,
-          color: Colors.orange,
-          items: ['Комиссии: \$12,500', 'Premium подписки: \$3,200', 'Реклама: \$2,100'],
-        ),
-      ],
+      );
+    }
+
+    return _buildAnalyticsCard(
+      title: 'Данные Firestore',
+      icon: Icons.analytics_outlined,
+      color: Colors.blue,
+      items: analytics.entries
+          .map((entry) => '${entry.key}: ${_formatValue(entry.value)}')
+          .toList(),
     );
+  }
+
+  String _formatValue(Object? value) {
+    if (value is Iterable) return value.join(', ');
+    if (value is Map) {
+      return value.entries
+          .map((entry) => '${entry.key}: ${entry.value}')
+          .join(', ');
+    }
+    return value?.toString() ?? '—';
   }
 
   Widget _buildAnalyticsCard({
@@ -176,7 +191,7 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(icon, color: color, size: 20),
@@ -184,21 +199,26 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            ...items.map((item) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Row(
-                children: [
-                  Icon(Icons.circle, size: 8, color: color),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(item)),
-                ],
+            ...items.map(
+              (item) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Icon(Icons.circle, size: 8, color: color),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(item)),
+                  ],
+                ),
               ),
-            )),
+            ),
           ],
         ),
       ),

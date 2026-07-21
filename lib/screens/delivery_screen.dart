@@ -6,10 +6,7 @@ class DeliveryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Доставка'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Доставка'), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -21,21 +18,14 @@ class DeliveryScreen extends StatelessWidget {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF2563EB),
-                    Color(0xFF3B82F6),
-                  ],
+                  colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
                 ),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.local_shipping,
-                    size: 60,
-                    color: Colors.white,
-                  ),
+                  Icon(Icons.local_shipping, size: 60, color: Colors.white),
                   SizedBox(height: 16),
                   Text(
                     'Доставка автомобиля',
@@ -48,10 +38,7 @@ class DeliveryScreen extends StatelessWidget {
                   SizedBox(height: 8),
                   Text(
                     'Доставим автомобиль под ключ из любой точки мира',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.white),
                   ),
                 ],
               ),
@@ -59,10 +46,7 @@ class DeliveryScreen extends StatelessWidget {
             const SizedBox(height: 32),
             const Text(
               'Как это работает',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             const HowItWorksStep(
@@ -92,7 +76,9 @@ class DeliveryScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Форма доставки откроется позже')),
+                    const SnackBar(
+                      content: Text('Форма доставки откроется позже'),
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -104,10 +90,7 @@ class DeliveryScreen extends StatelessWidget {
                 ),
                 child: const Text(
                   'Заказать доставку',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -140,7 +123,7 @@ class HowItWorksStep extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -181,10 +164,7 @@ class HowItWorksStep extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                 ),
               ],
             ),

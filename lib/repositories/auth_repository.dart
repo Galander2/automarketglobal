@@ -5,7 +5,7 @@ import '../services/authentication_service.dart';
 /// Provider для управления состоянием аутентификации и данными пользователя
 class AuthProvider extends ChangeNotifier {
   final AuthenticationService _authService = AuthenticationService();
-  
+
   AppUser? _currentUser;
   bool _isLoading = true;
   bool _isCheckingAuth = true;
@@ -33,7 +33,7 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
 
       _currentUser = await _authService.getCurrentUser();
-      
+
       _isCheckingAuth = false;
       _isLoading = false;
       notifyListeners();
@@ -53,10 +53,10 @@ class AuthProvider extends ChangeNotifier {
 
       final user = await _authService.signInWithEmail(email, password);
       _currentUser = user;
-      
+
       _isLoading = false;
       notifyListeners();
-      
+
       return user;
     } catch (e) {
       _isLoading = false;
@@ -85,10 +85,10 @@ class AuthProvider extends ChangeNotifier {
         phone: phone,
       );
       _currentUser = user;
-      
+
       _isLoading = false;
       notifyListeners();
-      
+
       return user;
     } catch (e) {
       _isLoading = false;
@@ -117,7 +117,7 @@ class AuthProvider extends ChangeNotifier {
 
       await _authService.updateUser(user);
       _currentUser = user;
-      
+
       _isLoading = false;
       notifyListeners();
     } catch (e) {

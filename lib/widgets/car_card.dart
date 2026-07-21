@@ -5,11 +5,7 @@ class CarCard extends StatelessWidget {
   final Car car;
   final VoidCallback? onTap;
 
-  const CarCard({
-    super.key,
-    required this.car,
-    this.onTap,
-  });
+  const CarCard({super.key, required this.car, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +15,7 @@ class CarCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -55,7 +51,7 @@ class CarCard extends StatelessWidget {
                             child: CircularProgressIndicator(
                               value: loadingProgress.expectedTotalBytes != null
                                   ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
+                                        loadingProgress.expectedTotalBytes!
                                   : null,
                             ),
                           ),
@@ -106,15 +102,9 @@ class CarCard extends StatelessWidget {
                 // Характеристики
                 Row(
                   children: [
-                    _SpecItem(
-                      icon: Icons.calendar_today,
-                      text: '${car.year}',
-                    ),
+                    _SpecItem(icon: Icons.calendar_today, text: '${car.year}'),
                     const SizedBox(width: 16),
-                    _SpecItem(
-                      icon: Icons.speed,
-                      text: '${car.mileage} km',
-                    ),
+                    _SpecItem(icon: Icons.speed, text: '${car.mileage} km'),
                     const SizedBox(width: 16),
                     _SpecItem(
                       icon: Icons.location_on,
@@ -134,7 +124,9 @@ class CarCard extends StatelessWidget {
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF2563EB).withOpacity(0.08),
+                          color: const Color(
+                            0xFF2563EB,
+                          ).withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -174,10 +166,7 @@ class _SpecItem extends StatelessWidget {
   final IconData icon;
   final String text;
 
-  const _SpecItem({
-    required this.icon,
-    required this.text,
-  });
+  const _SpecItem({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {

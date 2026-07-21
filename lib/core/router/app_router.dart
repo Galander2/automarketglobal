@@ -22,6 +22,7 @@ import '../../screens/admin_reports_screen.dart';
 import '../../screens/admin_complaints_screen.dart';
 import '../../screens/admin_markets_screen.dart';
 import '../../screens/admin_settings_screen.dart';
+import '../../models/car.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -40,8 +41,8 @@ class AppRouter {
         final args = settings.arguments;
         if (args is Map<String, dynamic>) {
           final car = args['car'];
-          if (car == null) {
-            return _errorRoute('Отсутствует аргумент car');
+          if (car is! Car) {
+            return _errorRoute('Отсутствует или повреждён аргумент car');
           }
           return MaterialPageRoute(builder: (_) => CarDetailsScreen(car: car));
         }
@@ -61,7 +62,9 @@ class AppRouter {
       case AppRoutes.aiVinCheck:
         return MaterialPageRoute(builder: (_) => const AiVinCheckScreen());
       case AppRoutes.languageSelection:
-        return MaterialPageRoute(builder: (_) => const LanguageSelectionScreen());
+        return MaterialPageRoute(
+          builder: (_) => const LanguageSelectionScreen(),
+        );
       case AppRoutes.searchFilters:
         return MaterialPageRoute(builder: (_) => const SearchFiltersScreen());
       case AppRoutes.adminUsers:
@@ -85,11 +88,7 @@ class AppRouter {
 
   static Route<dynamic> _errorRoute(String message) {
     return MaterialPageRoute(
-      builder: (_) => Scaffold(
-        body: Center(
-          child: Text(message),
-        ),
-      ),
+      builder: (_) => Scaffold(body: Center(child: Text(message))),
     );
   }
 }

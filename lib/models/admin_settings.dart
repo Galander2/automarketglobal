@@ -32,8 +32,10 @@ class AdminSettings {
   factory AdminSettings.fromMap(Map<String, dynamic> map) {
     return AdminSettings(
       notificationsEnabled: map['notificationsEnabled'] as bool? ?? true,
-      emailNotificationsEnabled: map['emailNotificationsEnabled'] as bool? ?? true,
-      pushNotificationsEnabled: map['pushNotificationsEnabled'] as bool? ?? true,
+      emailNotificationsEnabled:
+          map['emailNotificationsEnabled'] as bool? ?? true,
+      pushNotificationsEnabled:
+          map['pushNotificationsEnabled'] as bool? ?? true,
       maintenanceMode: map['maintenanceMode'] as bool? ?? false,
       requireUserVerification: map['requireUserVerification'] as bool? ?? false,
       moderateListings: map['moderateListings'] as bool? ?? false,
@@ -76,10 +78,13 @@ class AdminSettings {
   }) {
     return AdminSettings(
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
-      emailNotificationsEnabled: emailNotificationsEnabled ?? this.emailNotificationsEnabled,
-      pushNotificationsEnabled: pushNotificationsEnabled ?? this.pushNotificationsEnabled,
+      emailNotificationsEnabled:
+          emailNotificationsEnabled ?? this.emailNotificationsEnabled,
+      pushNotificationsEnabled:
+          pushNotificationsEnabled ?? this.pushNotificationsEnabled,
       maintenanceMode: maintenanceMode ?? this.maintenanceMode,
-      requireUserVerification: requireUserVerification ?? this.requireUserVerification,
+      requireUserVerification:
+          requireUserVerification ?? this.requireUserVerification,
       moderateListings: moderateListings ?? this.moderateListings,
       language: language ?? this.language,
       themeMode: themeMode ?? this.themeMode,

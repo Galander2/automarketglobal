@@ -1,4 +1,3 @@
-```
 # Build artifacts
 *.o
 *.obj
@@ -40,6 +39,8 @@ build/
 
 # Dart/Flutter specific
 .dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
 .packages
 .pub/
 *.g.dart
@@ -49,4 +50,3 @@ build/
 .env
 .env.local
 .env.*
-```

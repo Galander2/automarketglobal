@@ -1,10 +1,4 @@
-enum CarStatus {
-  pending,
-  approved,
-  rejected,
-  sold,
-  draft,
-}
+enum CarStatus { pending, approved, rejected, sold, draft }
 
 class Car {
   final String id;

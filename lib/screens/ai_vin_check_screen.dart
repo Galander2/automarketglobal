@@ -23,7 +23,7 @@ class _AiVinCheckScreenState extends State<AiVinCheckScreen> {
 
   Future<void> _checkVin() async {
     final vin = _vinController.text.trim().toUpperCase();
-    
+
     if (vin.isEmpty) {
       setState(() {
         _error = 'Введите VIN код';
@@ -46,19 +46,23 @@ class _AiVinCheckScreenState extends State<AiVinCheckScreen> {
 
     try {
       final response = await http.get(
-        Uri.parse('https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/$vin?format=json'),
+        Uri.parse(
+          'https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/$vin?format=json',
+        ),
       );
+
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final results = data['Results'] as List;
-        
+
         final vinInfo = <String, String>{};
-        
+
         for (var item in results) {
           final variable = item['Variable'] as String?;
           final value = item['Value'] as String?;
-          
+
           if (variable != null && value != null && value.isNotEmpty) {
             vinInfo[variable] = value;
           }
@@ -75,6 +79,7 @@ class _AiVinCheckScreenState extends State<AiVinCheckScreen> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = 'Ошибка подключения: $e';
         _isLoading = false;
@@ -85,10 +90,7 @@ class _AiVinCheckScreenState extends State<AiVinCheckScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('AI Проверка VIN'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('AI Проверка VIN'), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -127,7 +129,7 @@ class _AiVinCheckScreenState extends State<AiVinCheckScreen> {
                         Text(
                           'Проверьте историю автомобиля по VIN коду',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                             fontSize: 13,
                           ),
                         ),
@@ -138,7 +140,7 @@ class _AiVinCheckScreenState extends State<AiVinCheckScreen> {
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -155,10 +157,7 @@ class _AiVinCheckScreenState extends State<AiVinCheckScreen> {
             // Ввод VIN
             const Text(
               'Введите VIN код',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -231,9 +230,9 @@ class _AiVinCheckScreenState extends State<AiVinCheckScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
+                  color: Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -253,10 +252,7 @@ class _AiVinCheckScreenState extends State<AiVinCheckScreen> {
             if (_vinData != null) ...[
               const Text(
                 'Результаты проверки',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               Container(
@@ -266,7 +262,7 @@ class _AiVinCheckScreenState extends State<AiVinCheckScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),

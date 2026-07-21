@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../models/app_user.dart';
-import '../data/user_data.dart';
 
 class AdminUsersScreen extends StatefulWidget {
   const AdminUsersScreen({super.key});
@@ -17,7 +15,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   bool _isLoading = true;
   String _searchQuery = '';
   String _roleFilter = 'all';
-  
+
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -35,46 +33,35 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   Future<void> _loadUsers() async {
     try {
       setState(() => _isLoading = true);
-      
+
       final snapshot = await FirebaseFirestore.instance
           .collection('users')
           .orderBy('createdAt', descending: true)
           .get();
 
       final users = snapshot.docs.map((doc) {
-        final data = doc.data();
-        return AppUser(
-          id: doc.id,
-          fullName: data['fullName'] ?? '',
-          email: data['email'] ?? '',
-          phone: data['phone'] ?? '',
-          role: UserRole.values.firstWhere(
-            (e) => e.name == data['role'],
-            orElse: () => UserRole.user,
-          ),
-          isVerified: data['isVerified'] ?? false,
-          rating: (data['rating'] ?? 0).toDouble(),
-        );
+        return AppUser.fromMap(doc.data(), doc.id);
       }).toList();
 
+      if (!mounted) return;
       setState(() {
         _users = users;
         _applyFilters();
       });
-    } catch (e) {
-      // Use mock data on error
-      setState(() {
-        _users = [currentUser];
-        _applyFilters();
-      });
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Не удалось загрузить пользователей: $error')),
+      );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _applyFilters() {
     _filteredUsers = _users.where((user) {
-      final matchesSearch = user.fullName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+      final matchesSearch =
+          user.fullName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           user.email.toLowerCase().contains(_searchQuery.toLowerCase());
       final matchesRole = _roleFilter == 'all' || user.role.name == _roleFilter;
       return matchesSearch && matchesRole;
@@ -93,7 +80,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       await FirebaseFirestore.instance.collection('users').doc(user.id).update({
         'role': newRole.name,
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Роль изменена на ${newRole.title}')),
@@ -112,12 +99,18 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   Future<void> _toggleUserBlock(AppUser user) async {
     try {
       await FirebaseFirestore.instance.collection('users').doc(user.id).update({
-        'isBlocked': !(user.role == UserRole.user), // Simple toggle logic
+        'isBlocked': !user.isBlocked,
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(user.role == UserRole.user ? 'Пользователь разблокирован' : 'Пользователь заблокирован')),
+          SnackBar(
+            content: Text(
+              user.isBlocked
+                  ? 'Пользователь разблокирован'
+                  : 'Пользователь заблокирован',
+            ),
+          ),
         );
         _loadUsers();
       }
@@ -155,18 +148,21 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
 
     if (confirmed == true) {
       try {
-        await FirebaseFirestore.instance.collection('users').doc(user.id).delete();
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.id)
+            .delete();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Пользователь удалён')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Пользователь удалён')));
           _loadUsers();
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Ошибка при удалении')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Ошибка при удалении')));
         }
       }
     }
@@ -203,7 +199,10 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               const SizedBox(height: 24),
               Text(
                 user.fullName,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               _buildDetailRow(Icons.email, 'Email', user.email),
@@ -250,7 +249,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               ),
               _buildActionTile(
                 icon: user.role == UserRole.user ? Icons.lock_open : Icons.lock,
-                title: user.role == UserRole.user ? 'Разблокировать' : 'Заблокировать',
+                title: user.role == UserRole.user
+                    ? 'Разблокировать'
+                    : 'Заблокировать',
                 color: Colors.orange,
                 onTap: () {
                   Navigator.pop(context);
@@ -308,10 +309,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Пользователи'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Пользователи'), centerTitle: true),
       body: Column(
         children: [
           Padding(
@@ -352,7 +350,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
+                        Icon(
+                          Icons.people_outline,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'Пользователи не найдены',
@@ -374,7 +376,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                         child: ListTile(
                           contentPadding: const EdgeInsets.all(16),
                           leading: CircleAvatar(
-                            backgroundColor: _getRoleColor(user.role).withOpacity(0.1),
+                            backgroundColor: _getRoleColor(
+                              user.role,
+                            ).withValues(alpha: 0.1),
                             child: Icon(
                               _getRoleIcon(user.role),
                               color: _getRoleColor(user.role),
@@ -389,9 +393,14 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: _getRoleColor(user.role).withOpacity(0.1),
+                                  color: _getRoleColor(
+                                    user.role,
+                                  ).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
@@ -434,7 +443,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             _applyFilters();
           });
         },
-        selectedColor: const Color(0xFF2563EB).withOpacity(0.2),
+        selectedColor: const Color(0xFF2563EB).withValues(alpha: 0.2),
         checkmarkColor: const Color(0xFF2563EB),
       ),
     );
@@ -450,7 +459,6 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       case UserRole.seller:
         return Colors.orange;
       case UserRole.user:
-      default:
         return Colors.grey;
     }
   }
@@ -465,7 +473,6 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
       case UserRole.seller:
         return Icons.sell;
       case UserRole.user:
-      default:
         return Icons.person;
     }
   }

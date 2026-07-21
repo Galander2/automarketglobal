@@ -35,10 +35,7 @@ class _AdminScreenState extends State<AdminScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Админ-панель'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Админ-панель'), centerTitle: true),
       body: _screens[_currentIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/car.dart';
-import '../data/car_data.dart';
 
 class AdminCarsScreen extends StatefulWidget {
   const AdminCarsScreen({super.key});
@@ -16,7 +15,7 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
   bool _isLoading = true;
   String _searchQuery = '';
   String _statusFilter = 'all';
-  
+
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -34,7 +33,7 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
   Future<void> _loadCars() async {
     try {
       setState(() => _isLoading = true);
-      
+
       final snapshot = await FirebaseFirestore.instance
           .collection('cars')
           .orderBy('createdAt', descending: true)
@@ -46,9 +45,9 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
           id: doc.id,
           sellerId: data['sellerId'] ?? '',
           title: data['title'] ?? '',
-          price: data['price'] ?? '',
-          year: data['year'] ?? 2020,
-          mileage: data['mileage'] ?? 0,
+          price: data['price']?.toString() ?? '',
+          year: (data['year'] as num?)?.toInt() ?? 0,
+          mileage: (data['mileage'] as num?)?.toInt() ?? 0,
           city: data['city'] ?? '',
           route: data['route'] ?? '',
           country: data['country'] ?? '',
@@ -60,30 +59,33 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
           images: List<String>.from(data['images'] ?? []),
           description: data['description'] ?? '',
           vin: data['vin'] ?? '',
-          createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          createdAt:
+              (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
         );
       }).toList();
 
+      if (!mounted) return;
       setState(() {
         _cars = cars;
         _applyFilters();
       });
-    } catch (e) {
-      // Use mock data on error
-      setState(() {
-        _cars = cars;
-        _applyFilters();
-      });
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Не удалось загрузить автомобили: $error')),
+      );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _applyFilters() {
     _filteredCars = _cars.where((car) {
-      final matchesSearch = car.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+      final matchesSearch =
+          car.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           car.vin.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesStatus = _statusFilter == 'all' || car.status.name == _statusFilter;
+      final matchesStatus =
+          _statusFilter == 'all' || car.status.name == _statusFilter;
       return matchesSearch && matchesStatus;
     }).toList();
   }
@@ -100,18 +102,18 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
       await FirebaseFirestore.instance.collection('cars').doc(car.id).update({
         'status': CarStatus.approved.name,
       });
-      
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Автомобиль одобрен')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Автомобиль одобрен')));
         _loadCars();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ошибка при одобрении')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Ошибка при одобрении')));
       }
     }
   }
@@ -121,18 +123,18 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
       await FirebaseFirestore.instance.collection('cars').doc(car.id).update({
         'status': CarStatus.rejected.name,
       });
-      
+
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Автомобиль отклонён')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Автомобиль отклонён')));
         _loadCars();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ошибка при отклонении')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Ошибка при отклонении')));
       }
     }
   }
@@ -162,18 +164,21 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
 
     if (confirmed == true) {
       try {
-        await FirebaseFirestore.instance.collection('cars').doc(car.id).delete();
+        await FirebaseFirestore.instance
+            .collection('cars')
+            .doc(car.id)
+            .delete();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Объявление удалено')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Объявление удалено')));
           _loadCars();
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Ошибка при удалении')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Ошибка при удалении')));
         }
       }
     }
@@ -225,12 +230,19 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
               const SizedBox(height: 16),
               Text(
                 car.title,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 '${car.price} \$',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2563EB)),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2563EB),
+                ),
               ),
               const SizedBox(height: 16),
               _buildDetailRow(Icons.info_outline, 'VIN', car.vin),
@@ -360,10 +372,7 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Автомобили'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Автомобили'), centerTitle: true),
       body: Column(
         children: [
           Padding(
@@ -405,7 +414,11 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.car_rental, size: 64, color: Colors.grey[400]),
+                        Icon(
+                          Icons.car_rental,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'Автомобили не найдены',
@@ -433,12 +446,15 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
                               width: 80,
                               height: 80,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Container(
-                                width: 80,
-                                height: 80,
-                                color: Colors.grey[300],
-                                child: const Icon(Icons.image_not_supported),
-                              ),
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                    width: 80,
+                                    height: 80,
+                                    color: Colors.grey[300],
+                                    child: const Icon(
+                                      Icons.image_not_supported,
+                                    ),
+                                  ),
                             ),
                           ),
                           title: Text(
@@ -453,9 +469,14 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
                               Text('${car.price} \$'),
                               const SizedBox(height: 4),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: _getStatusColor(car.status).withOpacity(0.1),
+                                  color: _getStatusColor(
+                                    car.status,
+                                  ).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -482,12 +503,24 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
                               }
                             },
                             itemBuilder: (context) => [
-                              const PopupMenuItem(value: 'details', child: Text('Подробнее')),
+                              const PopupMenuItem(
+                                value: 'details',
+                                child: Text('Подробнее'),
+                              ),
                               if (car.isPending) ...[
-                                const PopupMenuItem(value: 'approve', child: Text('Одобрить')),
-                                const PopupMenuItem(value: 'reject', child: Text('Отклонить')),
+                                const PopupMenuItem(
+                                  value: 'approve',
+                                  child: Text('Одобрить'),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'reject',
+                                  child: Text('Отклонить'),
+                                ),
                               ],
-                              const PopupMenuItem(value: 'delete', child: Text('Удалить')),
+                              const PopupMenuItem(
+                                value: 'delete',
+                                child: Text('Удалить'),
+                              ),
                             ],
                           ),
                           onTap: () => _showCarDetails(car),
@@ -514,7 +547,7 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
             _applyFilters();
           });
         },
-        selectedColor: const Color(0xFF2563EB).withOpacity(0.2),
+        selectedColor: const Color(0xFF2563EB).withValues(alpha: 0.2),
         checkmarkColor: const Color(0xFF2563EB),
       ),
     );

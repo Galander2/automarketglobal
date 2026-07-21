@@ -27,10 +27,7 @@ class CountriesScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Выберите страну'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Выберите страну'), centerTitle: true),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: countries.length,
@@ -159,10 +156,7 @@ class _CountryMarketScreenState extends State<CountryMarketScreen> {
                   const SizedBox(height: 16),
                   Text(
                     'В ${widget.countryName} пока нет автомобилей',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey,
-                    ),
+                    style: const TextStyle(fontSize: 18, color: Colors.grey),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/dealer.dart';
-import '../data/dealer_data.dart';
 
 class AdminDealersScreen extends StatefulWidget {
   const AdminDealersScreen({super.key});
@@ -15,7 +14,7 @@ class _AdminDealersScreenState extends State<AdminDealersScreen> {
   List<Dealer> _filteredDealers = [];
   bool _isLoading = true;
   String _searchQuery = '';
-  
+
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -33,7 +32,7 @@ class _AdminDealersScreenState extends State<AdminDealersScreen> {
   Future<void> _loadDealers() async {
     try {
       setState(() => _isLoading = true);
-      
+
       final snapshot = await FirebaseFirestore.instance
           .collection('dealers')
           .orderBy('name')
@@ -50,21 +49,22 @@ class _AdminDealersScreenState extends State<AdminDealersScreen> {
           deliveryCountries: List<String>.from(data['deliveryCountries'] ?? []),
           isVerified: data['isVerified'] ?? false,
           rating: (data['rating'] ?? 0).toDouble(),
-          carsCount: data['carsCount'] ?? 0,
+          carsCount: (data['carsCount'] as num?)?.toInt() ?? 0,
         );
       }).toList();
 
+      if (!mounted) return;
       setState(() {
         _dealers = dealers;
         _applyFilters();
       });
-    } catch (e) {
-      setState(() {
-        _dealers = dealers;
-        _applyFilters();
-      });
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Не удалось загрузить дилеров: $error')),
+      );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -84,21 +84,28 @@ class _AdminDealersScreenState extends State<AdminDealersScreen> {
 
   Future<void> _verifyDealer(Dealer dealer) async {
     try {
-      await FirebaseFirestore.instance.collection('dealers').doc(dealer.id).update({
-        'isVerified': !dealer.isVerified,
-      });
-      
+      await FirebaseFirestore.instance
+          .collection('dealers')
+          .doc(dealer.id)
+          .update({'isVerified': !dealer.isVerified});
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(dealer.isVerified ? 'Дилер больше не верифицирован' : 'Дилер верифицирован')),
+          SnackBar(
+            content: Text(
+              dealer.isVerified
+                  ? 'Дилер больше не верифицирован'
+                  : 'Дилер верифицирован',
+            ),
+          ),
         );
         _loadDealers();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ошибка')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Ошибка')));
       }
     }
   }
@@ -134,12 +141,19 @@ class _AdminDealersScreenState extends State<AdminDealersScreen> {
               const SizedBox(height: 24),
               Text(
                 dealer.name,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               _buildDetailRow(Icons.location_on, 'Страна', dealer.country),
               _buildDetailRow(Icons.city, 'Город', dealer.city),
-              _buildDetailRow(Icons.store, 'Авто в наличии', '${dealer.carsCount}'),
+              _buildDetailRow(
+                Icons.store,
+                'Авто в наличии',
+                '${dealer.carsCount}',
+              ),
               _buildDetailRow(Icons.star, 'Рейтинг', '${dealer.rating}'),
               _buildDetailRow(
                 Icons.verified_user,
@@ -147,11 +161,17 @@ class _AdminDealersScreenState extends State<AdminDealersScreen> {
                 dealer.isVerified ? 'Верифицирован' : 'Не верифицирован',
               ),
               const SizedBox(height: 16),
-              const Text('Описание:', style: TextStyle(fontWeight: FontWeight.w600)),
+              const Text(
+                'Описание:',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 8),
               Text(dealer.description),
               const SizedBox(height: 16),
-              const Text('Страны доставки:', style: TextStyle(fontWeight: FontWeight.w600)),
+              const Text(
+                'Страны доставки:',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -166,8 +186,12 @@ class _AdminDealersScreenState extends State<AdminDealersScreen> {
                   Navigator.pop(context);
                   _verifyDealer(dealer);
                 },
-                icon: Icon(dealer.isVerified ? Icons.cancel : Icons.check_circle),
-                label: Text(dealer.isVerified ? 'Снять верификацию' : 'Верифицировать'),
+                icon: Icon(
+                  dealer.isVerified ? Icons.cancel : Icons.check_circle,
+                ),
+                label: Text(
+                  dealer.isVerified ? 'Снять верификацию' : 'Верифицировать',
+                ),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 48),
                 ),
@@ -200,10 +224,7 @@ class _AdminDealersScreenState extends State<AdminDealersScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Дилеры'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Дилеры'), centerTitle: true),
       body: Column(
         children: [
           Padding(
@@ -251,11 +272,13 @@ class _AdminDealersScreenState extends State<AdminDealersScreen> {
                           contentPadding: const EdgeInsets.all(16),
                           leading: CircleAvatar(
                             backgroundColor: dealer.isVerified
-                                ? Colors.green.withOpacity(0.1)
-                                : Colors.grey.withOpacity(0.1),
+                                ? Colors.green.withValues(alpha: 0.1)
+                                : Colors.grey.withValues(alpha: 0.1),
                             child: Icon(
                               Icons.store,
-                              color: dealer.isVerified ? Colors.green : Colors.grey,
+                              color: dealer.isVerified
+                                  ? Colors.green
+                                  : Colors.grey,
                             ),
                           ),
                           title: Text(
@@ -268,14 +291,20 @@ class _AdminDealersScreenState extends State<AdminDealersScreen> {
                             children: [
                               if (dealer.isVerified)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: Colors.green.withOpacity(0.1),
+                                    color: Colors.green.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: const Text(
                                     '✓',
-                                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               const SizedBox(width: 8),

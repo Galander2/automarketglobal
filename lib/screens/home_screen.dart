@@ -39,10 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: CustomScrollView(
           slivers: [
             const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: AiBanner(),
-              ),
+              child: Padding(padding: EdgeInsets.all(16), child: AiBanner()),
             ),
             SliverToBoxAdapter(
               child: Padding(
@@ -79,10 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: EdgeInsets.all(16),
                 child: Text(
                   'Проверенные автомобили',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -125,10 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           padding: EdgeInsets.all(32),
                           child: Text(
                             'Пока нет автомобилей',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey,
-                            ),
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
                           ),
                         ),
                       ),
@@ -136,33 +127,28 @@ class _HomeScreenState extends State<HomeScreen> {
                   }
 
                   return SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final car = cars[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => CarDetailsScreen(car: car),
-                                ),
-                              );
-                            },
-                            child: CarCard(car: car),
-                          ),
-                        );
-                      },
-                      childCount: cars.length,
-                    ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final car = cars[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => CarDetailsScreen(car: car),
+                              ),
+                            );
+                          },
+                          child: CarCard(car: car),
+                        ),
+                      );
+                    }, childCount: cars.length),
                   );
                 },
               ),
             ),
-            const SliverToBoxAdapter(
-              child: SizedBox(height: 100),
-            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
       ),
@@ -210,10 +196,7 @@ class _QuickActionCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
             ],

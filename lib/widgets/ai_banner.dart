@@ -12,16 +12,12 @@ class AiBanner extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF6366F1),
-            Color(0xFF8B5CF6),
-            Color(0xFFEC4899),
-          ],
+          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6), Color(0xFFEC4899)],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6366F1).withOpacity(0.4),
+            color: const Color(0xFF6366F1).withValues(alpha: 0.4),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -39,7 +35,7 @@ class AiBanner extends StatelessWidget {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Row(
@@ -71,7 +67,7 @@ class AiBanner extends StatelessWidget {
                 Text(
                   'VIN проверка и история',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 13,
                   ),
                 ),
@@ -92,11 +88,7 @@ class AiBanner extends StatelessWidget {
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.scanner,
-                          size: 18,
-                          color: Color(0xFF6366F1),
-                        ),
+                        Icon(Icons.scanner, size: 18, color: Color(0xFF6366F1)),
                         SizedBox(width: 6),
                         Text(
                           'Проверить VIN',
@@ -118,14 +110,10 @@ class AiBanner extends StatelessWidget {
             width: 90,
             height: 90,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.smart_toy,
-              size: 50,
-              color: Colors.white,
-            ),
+            child: const Icon(Icons.smart_toy, size: 50, color: Colors.white),
           ),
         ],
       ),

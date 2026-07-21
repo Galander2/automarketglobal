@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import '../models/admin_settings.dart';
 import '../services/settings_service.dart';
@@ -52,7 +54,7 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   Future<void> saveSettings(AdminSettings settings, String adminUid) async {
-    await _settingsService.saveSettingsWithAdmin(settings, adminUid);
+    await _settingsService.saveSettings(settings, adminUid);
     _settings = settings.copyWith(
       updatedAt: DateTime.now(),
       updatedBy: adminUid,

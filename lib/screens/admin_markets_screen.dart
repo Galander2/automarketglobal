@@ -6,13 +6,8 @@ class AdminMarketsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Рынки'),
-        centerTitle: true,
-      ),
-      body: const Center(
-        child: Text('Управление рынками'),
-      ),
+      appBar: AppBar(title: const Text('Рынки'), centerTitle: true),
+      body: const Center(child: Text('Управление рынками')),
     );
   }
 }
