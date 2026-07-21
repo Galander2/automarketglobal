@@ -28,14 +28,12 @@ void main() {
     });
 
     testWidgets('generates error route for unknown path', (tester) async {
-      await tester.pumpWidget(_createRoutedApp('/unknown-route'));
-      await tester.pumpAndSettle();
+      await _pumpGeneratedRoute(tester, '/unknown-route');
       expect(find.text('Нет маршрута: /unknown-route'), findsOneWidget);
     });
 
     testWidgets('handles carDetails with missing arguments', (tester) async {
-      await tester.pumpWidget(_createRoutedApp(AppRoutes.carDetails));
-      await tester.pumpAndSettle();
+      await _pumpGeneratedRoute(tester, AppRoutes.carDetails);
       expect(
         find.textContaining('Отсутствует или повреждён аргумент car'),
         findsOneWidget,
@@ -65,16 +63,24 @@ Future<void> _expectRouteBuilds<T extends Widget>(
   expect(routedWidget, isA<T>());
 }
 
-Widget _createRoutedApp(String routeName) {
-  return MaterialApp(
-    onGenerateRoute: AppRouter.generateRoute,
-    initialRoute: routeName,
-    supportedLocales: const [Locale('ru')],
-    localizationsDelegates: const [
-      AppLocalizations.delegate,
-      GlobalMaterialLocalizations.delegate,
-      GlobalWidgetsLocalizations.delegate,
-      GlobalCupertinoLocalizations.delegate,
-    ],
+Future<void> _pumpGeneratedRoute(WidgetTester tester, String routeName) async {
+  final route = AppRouter.generateRoute(RouteSettings(name: routeName));
+  expect(route, isA<MaterialPageRoute<dynamic>>());
+
+  await tester.pumpWidget(
+    MaterialApp(
+      supportedLocales: const [Locale('ru')],
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      home: Builder(
+        builder: (context) =>
+            (route as MaterialPageRoute<dynamic>).builder(context),
+      ),
+    ),
   );
+  await tester.pumpAndSettle();
 }
