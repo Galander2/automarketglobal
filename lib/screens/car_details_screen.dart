@@ -5,10 +5,7 @@ import '../models/car.dart';
 class CarDetailsScreen extends StatelessWidget {
   final Car car;
 
-  const CarDetailsScreen({
-    super.key,
-    required this.car,
-  });
+  const CarDetailsScreen({super.key, required this.car});
 
   @override
   Widget build(BuildContext context) {
@@ -111,28 +108,19 @@ class CarDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 26),
                   const Text(
                     'Описание',
-                    style: TextStyle(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w900,
-                    ),
+                    style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     car.description.isEmpty
                         ? 'Описание пока не добавлено.'
                         : car.description,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      height: 1.5,
-                    ),
+                    style: const TextStyle(fontSize: 16, height: 1.5),
                   ),
                   const SizedBox(height: 26),
                   const Text(
                     'Проверка автомобиля',
-                    style: TextStyle(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w900,
-                    ),
+                    style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
                   ),
                   const SizedBox(height: 12),
                   _CheckTile(
@@ -162,7 +150,7 @@ class CarDetailsScreen extends StatelessWidget {
           color: Theme.of(context).scaffoldBackgroundColor,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 18,
               offset: const Offset(0, -6),
             ),
@@ -216,28 +204,20 @@ class _SpecCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Colors.black.withOpacity(0.06),
-        ),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, color: const Color(0xFF2563EB)),
           const Spacer(),
-          Text(
-            title,
-            style: const TextStyle(color: Colors.grey),
-          ),
+          Text(title, style: const TextStyle(color: Colors.grey)),
           const SizedBox(height: 4),
           Text(
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: 15,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
           ),
         ],
       ),
@@ -264,18 +244,13 @@ class _CheckTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.black.withOpacity(0.06),
-        ),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: const Color(0xFF2563EB).withOpacity(0.10),
-            child: const Icon(
-              Icons.security,
-              color: Color(0xFF2563EB),
-            ),
+            backgroundColor: const Color(0xFF2563EB).withValues(alpha: 0.10),
+            child: const Icon(Icons.security, color: Color(0xFF2563EB)),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -287,10 +262,7 @@ class _CheckTile extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(color: Colors.grey),
-                ),
+                Text(value, style: const TextStyle(color: Colors.grey)),
               ],
             ),
           ),
@@ -336,15 +308,12 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         text,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w800,
-        ),
+        style: TextStyle(color: color, fontWeight: FontWeight.w800),
       ),
     );
   }

@@ -17,7 +17,8 @@ class AppUz {
   static const String sellCar = 'Mashina sotish';
   static const String createAd = 'E\'lon yarating va moderatsiyaga yuboring';
   static const String addDealerCar = 'Dilerdan mashina qo\'shish';
-  static const String forLargeSellers = 'Yirik sotuvchilar va kompaniyalar uchun';
+  static const String forLargeSellers =
+      'Yirik sotuvchilar va kompaniyalar uchun';
   static const String orderDelivery = 'Yetkazib berishni buyurtma qilish';
   static const String keyDelivery = 'Mashinani kalit bilan yetkazib berish';
   static const String importCatalog = 'Diler katalogini import qilish';

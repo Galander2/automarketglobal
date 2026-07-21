@@ -23,10 +23,7 @@ class LanguageSelectionScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Выберите язык'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Выберите язык'), centerTitle: true),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: languages.length,
@@ -56,10 +53,7 @@ class LanguageSelectionScreen extends StatelessWidget {
                 ),
               ),
               trailing: isSelected
-                  ? const Icon(
-                      Icons.check_circle,
-                      color: Color(0xFF2563EB),
-                    )
+                  ? const Icon(Icons.check_circle, color: Color(0xFF2563EB))
                   : null,
               onTap: () {
                 languageService.setLocale(Locale(lang['code'] as String));

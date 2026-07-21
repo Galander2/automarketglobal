@@ -116,7 +116,8 @@ class CarRepository {
     int limit = 50,
   }) async {
     try {
-      Query queryRef = _firestore.collection('cars')
+      Query queryRef = _firestore
+          .collection('cars')
           .where('status', isEqualTo: 'approved');
 
       if (country != null && country.isNotEmpty) {
@@ -138,7 +139,8 @@ class CarRepository {
           final title = car.title.toLowerCase();
           final description = car.description.toLowerCase();
           final searchQuery = query.toLowerCase();
-          return title.contains(searchQuery) || description.contains(searchQuery);
+          return title.contains(searchQuery) ||
+              description.contains(searchQuery);
         }).toList();
       }
 

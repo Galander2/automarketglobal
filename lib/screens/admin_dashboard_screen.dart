@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../core/router/app_routes.dart';
 import '../models/admin_stats.dart';
-import '../data/admin_stats_data.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -25,13 +23,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Future<void> _loadStats() async {
     try {
-      setState(() => _isLoading = true);
-      
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _error = null;
+        });
+      }
+
       // Load stats from Firestore
       final statsDoc = await FirebaseFirestore.instance
           .collection('admin')
           .doc('stats')
           .get();
+
+      if (!mounted) return;
 
       if (statsDoc.exists) {
         final data = statsDoc.data()!;
@@ -48,16 +53,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           );
         });
       } else {
-        // Use mock data if no stats in Firestore
-        setState(() => _stats = AdminStatsData.getStats());
+        setState(() {
+          _stats = null;
+          _error = 'Документ admin/stats не найден';
+        });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
-        _stats = AdminStatsData.getStats();
+        _stats = null;
       });
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -67,7 +77,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    final stats = _stats ?? AdminStatsData.getStats();
+    final stats = _stats;
 
     return RefreshIndicator(
       onRefresh: _loadStats,
@@ -77,8 +87,26 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(),
+            if (_error != null) ...[
+              const SizedBox(height: 12),
+              Card(
+                color: Colors.red.shade50,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Text('Не удалось загрузить статистику: $_error'),
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
-            _buildQuickStats(stats),
+            if (stats != null)
+              _buildQuickStats(stats)
+            else
+              const Card(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('Статистические данные пока отсутствуют'),
+                ),
+              ),
             const SizedBox(height: 24),
             _buildMainGrid(context),
             const SizedBox(height: 24),
@@ -98,17 +126,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           children: [
             Text(
               'Админ панель',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
             Text(
               'Управление платформой',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
           ],
         ),
@@ -123,18 +145,51 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _buildQuickStats(AdminStats stats) {
     return Row(
       children: [
-        Expanded(child: _buildStatCard('Пользователи', stats.totalUsers.toString(), Icons.people, const Color(0xFF2563EB))),
+        Expanded(
+          child: _buildStatCard(
+            'Пользователи',
+            stats.totalUsers.toString(),
+            Icons.people,
+            const Color(0xFF2563EB),
+          ),
+        ),
         const SizedBox(width: 12),
-        Expanded(child: _buildStatCard('Дилеры', stats.totalDealers.toString(), Icons.store, const Color(0xFF10B981))),
+        Expanded(
+          child: _buildStatCard(
+            'Дилеры',
+            stats.totalDealers.toString(),
+            Icons.store,
+            const Color(0xFF10B981),
+          ),
+        ),
         const SizedBox(width: 12),
-        Expanded(child: _buildStatCard('Авто', stats.totalCars.toString(), Icons.directions_car, const Color(0xFFF59E0B))),
+        Expanded(
+          child: _buildStatCard(
+            'Авто',
+            stats.totalCars.toString(),
+            Icons.directions_car,
+            const Color(0xFFF59E0B),
+          ),
+        ),
         const SizedBox(width: 12),
-        Expanded(child: _buildStatCard('Продано', stats.soldCars.toString(), Icons.check_circle, const Color(0xFF8B5CF6))),
+        Expanded(
+          child: _buildStatCard(
+            'Продано',
+            stats.soldCars.toString(),
+            Icons.check_circle,
+            const Color(0xFF8B5CF6),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -149,7 +204,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: color, size: 20),
@@ -157,18 +212,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             const SizedBox(height: 12),
             Text(
               value,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -256,10 +305,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           children: [
             const Text(
               'Активность за неделю',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             _buildMiniChart(),
@@ -272,7 +318,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _buildMiniChart() {
     final days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
     final values = [65, 78, 52, 89, 73, 45, 82];
-    
+
     return SizedBox(
       height: 150,
       child: Row(
@@ -290,8 +336,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      const Color(0xFF2563EB).withOpacity(0.8),
-                      const Color(0xFF2563EB).withOpacity(0.3),
+                      const Color(0xFF2563EB).withValues(alpha: 0.8),
+                      const Color(0xFF2563EB).withValues(alpha: 0.3),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(6),
@@ -300,10 +346,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               const SizedBox(height: 8),
               Text(
                 days[index],
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
             ],
           );
@@ -346,8 +389,8 @@ class _AdminCard extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                color.withOpacity(0.1),
-                color.withOpacity(0.05),
+                color.withValues(alpha: 0.1),
+                color.withValues(alpha: 0.05),
               ],
             ),
           ),
@@ -357,7 +400,7 @@ class _AdminCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
+                  color: color.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, size: 32, color: color),
@@ -373,10 +416,7 @@ class _AdminCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
             ],

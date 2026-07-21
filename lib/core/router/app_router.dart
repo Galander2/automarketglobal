@@ -22,6 +22,7 @@ import '../../screens/admin_reports_screen.dart';
 import '../../screens/admin_complaints_screen.dart';
 import '../../screens/admin_markets_screen.dart';
 import '../../screens/admin_settings_screen.dart';
+import '../../models/car.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -37,8 +38,18 @@ class AppRouter {
       case AppRoutes.addCar:
         return MaterialPageRoute(builder: (_) => const AddCarScreen());
       case AppRoutes.carDetails:
-        final args = settings.arguments as Map<String, dynamic>;
-        return MaterialPageRoute(builder: (_) => CarDetailsScreen(car: args['car']));
+        final args = settings.arguments;
+        if (args == null) {
+          return _errorRoute('Отсутствует или повреждён аргумент car');
+        }
+        if (args is Map<String, dynamic>) {
+          final car = args['car'];
+          if (car is! Car) {
+            return _errorRoute('Отсутствует или повреждён аргумент car');
+          }
+          return MaterialPageRoute(builder: (_) => CarDetailsScreen(car: car));
+        }
+        return _errorRoute('Неверный тип аргументов для carDetails');
       case AppRoutes.countries:
         return MaterialPageRoute(builder: (_) => const CountriesScreen());
       case AppRoutes.dealers:
@@ -54,7 +65,9 @@ class AppRouter {
       case AppRoutes.aiVinCheck:
         return MaterialPageRoute(builder: (_) => const AiVinCheckScreen());
       case AppRoutes.languageSelection:
-        return MaterialPageRoute(builder: (_) => const LanguageSelectionScreen());
+        return MaterialPageRoute(
+          builder: (_) => const LanguageSelectionScreen(),
+        );
       case AppRoutes.searchFilters:
         return MaterialPageRoute(builder: (_) => const SearchFiltersScreen());
       case AppRoutes.adminUsers:
@@ -72,7 +85,13 @@ class AppRouter {
       case AppRoutes.adminSettings:
         return MaterialPageRoute(builder: (_) => const AdminSettingsScreen());
       default:
-        return MaterialPageRoute(builder: (_) => Scaffold(body: Center(child: Text('Нет маршрута: ${settings.name}'))));
+        return _errorRoute('Нет маршрута: ${settings.name}');
     }
+  }
+
+  static Route<dynamic> _errorRoute(String message) {
+    return MaterialPageRoute(
+      builder: (_) => Scaffold(body: Center(child: Text(message))),
+    );
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -15,7 +16,7 @@ class AddCarScreen extends StatefulWidget {
 class _AddCarScreenState extends State<AddCarScreen> {
   final _formKey = GlobalKey<FormState>();
   final _carRepository = CarRepository();
-  
+
   final _titleController = TextEditingController();
   final _priceController = TextEditingController();
   final _yearController = TextEditingController();
@@ -24,13 +25,13 @@ class _AddCarScreenState extends State<AddCarScreen> {
   final _descriptionController = TextEditingController();
   final _cityController = TextEditingController();
   final _routeController = TextEditingController();
-  
+
   final List<XFile> _images = [];
   final ImagePicker _picker = ImagePicker();
-  
+
   bool _isLoading = false;
   String? _selectedCountry;
-  
+
   final List<String> _countries = [
     'Таджикистан',
     'Узбекистан',
@@ -71,17 +72,17 @@ class _AddCarScreenState extends State<AddCarScreen> {
         maxHeight: 1080,
         imageQuality: 85,
       );
-      
-      if (image != null) {
+
+      if (image != null && mounted) {
         setState(() {
           _images.add(image);
         });
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Ошибка: $e')));
       }
     }
   }
@@ -94,33 +95,43 @@ class _AddCarScreenState extends State<AddCarScreen> {
 
   Future<List<String>> _uploadImages() async {
     final List<String> imageUrls = [];
-    const apiKey = 'YOUR_IMGBB_API_KEY';
-    
-    for (var image in _images) {
-      try {
-        final bytes = await image.readAsBytes();
-        
-        var request = http.MultipartRequest(
-          'POST',
-          Uri.parse('https://api.imgbb.com/1/upload'),
-        );
-        
-        request.fields['key'] = apiKey;
-        request.files.add(http.MultipartFile.fromBytes('image', bytes, filename: image.name));
-        
-        var response = await request.send();
-        var responseData = await http.Response.fromStream(response);
-        var jsonData = json.decode(responseData.body);
-        
-        if (jsonData['success'] == true) {
-          imageUrls.add(jsonData['data']['url']);
-        }
-      } catch (e) {
-        // ignore: avoid_print
-        print('Ошибка загрузки фото: $e');
-      }
+    const apiKey = String.fromEnvironment('IMGBB_API_KEY');
+    if (apiKey.isEmpty) {
+      throw StateError(
+        'IMGBB_API_KEY не настроен. Запустите приложение с '
+        '--dart-define=IMGBB_API_KEY=ваш_ключ',
+      );
     }
-    
+
+    for (var image in _images) {
+      final bytes = await image.readAsBytes();
+
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('https://api.imgbb.com/1/upload'),
+      );
+
+      request.fields['key'] = apiKey;
+      request.files.add(
+        http.MultipartFile.fromBytes('image', bytes, filename: image.name),
+      );
+
+      final response = await request.send();
+      final responseData = await http.Response.fromStream(response);
+      final jsonData = json.decode(responseData.body) as Map<String, dynamic>;
+
+      if (responseData.statusCode != 200 || jsonData['success'] != true) {
+        throw StateError('Сервис изображений отклонил загрузку');
+      }
+
+      final data = jsonData['data'] as Map<String, dynamic>?;
+      final url = data?['url'] as String?;
+      if (url == null || url.isEmpty) {
+        throw StateError('Сервис изображений не вернул URL');
+      }
+      imageUrls.add(url);
+    }
+
     return imageUrls;
   }
 
@@ -133,9 +144,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
       return;
     }
     if (_selectedCountry == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Выберите страну')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Выберите страну')));
       return;
     }
 
@@ -144,18 +155,27 @@ class _AddCarScreenState extends State<AddCarScreen> {
     });
 
     try {
+      final sellerId = FirebaseAuth.instance.currentUser?.uid;
+      if (sellerId == null) {
+        throw StateError('Для публикации необходимо войти в аккаунт');
+      }
+
       final imageUrls = await _uploadImages();
-      
+
       if (imageUrls.isEmpty) {
         throw Exception('Не удалось загрузить фото');
       }
 
       final carData = {
-        'sellerId': 'current_user_id',
+        'sellerId': sellerId,
         'title': _titleController.text.trim(),
-        'price': double.parse(_priceController.text.replaceAll(RegExp(r'[^\d]'), '')),
+        'price': double.parse(
+          _priceController.text.replaceAll(RegExp(r'[^\d]'), ''),
+        ),
         'year': int.parse(_yearController.text),
-        'mileage': int.parse(_mileageController.text.replaceAll(RegExp(r'[^\d]'), '')),
+        'mileage': int.parse(
+          _mileageController.text.replaceAll(RegExp(r'[^\d]'), ''),
+        ),
         'city': _cityController.text.trim(),
         'route': _routeController.text.trim(),
         'country': _selectedCountry,
@@ -179,9 +199,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Ошибка: $e')));
       }
     } finally {
       if (mounted) {
@@ -209,7 +229,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            
+
             SizedBox(
               height: 120,
               child: _images.isEmpty
@@ -223,7 +243,11 @@ class _AddCarScreenState extends State<AddCarScreen> {
                         child: const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
+                            Icon(
+                              Icons.add_a_photo,
+                              size: 40,
+                              color: Colors.grey,
+                            ),
                             SizedBox(height: 8),
                             Text('Добавить фото'),
                           ],
@@ -248,10 +272,13 @@ class _AddCarScreenState extends State<AddCarScreen> {
                                 child: FutureBuilder<Uint8List>(
                                   future: _images[index].readAsBytes(),
                                   builder: (context, snapshot) {
-                                    if (snapshot.connectionState == ConnectionState.waiting) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
                                       return Container(
                                         color: Colors.grey[200],
-                                        child: const Center(child: CircularProgressIndicator()),
+                                        child: const Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
                                       );
                                     }
                                     if (snapshot.hasData) {
@@ -291,7 +318,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                       },
                     ),
             ),
-            
+
             if (_images.isNotEmpty) ...[
               const SizedBox(height: 8),
               TextButton.icon(
@@ -303,9 +330,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 ),
               ),
             ],
-            
+
             const SizedBox(height: 24),
-            
+
             TextFormField(
               controller: _titleController,
               decoration: const InputDecoration(
@@ -320,21 +347,18 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             DropdownButtonFormField<String>(
-  initialValue: _selectedCountry,
-  // ...
+              initialValue: _selectedCountry,
+              // ...
               decoration: const InputDecoration(
                 labelText: 'Страна',
                 border: OutlineInputBorder(),
               ),
               items: _countries.map((country) {
-                return DropdownMenuItem(
-                  value: country,
-                  child: Text(country),
-                );
+                return DropdownMenuItem(value: country, child: Text(country));
               }).toList(),
               onChanged: (value) {
                 setState(() {
@@ -348,9 +372,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _cityController,
               decoration: const InputDecoration(
@@ -365,9 +389,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _routeController,
               decoration: const InputDecoration(
@@ -376,9 +400,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
                 Expanded(
@@ -418,9 +442,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _mileageController,
               decoration: const InputDecoration(
@@ -436,9 +460,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _vinController,
               decoration: const InputDecoration(
@@ -447,9 +471,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 border: OutlineInputBorder(),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(
@@ -466,9 +490,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 return null;
               },
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             SizedBox(
               height: 52,
               child: ElevatedButton(
@@ -498,7 +522,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                       ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
           ],
         ),

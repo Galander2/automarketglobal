@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../repositories/auth_repository.dart';
-import '../l10n/app_localizations.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -19,7 +18,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _lastNameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   bool _isLogin = true;
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -45,7 +44,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       final authProvider = context.read<AuthProvider>();
-      
+
       if (_isLogin) {
         await authProvider.signInWithEmail(
           _emailController.text.trim(),
@@ -86,10 +85,10 @@ class _AuthScreenState extends State<AuthScreen> {
 
   Future<void> _showForgotPasswordDialog() async {
     final emailController = TextEditingController();
-    
-    showDialog(
+
+    await showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Сброс пароля'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -109,24 +108,25 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Отмена'),
           ),
           ElevatedButton(
             onPressed: () async {
               if (emailController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Введите email')),
-                );
+                ScaffoldMessenger.of(
+                  dialogContext,
+                ).showSnackBar(const SnackBar(content: Text('Введите email')));
                 return;
               }
-              
+
               try {
-                final authProvider = context.read<AuthProvider>();
+                final authProvider = dialogContext.read<AuthProvider>();
                 await authProvider.resetPassword(emailController.text.trim());
-                
+
+                if (!dialogContext.mounted) return;
+                Navigator.pop(dialogContext);
                 if (mounted) {
-                  Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Письмо для сброса пароля отправлено'),
@@ -135,8 +135,8 @@ class _AuthScreenState extends State<AuthScreen> {
                   );
                 }
               } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                if (dialogContext.mounted) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
                     SnackBar(
                       content: Text(e.toString().replaceAll('Exception: ', '')),
                       backgroundColor: Colors.red,
@@ -150,11 +150,11 @@ class _AuthScreenState extends State<AuthScreen> {
         ],
       ),
     );
+    emailController.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
@@ -187,17 +187,14 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _isLogin 
-                    ? 'Войдите для продолжения' 
-                    : 'Заполните форму для регистрации',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
+                  _isLogin
+                      ? 'Войдите для продолжения'
+                      : 'Заполните форму для регистрации',
+                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
-                
+
                 if (!_isLogin) ...[
                   Row(
                     children: [
@@ -246,7 +243,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     keyboardType: TextInputType.phone,
                     inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-\s()]')),
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'[0-9+\-\s()]'),
+                      ),
                     ],
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -257,7 +256,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                   const SizedBox(height: 16),
                 ],
-                
+
                 TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(
@@ -286,7 +285,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
@@ -305,7 +306,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     return null;
                   },
                 ),
-                
+
                 if (!_isLogin) ...[
                   const SizedBox(height: 16),
                   TextFormField(
@@ -317,7 +318,9 @@ class _AuthScreenState extends State<AuthScreen> {
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                          _obscureConfirmPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                         ),
                         onPressed: () {
                           setState(() {
@@ -337,7 +340,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     },
                   ),
                 ],
-                
+
                 if (_isLogin) ...[
                   Align(
                     alignment: Alignment.centerRight,
@@ -347,13 +350,15 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ),
                 ],
-                
+
                 const SizedBox(height: 32),
-                
+
                 SizedBox(
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: _isLoading || authProvider.isLoading ? null : _handleSubmit,
+                    onPressed: _isLoading || authProvider.isLoading
+                        ? null
+                        : _handleSubmit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2563EB),
                       foregroundColor: Colors.white,
@@ -362,25 +367,25 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     ),
                     child: _isLoading || authProvider.isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            _isLogin ? 'Войти' : 'Зарегистрироваться',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        )
-                      : Text(
-                          _isLogin ? 'Войти' : 'Зарегистрироваться',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
                   ),
                 ),
                 const SizedBox(height: 24),
-                
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

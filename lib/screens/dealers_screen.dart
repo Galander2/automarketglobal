@@ -6,18 +6,40 @@ class DealersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Map<String, dynamic>> dealers = [
-      {'name': 'Toyota Dubai', 'desc': 'Официальный дилер Toyota', 'rating': 4.9, 'cars': 245},
-      {'name': 'Japan Motors', 'desc': 'Автомобили из Японии', 'rating': 4.8, 'cars': 189},
-      {'name': 'China Auto Export', 'desc': 'Китайские автомобили', 'rating': 4.7, 'cars': 312},
-      {'name': 'Korea Auto Group', 'desc': 'Корейские авто под ключ', 'rating': 4.8, 'cars': 156},
-      {'name': 'Luxury Dubai Cars', 'desc': 'Премиум автомобили', 'rating': 4.9, 'cars': 78},
+      {
+        'name': 'Toyota Dubai',
+        'desc': 'Официальный дилер Toyota',
+        'rating': 4.9,
+        'cars': 245,
+      },
+      {
+        'name': 'Japan Motors',
+        'desc': 'Автомобили из Японии',
+        'rating': 4.8,
+        'cars': 189,
+      },
+      {
+        'name': 'China Auto Export',
+        'desc': 'Китайские автомобили',
+        'rating': 4.7,
+        'cars': 312,
+      },
+      {
+        'name': 'Korea Auto Group',
+        'desc': 'Корейские авто под ключ',
+        'rating': 4.8,
+        'cars': 156,
+      },
+      {
+        'name': 'Luxury Dubai Cars',
+        'desc': 'Премиум автомобили',
+        'rating': 4.9,
+        'cars': 78,
+      },
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Крупные дилеры'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Крупные дилеры'), centerTitle: true),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: dealers.length,
@@ -39,7 +61,9 @@ class DealersScreen extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 32,
-                      backgroundColor: const Color(0xFF2563EB).withOpacity(0.1),
+                      backgroundColor: const Color(
+                        0xFF2563EB,
+                      ).withValues(alpha: 0.1),
                       child: Text(
                         dealer['name'].toString().substring(0, 1),
                         style: const TextStyle(
@@ -72,14 +96,24 @@ class DealersScreen extends StatelessWidget {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              Icon(Icons.star, size: 16, color: Colors.amber[700]),
+                              Icon(
+                                Icons.star,
+                                size: 16,
+                                color: Colors.amber[700],
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 dealer['rating'].toString(),
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               const SizedBox(width: 16),
-                              Icon(Icons.directions_car, size: 16, color: Colors.grey[600]),
+                              Icon(
+                                Icons.directions_car,
+                                size: 16,
+                                color: Colors.grey[600],
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 '${dealer['cars']} авто',

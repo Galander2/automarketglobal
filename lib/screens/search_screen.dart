@@ -130,30 +130,34 @@ class _SearchScreenState extends State<SearchScreen> {
             child: ListView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: ['All', 'Tajikistan', 'Uzbekistan', 'Kazakhstan', 'Kyrgyzstan']
-                  .map((country) {
-                final isSelected = _selectedCountry == country;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(country),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedCountry = selected ? country : 'All';
-                      });
-                    },
-                  ),
-                );
-              }).toList(),
+              children:
+                  [
+                    'All',
+                    'Tajikistan',
+                    'Uzbekistan',
+                    'Kazakhstan',
+                    'Kyrgyzstan',
+                  ].map((country) {
+                    final isSelected = _selectedCountry == country;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(country),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            _selectedCountry = selected ? country : 'All';
+                          });
+                        },
+                      ),
+                    );
+                  }).toList(),
             ),
           ),
           const SizedBox(height: 16),
           Expanded(
             child: _cars.isEmpty
-                ? const Center(
-                    child: Text('No cars'),
-                  )
+                ? const Center(child: Text('No cars'))
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: _cars.length,

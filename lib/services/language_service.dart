@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class LanguageService extends ChangeNotifier {
   Locale _locale = const Locale('ru');
-  
+
   Locale get locale => _locale;
 
   LanguageService() {

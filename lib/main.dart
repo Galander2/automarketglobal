@@ -19,10 +19,8 @@ import 'screens/profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.web,
-  );
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.web);
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -32,15 +30,15 @@ void main() async {
   );
 
   final settingsService = SettingsService();
-  await settingsService.initialize();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => LanguageService()),
-        ChangeNotifierProvider(create: (_) => SettingsProvider(settingsService)),
+        ChangeNotifierProvider(
+          create: (_) => SettingsProvider(settingsService),
+        ),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],
       child: const AutoMarketApp(),
     ),
@@ -77,9 +75,7 @@ class AutoMarketApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFFAF5FF),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2563EB),
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2563EB)),
         appBarTheme: const AppBarTheme(
           centerTitle: true,
           backgroundColor: Color(0xFFFAF5FF),
@@ -90,9 +86,7 @@ class AutoMarketApp extends StatelessWidget {
         builder: (context, authProvider, _) {
           if (authProvider.isCheckingAuth) {
             return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(),
-              ),
+              body: Center(child: CircularProgressIndicator()),
             );
           }
 
@@ -130,9 +124,7 @@ class _MainShellState extends State<MainShell> {
       showDragHandle: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(28),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) {
         final l10n = AppLocalizations.of(context);
@@ -197,10 +189,7 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      body: IndexedStack(
-        index: currentIndex,
-        children: screens,
-      ),
+      body: IndexedStack(index: currentIndex, children: screens),
       floatingActionButton: FloatingActionButton(
         onPressed: _openAddMenu,
         backgroundColor: const Color(0xFF2563EB),
@@ -295,10 +284,7 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              isSelected ? selectedIcon : icon,
-              color: color,
-            ),
+            Icon(isSelected ? selectedIcon : icon, color: color),
             const SizedBox(height: 4),
             Text(
               label,
@@ -335,20 +321,15 @@ class _AddMenuTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: Colors.black.withOpacity(0.06),
-        ),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
-          backgroundColor: const Color(0xFF2563EB).withOpacity(0.10),
+          backgroundColor: const Color(0xFF2563EB).withValues(alpha: 0.10),
           child: Icon(icon, color: const Color(0xFF2563EB)),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w900),
-        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.chevron_right),
         onTap: onTap,

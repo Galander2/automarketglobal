@@ -24,10 +24,7 @@ class _MyPublicationsScreenState extends State<MyPublicationsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Мои публикации'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Мои публикации'), centerTitle: true),
       body: FutureBuilder<List<Car>>(
         future: _carsFuture,
         builder: (context, snapshot) {

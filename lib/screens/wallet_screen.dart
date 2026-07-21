@@ -6,10 +6,7 @@ class WalletScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Кошелёк'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Кошелёк'), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -30,10 +27,7 @@ class WalletScreen extends StatelessWidget {
                 children: [
                   Text(
                     'Баланс',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                   SizedBox(height: 8),
                   Text(
@@ -48,7 +42,7 @@ class WalletScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Кнопки действий
             Row(
               children: [
@@ -57,8 +51,8 @@ class WalletScreen extends StatelessWidget {
                     icon: Icons.add,
                     label: 'Пополнить',
                     onTap: () {
-  // Перевод будет позже
-},
+                      // Перевод будет позже
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -67,23 +61,20 @@ class WalletScreen extends StatelessWidget {
                     icon: Icons.send,
                     label: 'Перевести',
                     onTap: () {
-  // Перевод будет позже
-},
+                      // Перевод будет позже
+                    },
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            
+
             const Text(
               'История операций',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            
+
             const Center(
               child: Padding(
                 padding: EdgeInsets.all(32),
@@ -128,10 +119,7 @@ class _ActionButton extends StatelessWidget {
             children: [
               Icon(icon, size: 28, color: const Color(0xFF2563EB)),
               const SizedBox(height: 8),
-              Text(
-                label,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
+              Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
         ),
