@@ -148,7 +148,7 @@ class _AdminDealersScreenState extends State<AdminDealersScreen> {
               ),
               const SizedBox(height: 16),
               _buildDetailRow(Icons.location_on, 'Страна', dealer.country),
-              _buildDetailRow(Icons.city, 'Город', dealer.city),
+              _buildDetailRow(Icons.location_city, 'Город', dealer.city),
               _buildDetailRow(
                 Icons.store,
                 'Авто в наличии',

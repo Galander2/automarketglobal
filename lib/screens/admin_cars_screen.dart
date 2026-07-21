@@ -252,7 +252,7 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
               _buildDetailRow(Icons.route, 'Маршрут', car.route),
               _buildDetailRow(Icons.public, 'Страна', car.country),
               _buildDetailRow(
-                Icons.status,
+                Icons.flag_outlined,
                 'Статус',
                 _getStatusTitle(car.status),
               ),

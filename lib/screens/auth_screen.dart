@@ -127,7 +127,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 if (!dialogContext.mounted) return;
                 Navigator.pop(dialogContext);
                 if (mounted) {
-                  ScaffoldMessenger.of(this.context).showSnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Письмо для сброса пароля отправлено'),
                       backgroundColor: Colors.green,

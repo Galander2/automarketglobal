@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import '../../../lib/core/router/app_router.dart';
-import '../../../lib/core/router/app_routes.dart';
-import '../../../lib/services/language_service.dart';
-import '../../../lib/l10n/app_localizations.dart';
-import '../../../lib/screens/favorites_screen.dart';
-import '../../../lib/screens/home_screen.dart';
-import '../../../lib/screens/profile_screen.dart';
-import '../../../lib/screens/search_screen.dart';
+import 'package:flutter_application_1_car_sales/core/router/app_router.dart';
+import 'package:flutter_application_1_car_sales/core/router/app_routes.dart';
+import 'package:flutter_application_1_car_sales/l10n/app_localizations.dart';
+import 'package:flutter_application_1_car_sales/screens/favorites_screen.dart';
+import 'package:flutter_application_1_car_sales/screens/home_screen.dart';
+import 'package:flutter_application_1_car_sales/screens/profile_screen.dart';
+import 'package:flutter_application_1_car_sales/screens/search_screen.dart';
+import 'package:flutter_application_1_car_sales/services/language_service.dart';
 
 void main() {
   group('AppRouter Tests', () {
@@ -39,7 +39,7 @@ void main() {
 
     testWidgets('handles carDetails with missing arguments', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           onGenerateRoute: AppRouter.generateRoute,
           initialRoute: AppRoutes.carDetails,
           localizationsDelegates: const [AppLocalizations.delegate],
@@ -53,7 +53,7 @@ void main() {
   });
 }
 
-MaterialApp _createTestApp(String routeName) {
+Widget _createTestApp(String routeName) {
   return ChangeNotifierProvider(
     create: (_) => LanguageService(),
     child: MaterialApp(
