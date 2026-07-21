@@ -14,26 +14,31 @@ void main() {
   group('AppRouter Tests', () {
     testWidgets('generates home route', (tester) async {
       await tester.pumpWidget(_createTestApp(AppRoutes.home));
+      await tester.pumpAndSettle();
       expect(find.byType(HomeScreen), findsOneWidget);
     });
 
     testWidgets('generates search route', (tester) async {
       await tester.pumpWidget(_createTestApp(AppRoutes.search));
+      await tester.pumpAndSettle();
       expect(find.byType(SearchScreen), findsOneWidget);
     });
 
     testWidgets('generates favorites route', (tester) async {
       await tester.pumpWidget(_createTestApp(AppRoutes.favorites));
+      await tester.pumpAndSettle();
       expect(find.byType(FavoritesScreen), findsOneWidget);
     });
 
     testWidgets('generates profile route', (tester) async {
       await tester.pumpWidget(_createTestApp(AppRoutes.profile));
+      await tester.pumpAndSettle();
       expect(find.byType(ProfileScreen), findsOneWidget);
     });
 
     testWidgets('generates error route for unknown path', (tester) async {
       await tester.pumpWidget(_createTestApp('/unknown-route'));
+      await tester.pumpAndSettle();
       expect(find.text('Нет маршрута: /unknown-route'), findsOneWidget);
     });
 
@@ -42,9 +47,10 @@ void main() {
         const MaterialApp(
           onGenerateRoute: AppRouter.generateRoute,
           initialRoute: AppRoutes.carDetails,
-          localizationsDelegates: const [AppLocalizations.delegate],
+          localizationsDelegates: [AppLocalizations.delegate],
         ),
       );
+      await tester.pumpAndSettle();
       expect(
         find.textContaining('Отсутствует или повреждён аргумент car'),
         findsOneWidget,
