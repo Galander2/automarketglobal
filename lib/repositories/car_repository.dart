@@ -1,110 +1,111 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../models/car.dart';
 
+class CarRepositoryException implements Exception {
+  const CarRepositoryException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 class CarRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  factory CarRepository() => _instance;
 
-  // Получить все автомобили
-  Future<List<Car>> getAllCars({int limit = 50}) async {
-    try {
-      final snapshot = await _firestore
+  CarRepository.withFirestore(FirebaseFirestore firestore)
+    : _firestore = firestore;
+
+  CarRepository._() : _firestore = FirebaseFirestore.instance;
+
+  static final CarRepository _instance = CarRepository._();
+  static const Duration _cacheLifetime = Duration(minutes: 2);
+
+  final FirebaseFirestore _firestore;
+  final Map<String, _CacheEntry<List<Car>>> _cache = {};
+  final Map<String, Future<List<Car>>> _requestsInProgress = {};
+
+  Future<List<Car>> getAllCars({int limit = 50, bool forceRefresh = false}) {
+    return _loadCars(
+      cacheKey: 'all:$limit',
+      forceRefresh: forceRefresh,
+      query: _firestore
           .collection('cars')
           .orderBy('createdAt', descending: true)
-          .limit(limit)
-          .get();
-
-      return snapshot.docs.map((doc) => _docToCar(doc)).toList();
-    } catch (e) {
-      return [];
-    }
+          .limit(limit),
+    );
   }
 
-  // Получить одобренные автомобили (для главной)
-  Future<List<Car>> getApprovedCars({int limit = 50}) async {
-    try {
-      final snapshot = await _firestore
+  Future<List<Car>> getApprovedCars({
+    int limit = 50,
+    bool forceRefresh = false,
+  }) {
+    return _loadCars(
+      cacheKey: 'approved:$limit',
+      forceRefresh: forceRefresh,
+      query: _statusQuery('approved', limit),
+    );
+  }
+
+  Future<List<Car>> getPendingCars({
+    int limit = 50,
+    bool forceRefresh = false,
+  }) {
+    return _loadCars(
+      cacheKey: 'pending:$limit',
+      forceRefresh: forceRefresh,
+      query: _statusQuery('pending', limit),
+    );
+  }
+
+  Future<List<Car>> getRejectedCars({
+    int limit = 50,
+    bool forceRefresh = false,
+  }) {
+    return _loadCars(
+      cacheKey: 'rejected:$limit',
+      forceRefresh: forceRefresh,
+      query: _statusQuery('rejected', limit),
+    );
+  }
+
+  Future<List<Car>> getCarsByCountry(
+    String country, {
+    int limit = 50,
+    bool forceRefresh = false,
+  }) {
+    final normalizedCountry = country.trim();
+    return _loadCars(
+      cacheKey: 'country:${normalizedCountry.toLowerCase()}:$limit',
+      forceRefresh: forceRefresh,
+      query: _firestore
           .collection('cars')
           .where('status', isEqualTo: 'approved')
+          .where('country', isEqualTo: normalizedCountry)
           .orderBy('createdAt', descending: true)
-          .limit(limit)
-          .get();
-
-      return snapshot.docs.map((doc) => _docToCar(doc)).toList();
-    } catch (e) {
-      return [];
-    }
+          .limit(limit),
+    );
   }
 
-  // Получить автомобили на модерации (для админа)
-  Future<List<Car>> getPendingCars({int limit = 50}) async {
-    try {
-      final snapshot = await _firestore
-          .collection('cars')
-          .where('status', isEqualTo: 'pending')
-          .orderBy('createdAt', descending: true)
-          .limit(limit)
-          .get();
-
-      return snapshot.docs.map((doc) => _docToCar(doc)).toList();
-    } catch (e) {
-      return [];
-    }
-  }
-
-  // Получить отклоненные автомобили
-  Future<List<Car>> getRejectedCars({int limit = 50}) async {
-    try {
-      final snapshot = await _firestore
-          .collection('cars')
-          .where('status', isEqualTo: 'rejected')
-          .orderBy('createdAt', descending: true)
-          .limit(limit)
-          .get();
-
-      return snapshot.docs.map((doc) => _docToCar(doc)).toList();
-    } catch (e) {
-      return [];
-    }
-  }
-
-  // Получить автомобили по стране
-  Future<List<Car>> getCarsByCountry(String country, {int limit = 50}) async {
-    try {
-      final snapshot = await _firestore
-          .collection('cars')
-          .where('status', isEqualTo: 'approved')
-          .where('country', isEqualTo: country)
-          .orderBy('createdAt', descending: true)
-          .limit(limit)
-          .get();
-
-      return snapshot.docs.map((doc) => _docToCar(doc)).toList();
-    } catch (e) {
-      return [];
-    }
-  }
-
-  // Получить автомобили пользователя (для my_publications_screen)
-  Future<List<Car>> getUserCars(String userId) async {
-    try {
-      final snapshot = await _firestore
+  Future<List<Car>> getUserCars(
+    String userId, {
+    bool forceRefresh = false,
+  }) {
+    return _loadCars(
+      cacheKey: 'seller:$userId',
+      forceRefresh: forceRefresh,
+      query: _firestore
           .collection('cars')
           .where('sellerId', isEqualTo: userId)
-          .orderBy('createdAt', descending: true)
-          .get();
-
-      return snapshot.docs.map((doc) => _docToCar(doc)).toList();
-    } catch (e) {
-      return [];
-    }
+          .orderBy('createdAt', descending: true),
+    );
   }
 
-  // Получить автомобили продавца (getCarsBySeller - для my_publications_screen)
-  Future<List<Car>> getCarsBySeller(String sellerId) async {
+  Future<List<Car>> getCarsBySeller(String sellerId) {
     return getUserCars(sellerId);
   }
 
-  // Поиск автомобилей (для search_screen)
   Future<List<Car>> searchCars({
     String? query,
     String? country,
@@ -114,56 +115,53 @@ class CarRepository {
     int? minYear,
     int? maxYear,
     int limit = 50,
+    bool forceRefresh = false,
   }) async {
-    try {
-      Query queryRef = _firestore
-          .collection('cars')
-          .where('status', isEqualTo: 'approved');
+    final searchQuery = query?.trim().toLowerCase() ?? '';
+    final normalizedCountry = country?.trim() ?? '';
+    final normalizedCity = city?.trim().toLowerCase() ?? '';
+    final cacheKey = [
+      'search',
+      searchQuery,
+      normalizedCountry.toLowerCase(),
+      normalizedCity,
+      minPrice,
+      maxPrice,
+      minYear,
+      maxYear,
+      limit,
+    ].join(':');
 
-      if (country != null && country.isNotEmpty) {
-        queryRef = queryRef.where('country', isEqualTo: country);
-      }
+    final cars = await _loadCars(
+      cacheKey: cacheKey,
+      forceRefresh: forceRefresh,
+      query: _statusQuery('approved', limit),
+    );
 
-      if (city != null && city.isNotEmpty) {
-        queryRef = queryRef.where('city', isEqualTo: city);
-      }
-
-      queryRef = queryRef.orderBy('createdAt', descending: true).limit(limit);
-
-      final snapshot = await queryRef.get();
-      final cars = snapshot.docs.map((doc) => _docToCar(doc)).toList();
-
-      // Фильтрация по текстовому запросу (если есть)
-      if (query != null && query.isNotEmpty) {
-        return cars.where((car) {
-          final title = car.title.toLowerCase();
-          final description = car.description.toLowerCase();
-          final searchQuery = query.toLowerCase();
-          return title.contains(searchQuery) ||
-              description.contains(searchQuery);
-        }).toList();
-      }
-
-      return cars;
-    } catch (e) {
-      return [];
-    }
+    return cars.where((car) {
+      final searchableText = '${car.title} ${car.description} ${car.city}'
+          .toLowerCase();
+      final price = _parsePrice(car.price);
+      return (searchQuery.isEmpty || searchableText.contains(searchQuery)) &&
+          (normalizedCountry.isEmpty || car.country == normalizedCountry) &&
+          (normalizedCity.isEmpty ||
+              car.city.toLowerCase() == normalizedCity) &&
+          (minPrice == null || price >= minPrice) &&
+          (maxPrice == null || price <= maxPrice) &&
+          (minYear == null || car.year >= minYear) &&
+          (maxYear == null || car.year <= maxYear);
+    }).toList(growable: false);
   }
 
-  // Получить один автомобиль по ID
   Future<Car?> getCarById(String carId) async {
     try {
       final doc = await _firestore.collection('cars').doc(carId).get();
-      if (doc.exists) {
-        return _docToCar(doc);
-      }
-      return null;
-    } catch (e) {
-      return null;
+      return doc.exists ? _docToCar(doc) : null;
+    } on FirebaseException catch (error) {
+      throw CarRepositoryException(_readError(error));
     }
   }
 
-  // Добавить новый автомобиль
   Future<String> addCar(Map<String, dynamic> carData) async {
     try {
       final docRef = await _firestore.collection('cars').add({
@@ -171,67 +169,125 @@ class CarRepository {
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      clearCache();
       return docRef.id;
-    } catch (e) {
-      throw Exception('Не удалось опубликовать автомобиль');
+    } on FirebaseException catch (error) {
+      throw CarRepositoryException(_readError(error));
     }
   }
 
-  // Обновить автомобиль
   Future<void> updateCar(String carId, Map<String, dynamic> updates) async {
     try {
       await _firestore.collection('cars').doc(carId).update({
         ...updates,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-    } catch (e) {
-      throw Exception('Не удалось обновить автомобиль');
+      clearCache();
+    } on FirebaseException catch (error) {
+      throw CarRepositoryException(_readError(error));
     }
   }
 
-  // Обновить статус автомобиля
-  Future<void> updateCarStatus(String carId, String newStatus) async {
-    try {
-      await _firestore.collection('cars').doc(carId).update({
-        'status': newStatus,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      throw Exception('Не удалось обновить статус');
-    }
+  Future<void> updateCarStatus(String carId, String newStatus) {
+    return updateCar(carId, {'status': newStatus});
   }
 
-  // Удалить автомобиль
   Future<void> deleteCar(String carId) async {
     try {
       await _firestore.collection('cars').doc(carId).delete();
-    } catch (e) {
-      throw Exception('Не удалось удалить автомобиль');
+      clearCache();
+    } on FirebaseException catch (error) {
+      throw CarRepositoryException(_readError(error));
     }
   }
 
-  // Вспомогательный метод: DocumentSnapshot -> Car
-  Car _docToCar(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  void clearCache() {
+    _cache.clear();
+  }
+
+  Query<Map<String, dynamic>> _statusQuery(String status, int limit) {
+    return _firestore
+        .collection('cars')
+        .where('status', isEqualTo: status)
+        .orderBy('createdAt', descending: true)
+        .limit(limit);
+  }
+
+  Future<List<Car>> _loadCars({
+    required String cacheKey,
+    required Query<Map<String, dynamic>> query,
+    required bool forceRefresh,
+  }) {
+    final cached = _cache[cacheKey];
+    if (!forceRefresh && cached != null && cached.isFresh) {
+      return Future.value(cached.value);
+    }
+
+    final existingRequest = _requestsInProgress[cacheKey];
+    if (!forceRefresh && existingRequest != null) return existingRequest;
+
+    final request = query.get().then((snapshot) {
+      final cars = snapshot.docs.map(_docToCar).toList(growable: false);
+      _cache[cacheKey] = _CacheEntry(cars, _cacheLifetime);
+      return cars;
+    }).onError<FirebaseException>((error, stackTrace) {
+      throw CarRepositoryException(_readError(error));
+    }).whenComplete(() {
+      _requestsInProgress.remove(cacheKey);
+    });
+
+    _requestsInProgress[cacheKey] = request;
+    return request;
+  }
+
+  int _parsePrice(String value) {
+    return int.tryParse(value.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+  }
+
+  String _readError(FirebaseException error) {
+    if (error.code == 'permission-denied') {
+      return 'Нет доступа к данным. Проверьте правила Firestore.';
+    }
+    if (error.code == 'failed-precondition') {
+      return 'Для этого запроса требуется индекс Firestore.';
+    }
+    if (error.code == 'unavailable') {
+      return 'Сервис временно недоступен. Проверьте интернет и повторите.';
+    }
+    return 'Не удалось загрузить данные. Повторите попытку.';
+  }
+
+  Car _docToCar(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data() ?? const <String, dynamic>{};
     return Car(
       id: doc.id,
       sellerId: data['sellerId'] ?? '',
       title: data['title'] ?? '',
       price: (data['price'] ?? 0).toString(),
-      year: (data['year'] ?? 0).toInt(),
-      mileage: (data['mileage'] ?? 0).toInt(),
+      year: (data['year'] as num?)?.toInt() ?? 0,
+      mileage: (data['mileage'] as num?)?.toInt() ?? 0,
       city: data['city'] ?? '',
       route: data['route'] ?? '',
       country: data['country'] ?? '',
       description: data['description'] ?? '',
       vin: data['vin'] ?? '',
       imageUrl: data['imageUrl'] ?? '',
-      images: List<String>.from(data['images'] ?? []),
+      images: List<String>.from(data['images'] ?? const []),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       status: CarStatus.values.firstWhere(
-        (e) => e.name == data['status'],
+        (status) => status.name == data['status'],
         orElse: () => CarStatus.pending,
       ),
     );
   }
+}
+
+class _CacheEntry<T> {
+  _CacheEntry(this.value, Duration lifetime)
+    : expiresAt = DateTime.now().add(lifetime);
+
+  final T value;
+  final DateTime expiresAt;
+
+  bool get isFresh => DateTime.now().isBefore(expiresAt);
 }

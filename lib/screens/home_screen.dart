@@ -31,10 +31,12 @@ class _HomeScreenState extends State<HomeScreen> {
         centerTitle: true,
       ),
       body: RefreshIndicator(
-        onRefresh: () async {
+        onRefresh: () {
+          final refreshed = _carRepository.getApprovedCars(forceRefresh: true);
           setState(() {
-            _carsFuture = _carRepository.getApprovedCars();
+            _carsFuture = refreshed;
           });
+          return refreshed;
         },
         child: CustomScrollView(
           slivers: [
@@ -101,9 +103,25 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Center(
                         child: Padding(
                           padding: const EdgeInsets.all(32),
-                          child: Text(
-                            'Ошибка: ${snapshot.error}',
-                            style: TextStyle(color: Colors.red[700]),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                snapshot.error.toString(),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.red[700]),
+                              ),
+                              const SizedBox(height: 12),
+                              FilledButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _carsFuture = _carRepository
+                                        .getApprovedCars(forceRefresh: true);
+                                  });
+                                },
+                                child: const Text('Повторить'),
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -131,7 +149,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       final car = cars[index];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: InkWell(
+                        child: CarCard(
+                          key: ValueKey(car.id),
+                          car: car,
                           onTap: () {
                             Navigator.push(
                               context,
@@ -140,7 +160,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             );
                           },
-                          child: CarCard(car: car),
                         ),
                       );
                     }, childCount: cars.length),
