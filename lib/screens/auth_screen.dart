@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../core/auth/auth_validators.dart';
 import '../repositories/auth_repository.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -103,6 +104,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.emailAddress,
+              autofillHints: const [AutofillHints.email],
             ),
           ],
         ),
@@ -113,10 +115,11 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (emailController.text.trim().isEmpty) {
+              final validation = AuthValidators.email(emailController.text);
+              if (validation != null) {
                 ScaffoldMessenger.of(
                   dialogContext,
-                ).showSnackBar(const SnackBar(content: Text('Введите email')));
+                ).showSnackBar(SnackBar(content: Text(validation)));
                 return;
               }
 
@@ -201,34 +204,30 @@ class _AuthScreenState extends State<AuthScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _firstNameController,
+                          textCapitalization: TextCapitalization.words,
+                          autofillHints: const [AutofillHints.givenName],
                           decoration: const InputDecoration(
                             labelText: 'Имя',
                             prefixIcon: Icon(Icons.person_outline),
                             border: OutlineInputBorder(),
                           ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Введите имя';
-                            }
-                            return null;
-                          },
+                          validator: (value) =>
+                              AuthValidators.name(value, 'имя'),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: TextFormField(
                           controller: _lastNameController,
+                          textCapitalization: TextCapitalization.words,
+                          autofillHints: const [AutofillHints.familyName],
                           decoration: const InputDecoration(
                             labelText: 'Фамилия',
                             prefixIcon: Icon(Icons.person_outline),
                             border: OutlineInputBorder(),
                           ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Введите фамилию';
-                            }
-                            return null;
-                          },
+                          validator: (value) =>
+                              AuthValidators.name(value, 'фамилию'),
                         ),
                       ),
                     ],
@@ -242,17 +241,13 @@ class _AuthScreenState extends State<AuthScreen> {
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.phone,
+                    autofillHints: const [AutofillHints.telephoneNumber],
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(
                         RegExp(r'[0-9+\-\s()]'),
                       ),
                     ],
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Введите телефон';
-                      }
-                      return null;
-                    },
+                    validator: AuthValidators.phone,
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -265,20 +260,24 @@ class _AuthScreenState extends State<AuthScreen> {
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Введите email';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Введите корректный email';
-                    }
-                    return null;
-                  },
+                  autofillHints: const [AutofillHints.email],
+                  textInputAction: TextInputAction.next,
+                  validator: AuthValidators.email,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
+                  autofillHints: [
+                    _isLogin
+                        ? AutofillHints.password
+                        : AutofillHints.newPassword,
+                  ],
+                  onFieldSubmitted: (_) {
+                    if (_isLogin && !_isLoading && !authProvider.isLoading) {
+                      _handleSubmit();
+                    }
+                  },
                   decoration: InputDecoration(
                     labelText: 'Пароль',
                     prefixIcon: const Icon(Icons.lock_outline),
@@ -296,15 +295,11 @@ class _AuthScreenState extends State<AuthScreen> {
                       },
                     ),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Введите пароль';
-                    }
-                    if (value.length < 6) {
-                      return 'Пароль должен быть не менее 6 символов';
-                    }
-                    return null;
-                  },
+                  validator: (value) => _isLogin
+                      ? ((value == null || value.isEmpty)
+                            ? 'Введите пароль'
+                            : null)
+                      : AuthValidators.password(value),
                 ),
 
                 if (!_isLogin) ...[
@@ -312,6 +307,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   TextFormField(
                     controller: _confirmPasswordController,
                     obscureText: _obscureConfirmPassword,
+                    autofillHints: const [AutofillHints.newPassword],
                     decoration: InputDecoration(
                       labelText: 'Подтверждение пароля',
                       prefixIcon: const Icon(Icons.lock_outline),

@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function owns(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function currentUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function admin() {
+      return signedIn() && currentUser().data.role in ['admin', 'superAdmin'];
+    }
+
+    function protectedUserFieldsUnchanged() {
+      return request.resource.data.role == resource.data.role
+        && request.resource.data.isBlocked == resource.data.isBlocked
+        && request.resource.data.isVerified == resource.data.isVerified
+        && request.resource.data.rating == resource.data.rating;
+    }
+
+    match /users/{userId} {
+      allow create: if owns(userId)
+        && request.resource.data.uid == userId
+        && request.resource.data.role == 'user'
+        && request.resource.data.isBlocked == false
+        && request.resource.data.isVerified == false;
+      allow read: if owns(userId) || admin();
+      allow update: if admin() || (owns(userId) && protectedUserFieldsUnchanged());
+      allow delete: if admin();
+    }
+
+    match /cars/{carId} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.sellerId == request.auth.uid;
+      allow update: if admin() || (signedIn()
+        && resource.data.sellerId == request.auth.uid
+        && request.resource.data.sellerId == resource.data.sellerId
+        && request.resource.data.status == resource.data.status);
+      allow delete: if signedIn()
+        && (resource.data.sellerId == request.auth.uid || admin());
+    }
+
+    match /{document=**} {
+      allow read, write: if admin();
+    }
+  }
+}

@@ -13,6 +13,7 @@ class AppUser {
   final String? country;
   final String? city;
   final bool isVerified;
+  final bool emailVerified;
   final bool isBlocked;
   final double rating;
   final DateTime? createdAt;
@@ -30,6 +31,7 @@ class AppUser {
     this.country,
     this.city,
     this.isVerified = false,
+    this.emailVerified = false,
     this.isBlocked = false,
     this.rating = 0,
     this.createdAt,
@@ -74,6 +76,7 @@ class AppUser {
       'country': country,
       'city': city,
       'isVerified': isVerified,
+      'emailVerified': emailVerified,
       'isBlocked': isBlocked,
       'rating': rating,
       'createdAt': createdAt,
@@ -97,6 +100,7 @@ class AppUser {
       country: map['country'],
       city: map['city'],
       isVerified: map['isVerified'] ?? false,
+      emailVerified: map['emailVerified'] ?? false,
       isBlocked: map['isBlocked'] ?? false,
       rating: (map['rating'] as num?)?.toDouble() ?? 0,
       createdAt: _convertToDateTime(map['createdAt']),
@@ -124,6 +128,7 @@ class AppUser {
     String? country,
     String? city,
     bool? isVerified,
+    bool? emailVerified,
     bool? isBlocked,
     double? rating,
     DateTime? createdAt,
@@ -141,6 +146,7 @@ class AppUser {
       country: country ?? this.country,
       city: city ?? this.city,
       isVerified: isVerified ?? this.isVerified,
+      emailVerified: emailVerified ?? this.emailVerified,
       isBlocked: isBlocked ?? this.isBlocked,
       rating: rating ?? this.rating,
       createdAt: createdAt ?? this.createdAt,

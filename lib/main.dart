@@ -12,6 +12,7 @@ import 'provider/settings_provider.dart';
 import 'core/router/app_routes.dart';
 import 'core/router/app_router.dart';
 import 'screens/auth_screen.dart';
+import 'screens/email_verification_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/search_screen.dart';
 import 'screens/favorites_screen.dart';
@@ -91,6 +92,9 @@ class AutoMarketApp extends StatelessWidget {
           }
 
           if (authProvider.isAuthenticated) {
+            if (!authProvider.isEmailVerified) {
+              return const EmailVerificationScreen();
+            }
             return const MainShell();
           }
 
