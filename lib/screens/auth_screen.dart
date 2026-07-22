@@ -84,6 +84,20 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+    try {
+      await context.read<AuthProvider>().signInWithGoogle();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.toString()), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _showForgotPasswordDialog() async {
     final emailController = TextEditingController();
 
@@ -381,6 +395,55 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
+
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        'или',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 52,
+                  child: OutlinedButton(
+                    onPressed: _isLoading || authProvider.isLoading
+                        ? null
+                        : _handleGoogleSignIn,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.black87,
+                      side: BorderSide(color: Colors.grey.shade300),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'G',
+                          style: TextStyle(
+                            color: Color(0xFF4285F4),
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Text(
+                          'Продолжить с Google',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,

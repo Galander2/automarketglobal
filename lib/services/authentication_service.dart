@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../models/app_user.dart';
 
@@ -14,6 +16,7 @@ class AuthenticationException implements Exception {
 class AuthenticationService {
   final firebase_auth.FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  Future<void>? _googleInitialization;
 
   AuthenticationService({
     firebase_auth.FirebaseAuth? auth,
@@ -84,6 +87,58 @@ class AuthenticationService {
         'emailVerified': authUser.emailVerified,
       }, SetOptions(merge: true));
       return appUser.copyWith(lastLogin: DateTime.now());
+    } on firebase_auth.FirebaseAuthException catch (error) {
+      throw AuthenticationException(_authMessage(error.code));
+    } on AuthenticationException {
+      rethrow;
+    }
+  }
+
+  Future<AppUser> signInWithGoogle() async {
+    try {
+      firebase_auth.UserCredential credential;
+      if (kIsWeb) {
+        final provider = firebase_auth.GoogleAuthProvider()
+          ..setCustomParameters({'prompt': 'select_account'});
+        credential = await _auth.signInWithPopup(provider);
+      } else {
+        final googleSignIn = GoogleSignIn.instance;
+        await (_googleInitialization ??= googleSignIn.initialize());
+        final googleUser = await googleSignIn.authenticate();
+        final googleAuth = googleUser.authentication;
+        final googleCredential = firebase_auth.GoogleAuthProvider.credential(
+          idToken: googleAuth.idToken,
+        );
+        credential = await _auth.signInWithCredential(googleCredential);
+      }
+
+      final authUser = credential.user;
+      if (authUser == null) {
+        throw const AuthenticationException('Не удалось войти через Google');
+      }
+      final appUser = await getCurrentUser();
+      if (appUser == null) {
+        throw const AuthenticationException('Не удалось создать профиль');
+      }
+      if (appUser.isBlocked) {
+        await _auth.signOut();
+        throw const AuthenticationException('Аккаунт заблокирован');
+      }
+      await _firestore.collection('users').doc(authUser.uid).set({
+        'lastLogin': FieldValue.serverTimestamp(),
+        'emailVerified': authUser.emailVerified,
+        'avatar': appUser.avatar ?? authUser.photoURL,
+      }, SetOptions(merge: true));
+      return appUser.copyWith(
+        emailVerified: authUser.emailVerified,
+        avatar: appUser.avatar ?? authUser.photoURL,
+        lastLogin: DateTime.now(),
+      );
+    } on GoogleSignInException catch (error) {
+      if (error.code == GoogleSignInExceptionCode.canceled) {
+        throw const AuthenticationException('Вход через Google отменён');
+      }
+      throw const AuthenticationException('Не удалось войти через Google');
     } on firebase_auth.FirebaseAuthException catch (error) {
       throw AuthenticationException(_authMessage(error.code));
     } on AuthenticationException {
@@ -213,6 +268,13 @@ class AuthenticationService {
         return 'Нет соединения с интернетом';
       case 'operation-not-allowed':
         return 'Этот способ входа не включён в Firebase';
+      case 'popup-closed-by-user':
+      case 'cancelled-popup-request':
+        return 'Вход через Google отменён';
+      case 'popup-blocked':
+        return 'Браузер заблокировал окно Google. Разрешите всплывающие окна';
+      case 'account-exists-with-different-credential':
+        return 'Аккаунт с таким email уже использует другой способ входа';
       default:
         return 'Ошибка авторизации. Попробуйте ещё раз';
     }

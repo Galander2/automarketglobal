@@ -59,6 +59,12 @@ class AuthProvider extends ChangeNotifier {
         return user;
       });
 
+  Future<AppUser> signInWithGoogle() => _run(() async {
+    final user = await _authService.signInWithGoogle();
+    _currentUser = user;
+    return user;
+  });
+
   Future<AppUser> registerUser({
     required String email,
     required String password,
