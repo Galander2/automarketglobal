@@ -10,20 +10,20 @@ class CountriesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final countries = [
-      {'name': 'Таджикистан', 'flag': '🇹🇯', 'cars': 1250},
-      {'name': 'Узбекистан', 'flag': '🇺🇿', 'cars': 890},
-      {'name': 'Казахстан', 'flag': '🇰', 'cars': 2100},
-      {'name': 'Кыргызстан', 'flag': '🇰🇬', 'cars': 450},
-      {'name': 'Туркменистан', 'flag': '🇹🇲', 'cars': 320},
-      {'name': 'Азербайджан', 'flag': '🇿', 'cars': 680},
-      {'name': 'Грузия', 'flag': '🇬🇪', 'cars': 920},
-      {'name': 'ОАЭ (Дубай)', 'flag': '🇦🇪', 'cars': 3500},
-      {'name': 'Китай', 'flag': '🇳', 'cars': 5200},
-      {'name': 'Южная Корея', 'flag': '🇰🇷', 'cars': 2800},
-      {'name': 'Япония', 'flag': '🇯🇵', 'cars': 4100},
-      {'name': 'США', 'flag': '🇺🇸', 'cars': 8900},
-      {'name': 'Германия', 'flag': '🇪', 'cars': 3400},
-      {'name': 'Франция', 'flag': '🇫🇷', 'cars': 2100},
+      {'name': 'Таджикистан', 'flag': '🇹🇯'},
+      {'name': 'Узбекистан', 'flag': '🇺🇿'},
+      {'name': 'Казахстан', 'flag': '🇰🇿'},
+      {'name': 'Кыргызстан', 'flag': '🇰🇬'},
+      {'name': 'Туркменистан', 'flag': '🇹🇲'},
+      {'name': 'Азербайджан', 'flag': '🇦🇿'},
+      {'name': 'Грузия', 'flag': '🇬🇪'},
+      {'name': 'ОАЭ (Дубай)', 'flag': '🇦🇪'},
+      {'name': 'Китай', 'flag': '🇨🇳'},
+      {'name': 'Южная Корея', 'flag': '🇰🇷'},
+      {'name': 'Япония', 'flag': '🇯🇵'},
+      {'name': 'США', 'flag': '🇺🇸'},
+      {'name': 'Германия', 'flag': '🇩🇪'},
+      {'name': 'Франция', 'flag': '🇫🇷'},
     ];
 
     return Scaffold(
@@ -74,11 +74,11 @@ class CountriesScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            '${country['cars']} автомобилей',
+                          const Text(
+                            'Открыть рынок автомобилей',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey[600],
+                              color: Colors.grey,
                             ),
                           ),
                         ],
