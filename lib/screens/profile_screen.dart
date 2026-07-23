@@ -81,7 +81,7 @@ class ProfileScreen extends StatelessWidget {
             icon: Icons.person_outline,
             title: 'Редактировать профиль',
             onTap: () {
-              Navigator.pushNamed(context, '/profile/edit');
+              Navigator.pushNamed(context, AppRoutes.profileEdit);
             },
           ),
           _ProfileMenuItem(

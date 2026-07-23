@@ -5,6 +5,7 @@ import 'package:flutter_application_1_car_sales/core/router/app_router.dart';
 import 'package:flutter_application_1_car_sales/core/router/app_routes.dart';
 import 'package:flutter_application_1_car_sales/l10n/app_localizations.dart';
 import 'package:flutter_application_1_car_sales/screens/favorites_screen.dart';
+import 'package:flutter_application_1_car_sales/screens/edit_profile_screen.dart';
 import 'package:flutter_application_1_car_sales/screens/home_screen.dart';
 import 'package:flutter_application_1_car_sales/screens/profile_screen.dart';
 import 'package:flutter_application_1_car_sales/screens/search_screen.dart';
@@ -25,6 +26,13 @@ void main() {
 
     testWidgets('generates profile route', (tester) async {
       await _expectRouteBuilds<ProfileScreen>(tester, AppRoutes.profile);
+    });
+
+    testWidgets('generates profile edit route', (tester) async {
+      await _expectRouteBuilds<EditProfileScreen>(
+        tester,
+        AppRoutes.profileEdit,
+      );
     });
 
     testWidgets('generates error route for unknown path', (tester) async {
