@@ -38,12 +38,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _refresh() async {
     final request = _loadCars(forceRefresh: true);
-    setState(() => _carsFuture = request);
+    setState(() {
+      _carsFuture = request;
+    });
     await request;
   }
 
   void _retry() {
-    setState(() => _carsFuture = _loadCars(forceRefresh: true));
+    setState(() {
+      _carsFuture = _loadCars(forceRefresh: true);
+    });
   }
 
   @override
