@@ -33,7 +33,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Не удалось загрузить автомобили'), findsOneWidget);
-    await tester.tap(find.text('Повторить'));
+    final retryButton = find.text('Повторить');
+    await tester.ensureVisible(retryButton);
+    await tester.tap(retryButton);
     await tester.pumpAndSettle();
 
     expect(calls, 2);

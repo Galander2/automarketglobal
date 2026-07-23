@@ -180,25 +180,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildQuickActions(BuildContext context) {
     final actions = <_HomeAction>[
-      _HomeAction(
+      const _HomeAction(
         icon: Icons.add_circle_outline,
         title: 'Продать авто',
         subtitle: 'Создать объявление',
         route: AppRoutes.addCar,
       ),
-      _HomeAction(
+      const _HomeAction(
         icon: Icons.public,
         title: 'Страны',
         subtitle: 'Выбрать рынок',
         route: AppRoutes.countries,
       ),
-      _HomeAction(
+      const _HomeAction(
         icon: Icons.storefront_outlined,
         title: 'Дилеры',
         subtitle: 'Надёжные продавцы',
         route: AppRoutes.dealers,
       ),
-      _HomeAction(
+      const _HomeAction(
         icon: Icons.local_shipping_outlined,
         title: 'Доставка',
         subtitle: 'Заказать перевозку',
