@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../core/router/app_routes.dart';
 import '../models/car.dart';
+import '../repositories/auth_repository.dart';
+import '../repositories/chat_repository.dart';
 
 class CarDetailsScreen extends StatelessWidget {
   final Car car;
@@ -10,6 +14,8 @@ class CarDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gallery = car.images.isNotEmpty ? car.images : [car.imageUrl];
+    final currentUser = context.watch<AuthProvider>().currentUser;
+    final isOwnListing = currentUser?.uid == car.sellerId;
 
     return Scaffold(
       body: CustomScrollView(
@@ -168,9 +174,43 @@ class CarDetailsScreen extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: isOwnListing
+                    ? null
+                    : () async {
+                        final user = context.read<AuthProvider>().currentUser;
+                        if (user == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Войдите в аккаунт, чтобы написать продавцу',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+                        try {
+                          final thread = await ChatRepository().openConversation(
+                            car: car,
+                            buyer: user,
+                          );
+                          if (!context.mounted) return;
+                          await Navigator.pushNamed(
+                            context,
+                            AppRoutes.chat,
+                            arguments: {'thread': thread},
+                          );
+                        } catch (error) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(error.toString()),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
                 icon: const Icon(Icons.chat_bubble_outline),
-                label: const Text('Связаться'),
+                label: Text(isOwnListing ? 'Ваше объявление' : 'Связаться'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2563EB),
                   foregroundColor: Colors.white,

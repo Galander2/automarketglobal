@@ -92,6 +92,14 @@ class ProfileScreen extends StatelessWidget {
             },
           ),
           _ProfileMenuItem(
+            icon: Icons.forum_outlined,
+            title: 'Сообщения',
+            subtitle: 'Диалоги с покупателями и продавцами',
+            onTap: () {
+              Navigator.pushNamed(context, AppRoutes.chats);
+            },
+          ),
+          _ProfileMenuItem(
             icon: Icons.favorite,
             title: l10n.translate('favorites'),
             onTap: () {

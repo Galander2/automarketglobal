@@ -7,6 +7,8 @@ import '../../screens/profile_screen.dart';
 import '../../screens/edit_profile_screen.dart';
 import '../../screens/add_car_screen.dart';
 import '../../screens/car_details_screen.dart';
+import '../../screens/chat_list_screen.dart';
+import '../../screens/chat_screen.dart';
 import '../../screens/countries_screen.dart';
 import '../../screens/dealers_screen.dart';
 import '../../screens/wallet_screen.dart';
@@ -24,6 +26,7 @@ import '../../screens/admin_complaints_screen.dart';
 import '../../screens/admin_markets_screen.dart';
 import '../../screens/admin_settings_screen.dart';
 import '../../models/car.dart';
+import '../../models/chat_thread.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -53,6 +56,19 @@ class AppRouter {
           return MaterialPageRoute(builder: (_) => CarDetailsScreen(car: car));
         }
         return _errorRoute('Неверный тип аргументов для carDetails');
+      case AppRoutes.chats:
+        return MaterialPageRoute(builder: (_) => const ChatListScreen());
+      case AppRoutes.chat:
+        final args = settings.arguments;
+        if (args is Map<String, dynamic>) {
+          final thread = args['thread'];
+          if (thread is ChatThread) {
+            return MaterialPageRoute(
+              builder: (_) => ChatScreen(thread: thread),
+            );
+          }
+        }
+        return _errorRoute('Отсутствует или повреждён аргумент thread');
       case AppRoutes.countries:
         return MaterialPageRoute(builder: (_) => const CountriesScreen());
       case AppRoutes.dealers:
