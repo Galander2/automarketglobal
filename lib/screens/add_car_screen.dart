@@ -111,7 +111,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
       final bytes = await image.readAsBytes();
       final safeName = image.name.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
       final objectName =
-          '${DateTime.now().microsecondsSinceEpoch}_$index_$safeName';
+          '${DateTime.now().microsecondsSinceEpoch}_${index}_$safeName';
       final reference = FirebaseStorage.instance
           .ref()
           .child('car_images')
