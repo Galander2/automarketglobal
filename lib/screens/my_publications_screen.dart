@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../repositories/car_repository.dart';
 import '../models/car.dart';
 import '../widgets/car_card.dart';
@@ -18,7 +19,10 @@ class _MyPublicationsScreenState extends State<MyPublicationsScreen> {
   @override
   void initState() {
     super.initState();
-    _carsFuture = _carRepository.getAllCars();
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    _carsFuture = userId == null
+        ? Future.error('Для просмотра публикаций необходимо войти')
+        : _carRepository.getUserCars(userId);
   }
 
   @override

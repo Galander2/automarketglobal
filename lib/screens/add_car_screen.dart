@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../core/cars/car_form_validators.dart';
 import '../repositories/car_repository.dart';
 
 class AddCarScreen extends StatefulWidget {
@@ -65,6 +65,13 @@ class _AddCarScreenState extends State<AddCarScreen> {
   }
 
   Future<void> _pickImage() async {
+    if (_images.length >= 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Можно добавить не более 10 фотографий')),
+      );
+      return;
+    }
+
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
@@ -93,43 +100,31 @@ class _AddCarScreenState extends State<AddCarScreen> {
     });
   }
 
-  Future<List<String>> _uploadImages() async {
+  Future<List<String>> _uploadImages(String sellerId) async {
     final List<String> imageUrls = [];
-    const apiKey = String.fromEnvironment('IMGBB_API_KEY');
-    if (apiKey.isEmpty) {
-      throw StateError(
-        'IMGBB_API_KEY не настроен. Запустите приложение с '
-        '--dart-define=IMGBB_API_KEY=ваш_ключ',
-      );
-    }
-
-    for (var image in _images) {
+    for (var index = 0; index < _images.length; index++) {
+      final image = _images[index];
+      final length = await image.length();
+      if (length > 10 * 1024 * 1024) {
+        throw StateError('Каждая фотография должна быть меньше 10 МБ');
+      }
       final bytes = await image.readAsBytes();
-
-      final request = http.MultipartRequest(
-        'POST',
-        Uri.parse('https://api.imgbb.com/1/upload'),
+      final safeName = image.name.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+      final objectName =
+          '${DateTime.now().microsecondsSinceEpoch}_${index}_$safeName';
+      final reference = FirebaseStorage.instance
+          .ref()
+          .child('car_images')
+          .child(sellerId)
+          .child(objectName);
+      final snapshot = await reference.putData(
+        bytes,
+        SettableMetadata(
+          contentType: image.mimeType ?? 'image/jpeg',
+          cacheControl: 'public,max-age=31536000,immutable',
+        ),
       );
-
-      request.fields['key'] = apiKey;
-      request.files.add(
-        http.MultipartFile.fromBytes('image', bytes, filename: image.name),
-      );
-
-      final response = await request.send();
-      final responseData = await http.Response.fromStream(response);
-      final jsonData = json.decode(responseData.body) as Map<String, dynamic>;
-
-      if (responseData.statusCode != 200 || jsonData['success'] != true) {
-        throw StateError('Сервис изображений отклонил загрузку');
-      }
-
-      final data = jsonData['data'] as Map<String, dynamic>?;
-      final url = data?['url'] as String?;
-      if (url == null || url.isEmpty) {
-        throw StateError('Сервис изображений не вернул URL');
-      }
-      imageUrls.add(url);
+      imageUrls.add(await snapshot.ref.getDownloadURL());
     }
 
     return imageUrls;
@@ -160,7 +155,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
         throw StateError('Для публикации необходимо войти в аккаунт');
       }
 
-      final imageUrls = await _uploadImages();
+      final imageUrls = await _uploadImages(sellerId);
 
       if (imageUrls.isEmpty) {
         throw Exception('Не удалось загрузить фото');
@@ -340,12 +335,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 hintText: 'Toyota Camry 70',
                 border: OutlineInputBorder(),
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Введите название';
-                }
-                return null;
-              },
+              validator: CarFormValidators.title,
             ),
 
             const SizedBox(height: 16),
@@ -382,12 +372,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 hintText: 'Душанбе',
                 border: OutlineInputBorder(),
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Введите город';
-                }
-                return null;
-              },
+              validator: CarFormValidators.city,
             ),
 
             const SizedBox(height: 16),
@@ -414,12 +399,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Введите цену';
-                      }
-                      return null;
-                    },
+                    validator: CarFormValidators.price,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -432,12 +412,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Введите год';
-                      }
-                      return null;
-                    },
+                    validator: CarFormValidators.year,
                   ),
                 ),
               ],
@@ -453,12 +428,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Введите пробег';
-                }
-                return null;
-              },
+              validator: CarFormValidators.mileage,
             ),
 
             const SizedBox(height: 16),
@@ -470,6 +440,8 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 hintText: 'JTDBF3FG500123456',
                 border: OutlineInputBorder(),
               ),
+              textCapitalization: TextCapitalization.characters,
+              validator: CarFormValidators.vin,
             ),
 
             const SizedBox(height: 16),
@@ -483,12 +455,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
                 alignLabelWithHint: true,
               ),
               maxLines: 4,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Введите описание';
-                }
-                return null;
-              },
+              validator: CarFormValidators.description,
             ),
 
             const SizedBox(height: 32),

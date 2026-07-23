@@ -3,6 +3,7 @@ class AppRoutes {
   static const String search = '/search';
   static const String favorites = '/favorites';
   static const String profile = '/profile';
+  static const String profileEdit = '/profile/edit';
   static const String addCar = '/add-car';
   static const String carDetails = '/car-details';
   static const String countries = '/countries';

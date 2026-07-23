@@ -1,0 +1,135 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function owns(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function currentUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function admin() {
+      return signedIn()
+        && currentUser().data.role in ['admin', 'superAdmin']
+        && currentUser().data.isBlocked == false;
+    }
+
+    function superAdmin() {
+      return signedIn()
+        && currentUser().data.role == 'superAdmin'
+        && currentUser().data.isBlocked == false;
+    }
+
+    function adminCanManageRegularUser() {
+      return admin()
+        && resource.data.role in ['user', 'seller', 'dealer']
+        && request.resource.data.role in ['user', 'seller', 'dealer']
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'role', 'isBlocked', 'isVerified', 'rating', 'updatedAt'
+        ]);
+    }
+
+    function validCarData() {
+      return request.resource.data.keys().hasAll([
+          'sellerId', 'title', 'price', 'year', 'mileage', 'city', 'country',
+          'description', 'imageUrl', 'images', 'status', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'sellerId', 'title', 'price', 'year', 'mileage', 'city', 'route',
+          'country', 'description', 'vin', 'imageUrl', 'images', 'status',
+          'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.sellerId is string
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 3
+        && request.resource.data.title.size() <= 120
+        && request.resource.data.price is number
+        && request.resource.data.price > 0
+        && request.resource.data.year is int
+        && request.resource.data.year >= 1886
+        && request.resource.data.year <= 2100
+        && request.resource.data.mileage is int
+        && request.resource.data.mileage >= 0
+        && request.resource.data.city is string
+        && request.resource.data.city.size() >= 2
+        && request.resource.data.city.size() <= 100
+        && request.resource.data.country is string
+        && request.resource.data.country.size() >= 2
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 5000
+        && request.resource.data.imageUrl is string
+        && request.resource.data.images is list
+        && request.resource.data.images.size() >= 1
+        && request.resource.data.images.size() <= 10
+        && request.resource.data.imageUrl == request.resource.data.images[0]
+        && request.resource.data.status in [
+          'pending', 'approved', 'rejected', 'sold', 'draft'
+        ];
+    }
+
+    function protectedUserFieldsUnchanged() {
+      return request.resource.data.role == resource.data.role
+        && request.resource.data.isBlocked == resource.data.isBlocked
+        && request.resource.data.isVerified == resource.data.isVerified
+        && request.resource.data.rating == resource.data.rating;
+    }
+
+    function validSelfProfileUpdate() {
+      return protectedUserFieldsUnchanged()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'firstName', 'lastName', 'phone', 'avatar', 'country', 'city',
+          'emailVerified', 'lastLogin', 'updatedAt'
+        ])
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['emailVerified'])
+          || request.resource.data.emailVerified
+            == request.auth.token.email_verified
+        );
+    }
+
+    match /users/{userId} {
+      allow create: if owns(userId)
+        && request.resource.data.uid == userId
+        && request.resource.data.role == 'user'
+        && request.resource.data.isBlocked == false
+        && request.resource.data.isVerified == false;
+      allow read: if owns(userId) || admin();
+      allow update: if superAdmin()
+        || adminCanManageRegularUser()
+        || (owns(userId) && validSelfProfileUpdate());
+      allow delete: if superAdmin();
+    }
+
+    match /cars/{carId} {
+      allow read: if resource.data.status == 'approved'
+        || owns(resource.data.sellerId)
+        || admin();
+
+      allow create: if signedIn()
+        && request.resource.data.sellerId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && validCarData();
+
+      allow update: if admin() || (
+        owns(resource.data.sellerId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'title', 'price', 'year', 'mileage', 'city', 'route', 'country',
+          'description', 'vin', 'imageUrl', 'images', 'updatedAt'
+        ])
+        && validCarData()
+      );
+
+      allow delete: if owns(resource.data.sellerId) || admin();
+    }
+
+    match /{document=**} {
+      allow read, write: if admin();
+    }
+  }
+}

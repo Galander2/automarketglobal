@@ -4,6 +4,7 @@ import '../../screens/home_screen.dart';
 import '../../screens/search_screen.dart';
 import '../../screens/favorites_screen.dart';
 import '../../screens/profile_screen.dart';
+import '../../screens/edit_profile_screen.dart';
 import '../../screens/add_car_screen.dart';
 import '../../screens/car_details_screen.dart';
 import '../../screens/countries_screen.dart';
@@ -35,6 +36,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const FavoritesScreen());
       case AppRoutes.profile:
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
+      case AppRoutes.profileEdit:
+        return MaterialPageRoute(builder: (_) => const EditProfileScreen());
       case AppRoutes.addCar:
         return MaterialPageRoute(builder: (_) => const AddCarScreen());
       case AppRoutes.carDetails:
