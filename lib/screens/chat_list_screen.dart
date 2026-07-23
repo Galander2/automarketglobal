@@ -15,9 +15,11 @@ class ChatListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().currentUser;
     if (user == null) {
-      return const Scaffold(
-        appBar: AppBar(title: Text('Сообщения')),
-        body: Center(child: Text('Войдите в аккаунт, чтобы открыть сообщения')),
+      return Scaffold(
+        appBar: AppBar(title: const Text('Сообщения')),
+        body: const Center(
+          child: Text('Войдите в аккаунт, чтобы открыть сообщения'),
+        ),
       );
     }
 
