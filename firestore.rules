@@ -106,6 +106,19 @@ service cloud.firestore {
       allow delete: if superAdmin();
     }
 
+    match /users/{userId}/favorites/{carId} {
+      allow read: if owns(userId);
+      allow create: if owns(userId)
+        && request.resource.data.keys().hasOnly(['carId', 'createdAt'])
+        && request.resource.data.carId == carId
+        && request.resource.data.createdAt == request.time
+        && exists(/databases/$(database)/documents/cars/$(carId))
+        && get(/databases/$(database)/documents/cars/$(carId)).data.status
+          == 'approved';
+      allow update: if false;
+      allow delete: if owns(userId);
+    }
+
     match /cars/{carId} {
       allow read: if resource.data.status == 'approved'
         || owns(resource.data.sellerId)

@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
 import '../models/car.dart';
+import '../repositories/favorite_repository.dart';
 import 'optimized_network_image.dart';
 
 class CarCard extends StatelessWidget {
   final Car car;
   final VoidCallback? onTap;
+  final String? favoriteUserId;
+  final FavoriteRepository? favoriteRepository;
 
-  const CarCard({super.key, required this.car, this.onTap});
+  const CarCard({
+    super.key,
+    required this.car,
+    this.onTap,
+    this.favoriteUserId,
+    this.favoriteRepository,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,23 +35,39 @@ class CarCard extends StatelessWidget {
           ],
         ),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Фото
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            child: AspectRatio(
-              aspectRatio: 16 / 10,
-              child: OptimizedNetworkImage(url: car.imageUrl),
-            ),
-          ),
-
-          // Информация
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Фото
+            Stack(
               children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
+                  child: AspectRatio(
+                    aspectRatio: 16 / 10,
+                    child: OptimizedNetworkImage(url: car.imageUrl),
+                  ),
+                ),
+                if (favoriteUserId?.isNotEmpty == true)
+                  PositionedDirectional(
+                    top: 10,
+                    end: 10,
+                    child: _FavoriteButton(
+                      userId: favoriteUserId!,
+                      carId: car.id,
+                      repository: favoriteRepository ?? FavoriteRepository(),
+                    ),
+                  ),
+              ],
+            ),
+
+            // Информация
+            Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                 // Заголовок
                 Text(
                   car.title,
@@ -121,11 +146,89 @@ class CarCard extends StatelessWidget {
                       ),
                   ],
                 ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
         ),
+      ),
+    );
+  }
+}
+
+class _FavoriteButton extends StatefulWidget {
+  const _FavoriteButton({
+    required this.userId,
+    required this.carId,
+    required this.repository,
+  });
+
+  final String userId;
+  final String carId;
+  final FavoriteRepository repository;
+
+  @override
+  State<_FavoriteButton> createState() => _FavoriteButtonState();
+}
+
+class _FavoriteButtonState extends State<_FavoriteButton> {
+  bool _isSaving = false;
+
+  Future<void> _toggle(bool isFavorite) async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+    try {
+      await widget.repository.setFavorite(
+        userId: widget.userId,
+        carId: widget.carId,
+        isFavorite: !isFavorite,
+      );
+    } on FavoriteRepositoryException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.94),
+      shape: const CircleBorder(),
+      elevation: 2,
+      child: StreamBuilder<bool>(
+        stream: widget.repository.watchIsFavorite(
+          userId: widget.userId,
+          carId: widget.carId,
+        ),
+        builder: (context, snapshot) {
+          final isLoading =
+              snapshot.connectionState == ConnectionState.waiting &&
+              !snapshot.hasData;
+          final isFavorite = snapshot.data ?? false;
+          return IconButton(
+            tooltip: isFavorite
+                ? 'Удалить из избранного'
+                : 'Добавить в избранное',
+            onPressed: isLoading || snapshot.hasError || _isSaving
+                ? null
+                : () => _toggle(isFavorite),
+            icon: _isSaving || isLoading
+                ? const SizedBox.square(
+                    dimension: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite
+                        ? const Color(0xFFE11D48)
+                        : const Color(0xFF475569),
+                  ),
+          );
+        },
       ),
     );
   }
