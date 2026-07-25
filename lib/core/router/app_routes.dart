@@ -6,6 +6,8 @@ class AppRoutes {
   static const String profileEdit = '/profile/edit';
   static const String addCar = '/add-car';
   static const String carDetails = '/car-details';
+  static const String chats = '/chats';
+  static const String chat = '/chat';
   static const String countries = '/countries';
   static const String dealers = '/dealers';
   static const String wallet = '/wallet';

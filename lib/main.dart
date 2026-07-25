@@ -122,6 +122,12 @@ class _MainShellState extends State<MainShell> {
     ProfileScreen(),
   ];
 
+  void _closeAddMenuAndOpen(BuildContext sheetContext, String route) {
+    Navigator.of(sheetContext).pop();
+    if (!mounted) return;
+    Navigator.of(context).pushNamed(route);
+  }
+
   void _openAddMenu() {
     showModalBottomSheet(
       context: context,
@@ -130,8 +136,8 @@ class _MainShellState extends State<MainShell> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (context) {
-        final l10n = AppLocalizations.of(context);
+      builder: (sheetContext) {
+        final l10n = AppLocalizations.of(sheetContext);
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
@@ -150,36 +156,22 @@ class _MainShellState extends State<MainShell> {
                   icon: Icons.directions_car,
                   title: l10n.translate('sellCar'),
                   subtitle: l10n.translate('createAd'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.addCar);
-                  },
+                  onTap: () =>
+                      _closeAddMenuAndOpen(sheetContext, AppRoutes.addCar),
                 ),
                 _AddMenuTile(
                   icon: Icons.storefront,
                   title: l10n.translate('addDealerCar'),
                   subtitle: l10n.translate('forLargeSellers'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.addCar);
-                  },
+                  onTap: () =>
+                      _closeAddMenuAndOpen(sheetContext, AppRoutes.addCar),
                 ),
                 _AddMenuTile(
                   icon: Icons.local_shipping,
                   title: l10n.translate('orderDelivery'),
                   subtitle: l10n.translate('keyDelivery'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.delivery);
-                  },
-                ),
-                _AddMenuTile(
-                  icon: Icons.upload_file,
-                  title: l10n.translate('importCatalog'),
-                  subtitle: l10n.translate('massUpload'),
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
+                  onTap: () =>
+                      _closeAddMenuAndOpen(sheetContext, AppRoutes.delivery),
                 ),
               ],
             ),
@@ -195,6 +187,7 @@ class _MainShellState extends State<MainShell> {
     return Scaffold(
       body: IndexedStack(index: currentIndex, children: screens),
       floatingActionButton: FloatingActionButton(
+        tooltip: l10n.translate('addCar'),
         onPressed: _openAddMenu,
         backgroundColor: const Color(0xFF2563EB),
         foregroundColor: Colors.white,
@@ -202,60 +195,63 @@ class _MainShellState extends State<MainShell> {
         child: const Icon(Icons.add, size: 34),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        height: 70,
-        padding: EdgeInsets.zero,
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 9,
-        color: Theme.of(context).scaffoldBackgroundColor,
-        child: Row(
-          children: [
-            _NavItem(
-              icon: Icons.home_outlined,
-              selectedIcon: Icons.home,
-              label: l10n.translate('home'),
-              isSelected: currentIndex == 0,
-              onTap: () {
-                setState(() {
-                  currentIndex = 0;
-                });
-              },
-            ),
-            _NavItem(
-              icon: Icons.search,
-              selectedIcon: Icons.search,
-              label: l10n.translate('search'),
-              isSelected: currentIndex == 1,
-              onTap: () {
-                setState(() {
-                  currentIndex = 1;
-                });
-              },
-            ),
-            const SizedBox(width: 72),
-            _NavItem(
-              icon: Icons.favorite_border,
-              selectedIcon: Icons.favorite,
-              label: l10n.translate('favorites'),
-              isSelected: currentIndex == 2,
-              onTap: () {
-                setState(() {
-                  currentIndex = 2;
-                });
-              },
-            ),
-            _NavItem(
-              icon: Icons.person_outline,
-              selectedIcon: Icons.person,
-              label: l10n.translate('profile'),
-              isSelected: currentIndex == 3,
-              onTap: () {
-                setState(() {
-                  currentIndex = 3;
-                });
-              },
-            ),
-          ],
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: BottomAppBar(
+          height: 70,
+          padding: EdgeInsets.zero,
+          shape: const CircularNotchedRectangle(),
+          notchMargin: 9,
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: Row(
+            children: [
+              _NavItem(
+                icon: Icons.home_outlined,
+                selectedIcon: Icons.home,
+                label: l10n.translate('home'),
+                isSelected: currentIndex == 0,
+                onTap: () {
+                  setState(() {
+                    currentIndex = 0;
+                  });
+                },
+              ),
+              _NavItem(
+                icon: Icons.search,
+                selectedIcon: Icons.search,
+                label: l10n.translate('search'),
+                isSelected: currentIndex == 1,
+                onTap: () {
+                  setState(() {
+                    currentIndex = 1;
+                  });
+                },
+              ),
+              const SizedBox(width: 72),
+              _NavItem(
+                icon: Icons.favorite_border,
+                selectedIcon: Icons.favorite,
+                label: l10n.translate('favorites'),
+                isSelected: currentIndex == 2,
+                onTap: () {
+                  setState(() {
+                    currentIndex = 2;
+                  });
+                },
+              ),
+              _NavItem(
+                icon: Icons.person_outline,
+                selectedIcon: Icons.person,
+                label: l10n.translate('profile'),
+                isSelected: currentIndex == 3,
+                onTap: () {
+                  setState(() {
+                    currentIndex = 3;
+                  });
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

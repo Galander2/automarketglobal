@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../core/router/app_routes.dart';
 import '../models/car.dart';
+import '../repositories/auth_repository.dart';
+import '../repositories/chat_repository.dart';
+import '../repositories/favorite_repository.dart';
 
 class CarDetailsScreen extends StatelessWidget {
   final Car car;
@@ -10,6 +15,8 @@ class CarDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gallery = car.images.isNotEmpty ? car.images : [car.imageUrl];
+    final currentUser = context.watch<AuthProvider>().currentUser;
+    final isOwnListing = currentUser?.uid == car.sellerId;
 
     return Scaffold(
       body: CustomScrollView(
@@ -159,18 +166,51 @@ class CarDetailsScreen extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.favorite_border),
-                label: const Text('Избранное'),
+              child: _FavoriteDetailsButton(
+                userId: currentUser?.uid,
+                carId: car.id,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: isOwnListing
+                    ? null
+                    : () async {
+                        final user = context.read<AuthProvider>().currentUser;
+                        if (user == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Войдите в аккаунт, чтобы написать продавцу',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+                        try {
+                          final thread = await ChatRepository().openConversation(
+                            car: car,
+                            buyer: user,
+                          );
+                          if (!context.mounted) return;
+                          await Navigator.pushNamed(
+                            context,
+                            AppRoutes.chat,
+                            arguments: {'thread': thread},
+                          );
+                        } catch (error) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(error.toString()),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
                 icon: const Icon(Icons.chat_bubble_outline),
-                label: const Text('Связаться'),
+                label: Text(isOwnListing ? 'Ваше объявление' : 'Связаться'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2563EB),
                   foregroundColor: Colors.white,
@@ -181,6 +221,87 @@ class CarDetailsScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _FavoriteDetailsButton extends StatefulWidget {
+  const _FavoriteDetailsButton({
+    required this.userId,
+    required this.carId,
+  });
+
+  final String? userId;
+  final String carId;
+
+  @override
+  State<_FavoriteDetailsButton> createState() =>
+      _FavoriteDetailsButtonState();
+}
+
+class _FavoriteDetailsButtonState extends State<_FavoriteDetailsButton> {
+  final FavoriteRepository _repository = FavoriteRepository();
+  bool _isSaving = false;
+
+  Future<void> _toggle(bool isFavorite) async {
+    final userId = widget.userId;
+    if (userId == null || _isSaving) return;
+    setState(() => _isSaving = true);
+    try {
+      await _repository.setFavorite(
+        userId: userId,
+        carId: widget.carId,
+        isFavorite: !isFavorite,
+      );
+    } on FavoriteRepositoryException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final userId = widget.userId;
+    if (userId == null) {
+      return const OutlinedButton(
+        onPressed: null,
+        child: Text('Избранное'),
+      );
+    }
+
+    return StreamBuilder<bool>(
+      stream: _repository.watchIsFavorite(
+        userId: userId,
+        carId: widget.carId,
+      ),
+      builder: (context, snapshot) {
+        final isLoading =
+            snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData;
+        final isFavorite = snapshot.data ?? false;
+        return OutlinedButton.icon(
+          onPressed: isLoading || snapshot.hasError || _isSaving
+              ? null
+              : () => _toggle(isFavorite),
+          icon: _isSaving || isLoading
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorite ? const Color(0xFFE11D48) : null,
+                ),
+          label: Text(
+            isFavorite ? 'В избранном' : 'Избранное',
+            overflow: TextOverflow.ellipsis,
+          ),
+        );
+      },
     );
   }
 }

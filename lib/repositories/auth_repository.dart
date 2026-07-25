@@ -102,8 +102,12 @@ class AuthProvider extends ChangeNotifier {
       _run(() => _authService.resetPassword(email));
 
   Future<void> updateUser(AppUser user) => _run(() async {
-    await _authService.updateUser(user);
-    _currentUser = user;
+    _currentUser = await _authService.updateUser(user);
+  });
+
+  Future<void> refreshUser() => _run(() async {
+    await _authService.reloadUser();
+    _currentUser = await _authService.getCurrentUser();
   });
 
   Future<bool> checkIsAdmin() => _authService.isAdmin();

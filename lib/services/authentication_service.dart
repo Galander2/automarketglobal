@@ -206,7 +206,26 @@ class AuthenticationService {
   }
 
   Future<void> reloadUser() async {
-    await firebaseUser?.reload();
+    final user = firebaseUser;
+    if (user == null) {
+      throw const AuthenticationException('Сначала войдите');
+    }
+    try {
+      await user.reload();
+      final refreshedUser = _auth.currentUser;
+      if (refreshedUser == null) {
+        throw const AuthenticationException('Сессия завершена. Войдите снова');
+      }
+      await refreshedUser.getIdToken(true);
+      await _firestore.collection('users').doc(refreshedUser.uid).update({
+        'emailVerified': refreshedUser.emailVerified,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } on firebase_auth.FirebaseAuthException catch (error) {
+      throw AuthenticationException(_authMessage(error.code));
+    } on FirebaseException catch (error) {
+      throw AuthenticationException(_firestoreMessage(error));
+    }
   }
 
   Future<void> sendEmailVerification() async {
@@ -225,22 +244,39 @@ class AuthenticationService {
     }
   }
 
-  Future<void> updateUser(AppUser user) async {
+  Future<AppUser> updateUser(AppUser user) async {
     final current = firebaseUser;
     if (current == null || current.uid != user.uid) {
       throw const AuthenticationException('Нет доступа к этому профилю');
     }
+    final firstName = user.firstName.trim();
+    final lastName = user.lastName.trim();
+    final phone = user.phone.trim().replaceAll(RegExp(r'[\s()\-]'), '');
+    final country = user.country?.trim() ?? '';
+    final city = user.city?.trim() ?? '';
+    final avatar = user.avatar?.trim();
+    final storedAvatar = avatar == null || avatar.isEmpty ? null : avatar;
     try {
       await _firestore.collection('users').doc(user.uid).update({
-        'firstName': user.firstName.trim(),
-        'lastName': user.lastName.trim(),
-        'phone': user.phone.trim(),
-        'avatar': user.avatar,
-        'country': user.country,
-        'city': user.city,
+        'firstName': firstName,
+        'lastName': lastName,
+        'phone': phone,
+        'avatar': storedAvatar,
+        'country': country,
+        'city': city,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      await current.updateDisplayName(user.fullName);
+      return user.copyWith(
+        firstName: firstName,
+        lastName: lastName,
+        phone: phone,
+        country: country,
+        city: city,
+        updatedAt: DateTime.now(),
+        clearAvatar: storedAvatar == null,
+      );
+    } on firebase_auth.FirebaseAuthException catch (error) {
+      throw AuthenticationException(_authMessage(error.code));
     } on FirebaseException catch (error) {
       throw AuthenticationException(_firestoreMessage(error));
     }

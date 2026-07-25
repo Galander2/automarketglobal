@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../core/router/app_routes.dart';
 import '../l10n/app_localizations.dart';
 import '../models/car.dart';
+import '../repositories/auth_repository.dart';
 import '../repositories/car_repository.dart';
 import '../widgets/car_card.dart';
 
@@ -165,6 +167,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildResults() {
+    final userId = context.read<AuthProvider?>()?.currentUser?.uid;
     if (_isLoading && _cars.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -198,6 +201,7 @@ class _SearchScreenState extends State<SearchScreen> {
             child: CarCard(
               key: ValueKey(car.id),
               car: car,
+              favoriteUserId: userId,
               onTap: () {
                 Navigator.pushNamed(
                   context,

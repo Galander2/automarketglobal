@@ -9,6 +9,7 @@ import 'package:flutter_application_1_car_sales/screens/edit_profile_screen.dart
 import 'package:flutter_application_1_car_sales/screens/home_screen.dart';
 import 'package:flutter_application_1_car_sales/screens/profile_screen.dart';
 import 'package:flutter_application_1_car_sales/screens/search_screen.dart';
+import 'package:flutter_application_1_car_sales/screens/chat_list_screen.dart';
 
 void main() {
   group('AppRouter Tests', () {
@@ -35,6 +36,10 @@ void main() {
       );
     });
 
+    testWidgets('generates chat list route', (tester) async {
+      await _expectRouteBuilds<ChatListScreen>(tester, AppRoutes.chats);
+    });
+
     testWidgets('generates error route for unknown path', (tester) async {
       await _pumpGeneratedRoute(tester, '/unknown-route');
       expect(find.text('Нет маршрута: /unknown-route'), findsOneWidget);
@@ -44,6 +49,14 @@ void main() {
       await _pumpGeneratedRoute(tester, AppRoutes.carDetails);
       expect(
         find.textContaining('Отсутствует или повреждён аргумент car'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('handles chat with missing arguments', (tester) async {
+      await _pumpGeneratedRoute(tester, AppRoutes.chat);
+      expect(
+        find.textContaining('Отсутствует или повреждён аргумент thread'),
         findsOneWidget,
       );
     });

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../core/router/app_routes.dart';
 import '../models/car.dart';
+import '../repositories/auth_repository.dart';
 import '../repositories/car_repository.dart';
 import '../widgets/car_card.dart';
 
@@ -311,11 +313,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _carItem(BuildContext context, Car car) {
+    final userId = context.read<AuthProvider?>()?.currentUser?.uid;
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: CarCard(
         key: ValueKey(car.id),
         car: car,
+        favoriteUserId: userId,
         onTap: () => Navigator.pushNamed(
           context,
           AppRoutes.carDetails,

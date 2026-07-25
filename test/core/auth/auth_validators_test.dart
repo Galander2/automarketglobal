@@ -18,5 +18,32 @@ void main() {
       expect(AuthValidators.phone('+992 900 00 00 00'), isNull);
       expect(AuthValidators.phone('123'), isNotNull);
     });
+
+    test('validates multilingual profile names', () {
+      expect(AuthValidators.name('Ахмад', 'имя'), isNull);
+      expect(AuthValidators.name("O'Connor", 'фамилию'), isNull);
+      expect(AuthValidators.name('李明', 'имя'), isNull);
+      expect(AuthValidators.name('A', 'имя'), isNotNull);
+      expect(AuthValidators.name('User_123', 'имя'), isNotNull);
+    });
+
+    test('validates optional country and city', () {
+      expect(AuthValidators.optionalPlace('', 'Город'), isNull);
+      expect(
+        AuthValidators.optionalPlace('Душанбе', 'Город'),
+        isNull,
+      );
+      expect(
+        AuthValidators.optionalPlace('City<script>', 'Город'),
+        isNotNull,
+      );
+    });
+
+    test('normalizes phone before saving', () {
+      expect(
+        AuthValidators.normalizePhone('+992 (900) 00-00-00'),
+        '+992900000000',
+      );
+    });
   });
 }

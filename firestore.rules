@@ -79,12 +79,69 @@ service cloud.firestore {
         && request.resource.data.rating == resource.data.rating;
     }
 
+    function validStoredPhone(phone) {
+      return phone is string
+        && (
+          phone == ''
+          || phone.matches('^\\+[1-9][0-9]{5,14}$')
+        );
+    }
+
     function validSelfProfileUpdate() {
       return protectedUserFieldsUnchanged()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'firstName', 'lastName', 'phone', 'avatar', 'country', 'city',
           'emailVerified', 'lastLogin', 'updatedAt'
         ])
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['firstName'])
+          || (
+            request.resource.data.firstName is string
+            && request.resource.data.firstName.size() >= 2
+            && request.resource.data.firstName.size() <= 60
+          )
+        )
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['lastName'])
+          || (
+            request.resource.data.lastName is string
+            && request.resource.data.lastName.size() >= 2
+            && request.resource.data.lastName.size() <= 60
+          )
+        )
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['phone'])
+          || validStoredPhone(request.resource.data.phone)
+        )
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['avatar'])
+          || request.resource.data.avatar == null
+          || (
+            request.resource.data.avatar is string
+            && request.resource.data.avatar.size() <= 2048
+            && request.resource.data.avatar.matches('^https://.*')
+          )
+        )
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['country'])
+          || (
+            request.resource.data.country is string
+            && request.resource.data.country.size() <= 100
+          )
+        )
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['city'])
+          || (
+            request.resource.data.city is string
+            && request.resource.data.city.size() <= 100
+          )
+        )
         && (
           !request.resource.data.diff(resource.data).affectedKeys()
             .hasAny(['emailVerified'])
@@ -98,12 +155,26 @@ service cloud.firestore {
         && request.resource.data.uid == userId
         && request.resource.data.role == 'user'
         && request.resource.data.isBlocked == false
-        && request.resource.data.isVerified == false;
+        && request.resource.data.isVerified == false
+        && validStoredPhone(request.resource.data.phone);
       allow read: if owns(userId) || admin();
       allow update: if superAdmin()
         || adminCanManageRegularUser()
         || (owns(userId) && validSelfProfileUpdate());
       allow delete: if superAdmin();
+    }
+
+    match /users/{userId}/favorites/{carId} {
+      allow read: if owns(userId);
+      allow create: if owns(userId)
+        && request.resource.data.keys().hasOnly(['carId', 'createdAt'])
+        && request.resource.data.carId == carId
+        && request.resource.data.createdAt == request.time
+        && exists(/databases/$(database)/documents/cars/$(carId))
+        && get(/databases/$(database)/documents/cars/$(carId)).data.status
+          == 'approved';
+      allow update: if false;
+      allow delete: if owns(userId);
     }
 
     match /cars/{carId} {
@@ -126,6 +197,156 @@ service cloud.firestore {
       );
 
       allow delete: if owns(resource.data.sellerId) || admin();
+    }
+
+    function chatParticipant(chatData) {
+      return signedIn()
+        && chatData.participantIds is list
+        && chatData.participantIds.hasAny([request.auth.uid]);
+    }
+
+    function validNewChat() {
+      let car = get(
+        /databases/$(database)/documents/cars/$(request.resource.data.carId)
+      );
+      return request.resource.data.keys().hasAll([
+          'carId', 'carTitle', 'carImageUrl', 'buyerId', 'sellerId',
+          'participantIds', 'lastMessage', 'lastMessageAt', 'createdAt',
+          'updatedAt', 'unreadCounts', 'blockedBy'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'carId', 'carTitle', 'carImageUrl', 'buyerId', 'sellerId',
+          'participantIds', 'lastMessage', 'lastMessageAt', 'createdAt',
+          'updatedAt', 'unreadCounts', 'blockedBy'
+        ])
+        && car.data.status == 'approved'
+        && request.resource.data.carId is string
+        && request.resource.data.carTitle is string
+        && request.resource.data.carTitle.size() >= 3
+        && request.resource.data.carTitle.size() <= 120
+        && request.resource.data.carImageUrl is string
+        && request.resource.data.buyerId == request.auth.uid
+        && request.resource.data.sellerId == car.data.sellerId
+        && request.resource.data.buyerId != request.resource.data.sellerId
+        && request.resource.data.participantIds is list
+        && request.resource.data.participantIds.size() == 2
+        && request.resource.data.participantIds[0]
+          == request.resource.data.buyerId
+        && request.resource.data.participantIds[1]
+          == request.resource.data.sellerId
+        && request.resource.data.lastMessage == ''
+        && request.resource.data.lastMessageAt == request.time
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.unreadCounts is map
+        && request.resource.data.unreadCounts[
+          request.resource.data.buyerId
+        ] == 0
+        && request.resource.data.unreadCounts[
+          request.resource.data.sellerId
+        ] == 0
+        && request.resource.data.blockedBy is list
+        && request.resource.data.blockedBy.size() == 0;
+    }
+
+    function otherChatParticipant(chatData) {
+      return chatData.participantIds[0] == request.auth.uid
+        ? chatData.participantIds[1]
+        : chatData.participantIds[0];
+    }
+
+    function validMessageSummaryUpdate() {
+      let otherId = otherChatParticipant(resource.data);
+      return resource.data.blockedBy.size() == 0
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'lastMessage', 'lastMessageAt', 'updatedAt', 'unreadCounts'
+        ])
+        && request.resource.data.lastMessage is string
+        && request.resource.data.lastMessage.size() >= 1
+        && request.resource.data.lastMessage.size() <= 2000
+        && request.resource.data.lastMessageAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.unreadCounts is map
+        && request.resource.data.unreadCounts[request.auth.uid] == 0
+        && request.resource.data.unreadCounts[otherId]
+          == resource.data.unreadCounts[otherId] + 1;
+    }
+
+    function validReadUpdate() {
+      let otherId = otherChatParticipant(resource.data);
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'updatedAt', 'unreadCounts'
+        ])
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.unreadCounts[request.auth.uid] == 0
+        && request.resource.data.unreadCounts[otherId]
+          == resource.data.unreadCounts[otherId];
+    }
+
+    function validBlockUpdate() {
+      let addingSelf = request.resource.data.blockedBy.size()
+          == resource.data.blockedBy.size() + 1
+        && request.resource.data.blockedBy.hasAll(resource.data.blockedBy)
+        && request.resource.data.blockedBy.hasAny([request.auth.uid]);
+      let removingSelf = request.resource.data.blockedBy.size()
+          == resource.data.blockedBy.size() - 1
+        && resource.data.blockedBy.hasAll(request.resource.data.blockedBy)
+        && !request.resource.data.blockedBy.hasAny([request.auth.uid]);
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'updatedAt', 'blockedBy'
+        ])
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.blockedBy is list
+        && request.resource.data.blockedBy.size() <= 2
+        && request.resource.data.blockedBy.hasOnly(
+          resource.data.participantIds
+        )
+        && (addingSelf || removingSelf);
+    }
+
+    function validChatUpdate() {
+      return chatParticipant(resource.data)
+        && (
+          validMessageSummaryUpdate()
+          || validReadUpdate()
+          || validBlockUpdate()
+        );
+    }
+
+    function validNewMessage(chatId) {
+      let chat = get(/databases/$(database)/documents/chats/$(chatId));
+      return chatParticipant(chat.data)
+        && chat.data.blockedBy.size() == 0
+        && request.resource.data.keys().hasAll([
+          'senderId', 'text', 'type', 'sentAt', 'readBy'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'senderId', 'text', 'type', 'sentAt', 'readBy'
+        ])
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 1
+        && request.resource.data.text.size() <= 2000
+        && request.resource.data.type == 'text'
+        && request.resource.data.sentAt == request.time
+        && request.resource.data.readBy is list
+        && request.resource.data.readBy.size() == 1
+        && request.resource.data.readBy[0] == request.auth.uid;
+    }
+
+    match /chats/{chatId} {
+      allow read: if chatParticipant(resource.data);
+      allow create: if signedIn() && validNewChat();
+      allow update: if validChatUpdate();
+      allow delete: if admin();
+
+      match /messages/{messageId} {
+        allow read: if chatParticipant(
+          get(/databases/$(database)/documents/chats/$(chatId)).data
+        );
+        allow create: if validNewMessage(chatId);
+        allow update, delete: if false;
+      }
     }
 
     match /{document=**} {
