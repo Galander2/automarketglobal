@@ -42,7 +42,7 @@ class InternationalPhoneField extends StatelessWidget {
     return Localizations.override(
       context: context,
       locale: locale,
-      delegates: PhoneFieldLocalization.delegates,
+      delegates: PhoneFieldLocalization.delegates.toList(),
       child: Builder(
         builder: (fieldContext) => PhoneFormField(
           initialValue: initialValue,
