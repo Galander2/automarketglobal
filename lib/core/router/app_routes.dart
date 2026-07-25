@@ -4,6 +4,7 @@ class AppRoutes {
   static const String favorites = '/favorites';
   static const String profile = '/profile';
   static const String profileEdit = '/profile/edit';
+  static const String settings = '/settings';
   static const String addCar = '/add-car';
   static const String carDetails = '/car-details';
   static const String chats = '/chats';

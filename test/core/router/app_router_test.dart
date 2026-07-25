@@ -10,6 +10,7 @@ import 'package:flutter_application_1_car_sales/screens/home_screen.dart';
 import 'package:flutter_application_1_car_sales/screens/profile_screen.dart';
 import 'package:flutter_application_1_car_sales/screens/search_screen.dart';
 import 'package:flutter_application_1_car_sales/screens/chat_list_screen.dart';
+import 'package:flutter_application_1_car_sales/screens/user_settings_screen.dart';
 
 void main() {
   group('AppRouter Tests', () {
@@ -33,6 +34,13 @@ void main() {
       await _expectRouteBuilds<EditProfileScreen>(
         tester,
         AppRoutes.profileEdit,
+      );
+    });
+
+    testWidgets('generates user settings route', (tester) async {
+      await _expectRouteBuilds<UserSettingsScreen>(
+        tester,
+        AppRoutes.settings,
       );
     });
 

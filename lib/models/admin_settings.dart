@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class AdminSettings {
   final bool notificationsEnabled;
   final bool emailNotificationsEnabled;
@@ -41,10 +43,16 @@ class AdminSettings {
       moderateListings: map['moderateListings'] as bool? ?? false,
       language: map['language'] as String? ?? 'ru',
       themeMode: map['themeMode'] as String? ?? 'system',
-      itemsPerPage: map['itemsPerPage'] as int? ?? 20,
-      updatedAt: map['updatedAt'] as DateTime?,
+      itemsPerPage: (map['itemsPerPage'] as num?)?.toInt() ?? 20,
+      updatedAt: _toDateTime(map['updatedAt']),
       updatedBy: map['updatedBy'] as String?,
     );
+  }
+
+  static DateTime? _toDateTime(Object? value) {
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    return null;
   }
 
   Map<String, dynamic> toMap() {

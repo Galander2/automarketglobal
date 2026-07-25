@@ -130,6 +130,14 @@ class ProfileScreen extends StatelessWidget {
               Navigator.pushNamed(context, AppRoutes.languageSelection);
             },
           ),
+          _ProfileMenuItem(
+            icon: Icons.settings_outlined,
+            title: 'Настройки',
+            subtitle: 'Аккаунт, тема и безопасность',
+            onTap: () {
+              Navigator.pushNamed(context, AppRoutes.settings);
+            },
+          ),
 
           // Админ-панель (только для админов)
           if (authProvider.isAdmin) ...[

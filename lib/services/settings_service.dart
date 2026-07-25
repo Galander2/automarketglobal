@@ -30,24 +30,38 @@ class SettingsService {
   }
 
   Future<void> saveSettings(AdminSettings settings, String adminUid) async {
-    final updatedSettings = settings.copyWith(
-      updatedAt: DateTime.now(),
-      updatedBy: adminUid,
-    );
-    await _firestore
-        .collection(_collectionPath)
-        .doc(_docId)
-        .set(updatedSettings.toMap(), SetOptions(merge: true));
+    await _writeWithAudit(settings, adminUid, action: 'settings.updated');
   }
 
   Future<void> resetSettings(String adminUid) async {
-    final defaultSettings = AdminSettings.defaults().copyWith(
-      updatedAt: DateTime.now(),
-      updatedBy: adminUid,
+    await _writeWithAudit(
+      AdminSettings.defaults(),
+      adminUid,
+      action: 'settings.reset',
     );
-    await _firestore
-        .collection(_collectionPath)
-        .doc(_docId)
-        .set(defaultSettings.toMap(), SetOptions(merge: false));
+  }
+
+  Future<void> _writeWithAudit(
+    AdminSettings settings,
+    String adminUid, {
+    required String action,
+  }) async {
+    final settingsRef = _firestore.collection(_collectionPath).doc(_docId);
+    final auditRef = _firestore.collection('admin_audit_logs').doc();
+    final data = settings.toMap()
+      ..['updatedAt'] = FieldValue.serverTimestamp()
+      ..['updatedBy'] = adminUid;
+
+    final batch = _firestore.batch();
+    batch.set(settingsRef, data);
+    batch.set(auditRef, {
+      'actorId': adminUid,
+      'action': action,
+      'targetType': 'settings',
+      'targetId': _docId,
+      'metadata': const <String, dynamic>{},
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+    await batch.commit();
   }
 }

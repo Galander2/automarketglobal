@@ -56,6 +56,7 @@ class AutoMarketApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       onGenerateRoute: AppRouter.generateRoute,
       locale: context.watch<LanguageService>().locale,
+      themeMode: context.watch<LanguageService>().themeMode,
       supportedLocales: const [
         Locale('ru'),
         Locale('en'),
@@ -82,6 +83,15 @@ class AutoMarketApp extends StatelessWidget {
           backgroundColor: Color(0xFFFAF5FF),
           elevation: 0,
         ),
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF2563EB),
+          brightness: Brightness.dark,
+        ),
+        appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
       ),
       home: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {

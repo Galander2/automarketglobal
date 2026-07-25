@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../provider/settings_provider.dart';
 import '../repositories/auth_repository.dart';
+import '../core/router/app_routes.dart';
+import '../models/app_user.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -98,6 +100,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = context.watch<AuthProvider>().currentUser;
+    final canEdit = user?.role == UserRole.superAdmin;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Настройки администратора'),
@@ -135,11 +140,58 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              Card(
+                color: canEdit
+                    ? Theme.of(context).colorScheme.primaryContainer
+                    : Theme.of(context).colorScheme.surfaceContainerHighest,
+                child: ListTile(
+                  leading: Icon(
+                    canEdit ? Icons.admin_panel_settings : Icons.visibility,
+                  ),
+                  title: Text(
+                    canEdit
+                        ? 'Режим суперадминистратора'
+                        : 'Безопасный режим администратора',
+                  ),
+                  subtitle: Text(
+                    canEdit
+                        ? 'Изменения записываются в журнал безопасности.'
+                        : 'Параметры доступны для просмотра. Критические изменения может выполнять только суперадминистратор.',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildSectionTitle('Рабочие разделы'),
+              Card(
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.car_rental_outlined),
+                      title: const Text('Модерация объявлений'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () =>
+                          Navigator.pushNamed(context, AppRoutes.adminCars),
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.report_outlined),
+                      title: const Text('Жалобы пользователей'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => Navigator.pushNamed(
+                        context,
+                        AppRoutes.adminComplaints,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
               _buildSectionTitle('Уведомления'),
               _buildSwitchTile(
                 icon: Icons.notifications_outlined,
                 title: 'Уведомления включены',
                 value: settings.notificationsEnabled,
+                enabled: canEdit,
                 onChanged: (value) =>
                     _updateField(provider, 'notificationsEnabled', value),
               ),
@@ -147,6 +199,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 icon: Icons.email_outlined,
                 title: 'Email уведомления',
                 value: settings.emailNotificationsEnabled,
+                enabled: canEdit,
                 onChanged: (value) =>
                     _updateField(provider, 'emailNotificationsEnabled', value),
               ),
@@ -154,6 +207,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 icon: Icons.phone_android_outlined,
                 title: 'Push уведомления',
                 value: settings.pushNotificationsEnabled,
+                enabled: canEdit,
                 onChanged: (value) =>
                     _updateField(provider, 'pushNotificationsEnabled', value),
               ),
@@ -164,6 +218,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 icon: Icons.build_outlined,
                 title: 'Режим обслуживания',
                 value: settings.maintenanceMode,
+                enabled: canEdit,
                 onChanged: (value) =>
                     _updateField(provider, 'maintenanceMode', value),
               ),
@@ -171,6 +226,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 icon: Icons.how_to_reg_outlined,
                 title: 'Проверка новых пользователей',
                 value: settings.requireUserVerification,
+                enabled: canEdit,
                 onChanged: (value) =>
                     _updateField(provider, 'requireUserVerification', value),
               ),
@@ -178,6 +234,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 icon: Icons.car_crash_outlined,
                 title: 'Модерация объявлений',
                 value: settings.moderateListings,
+                enabled: canEdit,
                 onChanged: (value) =>
                     _updateField(provider, 'moderateListings', value),
               ),
@@ -199,6 +256,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   'ar',
                   'ko',
                 ],
+                enabled: canEdit,
                 onChanged: (value) {
                   if (value != null) {
                     _updateField(provider, 'language', value);
@@ -210,6 +268,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 title: 'Тема',
                 value: settings.themeMode,
                 items: const ['system', 'light', 'dark'],
+                enabled: canEdit,
                 onChanged: (value) {
                   if (value != null) {
                     _updateField(provider, 'themeMode', value);
@@ -220,12 +279,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 icon: Icons.list_alt_outlined,
                 title: 'Элементов на странице',
                 value: settings.itemsPerPage,
+                enabled: canEdit,
                 onChanged: (value) =>
                     _updateField(provider, 'itemsPerPage', value),
               ),
 
               const SizedBox(height: 32),
-              _buildDangerZone(provider),
+              if (canEdit) _buildDangerZone(provider),
             ],
           );
         },
@@ -251,6 +311,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     required String title,
     required bool value,
     required ValueChanged<bool> onChanged,
+    bool enabled = true,
   }) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -258,7 +319,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         secondary: Icon(icon, color: Theme.of(context).colorScheme.primary),
         title: Text(title),
         value: value,
-        onChanged: onChanged,
+        onChanged: enabled ? onChanged : null,
       ),
     );
   }
@@ -269,6 +330,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     required String value,
     required List<String> items,
     required ValueChanged<String?> onChanged,
+    bool enabled = true,
   }) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -281,7 +343,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           items: items
               .map((item) => DropdownMenuItem(value: item, child: Text(item)))
               .toList(),
-          onChanged: onChanged,
+          onChanged: enabled ? onChanged : null,
         ),
       ),
     );
@@ -292,6 +354,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     required String title,
     required int value,
     required ValueChanged<int> onChanged,
+    bool enabled = true,
   }) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -303,7 +366,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           children: [
             IconButton(
               tooltip: 'Уменьшить',
-              onPressed: value > 10 ? () => onChanged(value - 10) : null,
+              onPressed: enabled && value > 10
+                  ? () => onChanged(value - 10)
+                  : null,
               icon: const Icon(Icons.remove_circle_outline),
             ),
             SizedBox(
@@ -312,7 +377,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
             ),
             IconButton(
               tooltip: 'Увеличить',
-              onPressed: value < 100 ? () => onChanged(value + 10) : null,
+              onPressed: enabled && value < 100
+                  ? () => onChanged(value + 10)
+                  : null,
               icon: const Icon(Icons.add_circle_outline),
             ),
           ],
