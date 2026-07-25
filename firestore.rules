@@ -87,6 +87,58 @@ service cloud.firestore {
         ])
         && (
           !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['firstName'])
+          || (
+            request.resource.data.firstName is string
+            && request.resource.data.firstName.size() >= 2
+            && request.resource.data.firstName.size() <= 60
+          )
+        )
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['lastName'])
+          || (
+            request.resource.data.lastName is string
+            && request.resource.data.lastName.size() >= 2
+            && request.resource.data.lastName.size() <= 60
+          )
+        )
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['phone'])
+          || (
+            request.resource.data.phone is string
+            && request.resource.data.phone.matches('^\\+?[0-9]{8,15}$')
+          )
+        )
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['avatar'])
+          || request.resource.data.avatar == null
+          || (
+            request.resource.data.avatar is string
+            && request.resource.data.avatar.size() <= 2048
+            && request.resource.data.avatar.matches('^https://.*')
+          )
+        )
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['country'])
+          || (
+            request.resource.data.country is string
+            && request.resource.data.country.size() <= 100
+          )
+        )
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['city'])
+          || (
+            request.resource.data.city is string
+            && request.resource.data.city.size() <= 100
+          )
+        )
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys()
             .hasAny(['emailVerified'])
           || request.resource.data.emailVerified
             == request.auth.token.email_verified

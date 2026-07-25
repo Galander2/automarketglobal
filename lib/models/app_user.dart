@@ -134,6 +134,7 @@ class AppUser {
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? lastLogin,
+    bool clearAvatar = false,
   }) {
     return AppUser(
       uid: uid ?? this.uid,
@@ -142,7 +143,7 @@ class AppUser {
       phone: phone ?? this.phone,
       email: email ?? this.email,
       role: role ?? this.role,
-      avatar: avatar ?? this.avatar,
+      avatar: clearAvatar ? null : avatar ?? this.avatar,
       country: country ?? this.country,
       city: city ?? this.city,
       isVerified: isVerified ?? this.isVerified,
