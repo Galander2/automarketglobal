@@ -18,6 +18,8 @@ class _AddCarScreenState extends State<AddCarScreen> {
   final _carRepository = CarRepository();
 
   final _titleController = TextEditingController();
+  final _makeController = TextEditingController();
+  final _modelController = TextEditingController();
   final _priceController = TextEditingController();
   final _yearController = TextEditingController();
   final _mileageController = TextEditingController();
@@ -31,6 +33,34 @@ class _AddCarScreenState extends State<AddCarScreen> {
 
   bool _isLoading = false;
   String? _selectedCountry;
+  String? _selectedTransmission;
+  String? _selectedBodyType;
+  String? _selectedFuelType;
+
+  static const _transmissions = [
+    'Автомат',
+    'Механика',
+    'Вариатор',
+    'Робот',
+  ];
+  static const _bodyTypes = [
+    'Седан',
+    'Кроссовер',
+    'Внедорожник',
+    'Хэтчбек',
+    'Универсал',
+    'Купе',
+    'Минивэн',
+    'Пикап',
+    'Кабриолет',
+  ];
+  static const _fuelTypes = [
+    'Бензин',
+    'Дизель',
+    'Гибрид',
+    'Электро',
+    'Газ',
+  ];
 
   final List<String> _countries = [
     'Таджикистан',
@@ -54,6 +84,8 @@ class _AddCarScreenState extends State<AddCarScreen> {
   @override
   void dispose() {
     _titleController.dispose();
+    _makeController.dispose();
+    _modelController.dispose();
     _priceController.dispose();
     _yearController.dispose();
     _mileageController.dispose();
@@ -144,6 +176,14 @@ class _AddCarScreenState extends State<AddCarScreen> {
       ).showSnackBar(const SnackBar(content: Text('Выберите страну')));
       return;
     }
+    if (_selectedTransmission == null ||
+        _selectedBodyType == null ||
+        _selectedFuelType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Заполните характеристики автомобиля')),
+      );
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -164,6 +204,11 @@ class _AddCarScreenState extends State<AddCarScreen> {
       final carData = {
         'sellerId': sellerId,
         'title': _titleController.text.trim(),
+        'make': _makeController.text.trim(),
+        'model': _modelController.text.trim(),
+        'transmission': _selectedTransmission,
+        'bodyType': _selectedBodyType,
+        'fuelType': _selectedFuelType,
         'price': double.parse(
           _priceController.text.replaceAll(RegExp(r'[^\d]'), ''),
         ),
@@ -340,6 +385,74 @@ class _AddCarScreenState extends State<AddCarScreen> {
 
             const SizedBox(height: 16),
 
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _makeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Марка',
+                      hintText: 'Toyota',
+                      border: OutlineInputBorder(),
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                    validator: (value) => _requiredShortText(value, 'марку'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _modelController,
+                    decoration: const InputDecoration(
+                      labelText: 'Модель',
+                      hintText: 'Camry',
+                      border: OutlineInputBorder(),
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                    validator: (value) => _requiredShortText(value, 'модель'),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _carPropertyDropdown(
+                    label: 'Коробка',
+                    value: _selectedTransmission,
+                    values: _transmissions,
+                    onChanged: (value) =>
+                        setState(() => _selectedTransmission = value),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _carPropertyDropdown(
+                    label: 'Кузов',
+                    value: _selectedBodyType,
+                    values: _bodyTypes,
+                    onChanged: (value) =>
+                        setState(() => _selectedBodyType = value),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+
+            _carPropertyDropdown(
+              label: 'Тип топлива',
+              value: _selectedFuelType,
+              values: _fuelTypes,
+              onChanged: (value) =>
+                  setState(() => _selectedFuelType = value),
+            ),
+
+            const SizedBox(height: 16),
+
             DropdownButtonFormField<String>(
               initialValue: _selectedCountry,
               // ...
@@ -494,6 +607,35 @@ class _AddCarScreenState extends State<AddCarScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  String? _requiredShortText(String? value, String fieldName) {
+    final text = value?.trim() ?? '';
+    if (text.isEmpty) return 'Введите $fieldName';
+    if (text.length < 2) return 'Минимум 2 символа';
+    if (text.length > 60) return 'Не более 60 символов';
+    return null;
+  }
+
+  Widget _carPropertyDropdown({
+    required String label,
+    required String? value,
+    required List<String> values,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return DropdownButtonFormField<String>(
+      initialValue: value,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+      ),
+      items: values
+          .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+          .toList(),
+      onChanged: onChanged,
+      validator: (selected) => selected == null ? 'Выберите значение' : null,
     );
   }
 }

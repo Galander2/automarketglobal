@@ -6,11 +6,10 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 import 'services/language_service.dart';
-import 'services/settings_service.dart';
 import 'repositories/auth_repository.dart';
-import 'provider/settings_provider.dart';
 import 'core/router/app_routes.dart';
 import 'core/router/app_router.dart';
+import 'core/theme/app_theme.dart';
 import 'screens/auth_screen.dart';
 import 'screens/email_verification_screen.dart';
 import 'screens/home_screen.dart';
@@ -30,15 +29,10 @@ void main() async {
     ),
   );
 
-  final settingsService = SettingsService();
-
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => LanguageService()),
-        ChangeNotifierProvider(
-          create: (_) => SettingsProvider(settingsService),
-        ),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
       child: const AutoMarketApp(),
@@ -56,6 +50,7 @@ class AutoMarketApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       onGenerateRoute: AppRouter.generateRoute,
       locale: context.watch<LanguageService>().locale,
+      themeMode: context.watch<LanguageService>().themeMode,
       supportedLocales: const [
         Locale('ru'),
         Locale('en'),
@@ -73,16 +68,8 @@ class AutoMarketApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFFAF5FF),
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2563EB)),
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
-          backgroundColor: Color(0xFFFAF5FF),
-          elevation: 0,
-        ),
-      ),
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
       home: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
           if (authProvider.isCheckingAuth) {
@@ -186,23 +173,44 @@ class _MainShellState extends State<MainShell> {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: IndexedStack(index: currentIndex, children: screens),
-      floatingActionButton: FloatingActionButton(
-        tooltip: l10n.translate('addCar'),
-        onPressed: _openAddMenu,
-        backgroundColor: const Color(0xFF2563EB),
-        foregroundColor: Colors.white,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, size: 34),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.primary, AppColors.accent],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.32),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          tooltip: l10n.translate('addCar'),
+          onPressed: _openAddMenu,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          hoverElevation: 0,
+          focusElevation: 0,
+          child: const Icon(Icons.add_rounded, size: 34),
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: SafeArea(
         top: false,
         child: BottomAppBar(
-          height: 70,
+          height: 74,
           padding: EdgeInsets.zero,
           shape: const CircularNotchedRectangle(),
-          notchMargin: 9,
-          color: Theme.of(context).scaffoldBackgroundColor,
+          notchMargin: 10,
+          elevation: 14,
+          shadowColor: Colors.black.withValues(alpha: 0.16),
+          surfaceTintColor: Colors.transparent,
+          color: Theme.of(context).cardColor,
           child: Row(
             children: [
               _NavItem(
@@ -275,26 +283,51 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? const Color(0xFF2563EB) : Colors.grey;
+    final color = isSelected ? AppColors.primary : AppColors.muted;
 
     return Expanded(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(isSelected ? selectedIcon : icon, color: color),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+      child: Semantics(
+        button: true,
+        selected: isSelected,
+        label: label,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: onTap,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.primary.withValues(alpha: 0.11)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 160),
+                  child: Icon(
+                    isSelected ? selectedIcon : icon,
+                    key: ValueKey(isSelected),
+                    color: color,
+                    size: 23,
+                  ),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 3),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -321,13 +354,13 @@ class _AddMenuTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
-          backgroundColor: const Color(0xFF2563EB).withValues(alpha: 0.10),
-          child: Icon(icon, color: const Color(0xFF2563EB)),
+          backgroundColor: AppColors.primary.withValues(alpha: 0.10),
+          child: Icon(icon, color: AppColors.primary),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
         subtitle: Text(subtitle),

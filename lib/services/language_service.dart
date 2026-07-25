@@ -3,17 +3,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class LanguageService extends ChangeNotifier {
   Locale _locale = const Locale('ru');
+  ThemeMode _themeMode = ThemeMode.system;
 
   Locale get locale => _locale;
+  ThemeMode get themeMode => _themeMode;
 
   LanguageService() {
-    _loadLocale();
+    _loadPreferences();
   }
 
-  Future<void> _loadLocale() async {
+  Future<void> _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final languageCode = prefs.getString('language_code') ?? 'ru';
     _locale = Locale(languageCode);
+    _themeMode = _themeModeFromName(prefs.getString('theme_mode'));
     notifyListeners();
   }
 
@@ -22,6 +25,21 @@ class LanguageService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language_code', locale.languageCode);
     notifyListeners();
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    if (_themeMode == mode) return;
+    _themeMode = mode;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('theme_mode', mode.name);
+    notifyListeners();
+  }
+
+  static ThemeMode _themeModeFromName(String? value) {
+    return ThemeMode.values.firstWhere(
+      (mode) => mode.name == value,
+      orElse: () => ThemeMode.system,
+    );
   }
 
   String getLanguageName() {

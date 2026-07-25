@@ -5,6 +5,7 @@ import '../../screens/search_screen.dart';
 import '../../screens/favorites_screen.dart';
 import '../../screens/profile_screen.dart';
 import '../../screens/edit_profile_screen.dart';
+import '../../screens/user_settings_screen.dart';
 import '../../screens/add_car_screen.dart';
 import '../../screens/car_details_screen.dart';
 import '../../screens/chat_list_screen.dart';
@@ -24,8 +25,8 @@ import '../../screens/admin_dealers_screen.dart';
 import '../../screens/admin_reports_screen.dart';
 import '../../screens/admin_complaints_screen.dart';
 import '../../screens/admin_markets_screen.dart';
-import '../../screens/admin_settings_screen.dart';
 import '../../models/car.dart';
+import '../../models/car_search_filters.dart';
 import '../../models/chat_thread.dart';
 import '../../models/app_user.dart';
 import '../../widgets/admin_guard.dart';
@@ -43,6 +44,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
       case AppRoutes.profileEdit:
         return MaterialPageRoute(builder: (_) => const EditProfileScreen());
+      case AppRoutes.settings:
+        return MaterialPageRoute(builder: (_) => const UserSettingsScreen());
       case AppRoutes.addCar:
         return MaterialPageRoute(builder: (_) => const AddCarScreen());
       case AppRoutes.carDetails:
@@ -90,7 +93,14 @@ class AppRouter {
           builder: (_) => const LanguageSelectionScreen(),
         );
       case AppRoutes.searchFilters:
-        return MaterialPageRoute(builder: (_) => const SearchFiltersScreen());
+        final filters = settings.arguments;
+        return MaterialPageRoute(
+          builder: (_) => SearchFiltersScreen(
+            initialFilters: filters is CarSearchFilters
+                ? filters
+                : const CarSearchFilters(),
+          ),
+        );
       case AppRoutes.adminUsers:
         return _adminRoute(
           const AdminUsersScreen(),
@@ -113,11 +123,6 @@ class AppRouter {
       case AppRoutes.adminMarkets:
         return _adminRoute(
           const AdminMarketsScreen(),
-          permission: (user) => user.role == UserRole.superAdmin,
-        );
-      case AppRoutes.adminSettings:
-        return _adminRoute(
-          const AdminSettingsScreen(),
           permission: (user) => user.role == UserRole.superAdmin,
         );
       default:

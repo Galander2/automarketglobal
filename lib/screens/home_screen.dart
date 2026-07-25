@@ -257,7 +257,8 @@ class _HomeScreenState extends State<HomeScreen> {
           child: _HomeMessage(
             icon: Icons.cloud_off_outlined,
             title: 'Не удалось загрузить автомобили',
-            message: snapshot.error.toString(),
+            message:
+                'Проверьте подключение к интернету и попробуйте ещё раз.',
             actionLabel: 'Повторить',
             onAction: _retry,
           ),

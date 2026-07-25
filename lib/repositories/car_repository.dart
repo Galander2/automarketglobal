@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../core/cars/car_search_engine.dart';
 import '../models/car.dart';
+import '../models/car_search_filters.dart';
 
 class CarRepositoryException implements Exception {
   const CarRepositoryException(this.message);
@@ -108,27 +110,27 @@ class CarRepository {
 
   Future<List<Car>> searchCars({
     String? query,
-    String? country,
-    String? city,
-    int? minPrice,
-    int? maxPrice,
-    int? minYear,
-    int? maxYear,
-    int limit = 50,
+    CarSearchFilters filters = const CarSearchFilters(),
+    int limit = 200,
     bool forceRefresh = false,
   }) async {
-    final searchQuery = query?.trim().toLowerCase() ?? '';
-    final normalizedCountry = country?.trim() ?? '';
-    final normalizedCity = city?.trim().toLowerCase() ?? '';
+    final searchQuery = _normalize(query ?? '');
     final cacheKey = [
       'search',
       searchQuery,
-      normalizedCountry.toLowerCase(),
-      normalizedCity,
-      minPrice,
-      maxPrice,
-      minYear,
-      maxYear,
+      filters.make,
+      filters.model,
+      filters.country,
+      filters.city,
+      filters.transmission,
+      filters.bodyType,
+      filters.fuelType,
+      filters.minPrice,
+      filters.maxPrice,
+      filters.minYear,
+      filters.maxYear,
+      filters.maxMileage,
+      filters.sortOrder.name,
       limit,
     ].join(':');
 
@@ -138,19 +140,11 @@ class CarRepository {
       query: _statusQuery('approved', limit),
     );
 
-    return cars.where((car) {
-      final searchableText = '${car.title} ${car.description} ${car.city}'
-          .toLowerCase();
-      final price = _parsePrice(car.price);
-      return (searchQuery.isEmpty || searchableText.contains(searchQuery)) &&
-          (normalizedCountry.isEmpty || car.country == normalizedCountry) &&
-          (normalizedCity.isEmpty ||
-              car.city.toLowerCase() == normalizedCity) &&
-          (minPrice == null || price >= minPrice) &&
-          (maxPrice == null || price <= maxPrice) &&
-          (minYear == null || car.year >= minYear) &&
-          (maxYear == null || car.year <= maxYear);
-    }).toList(growable: false);
+    return CarSearchEngine.apply(
+      cars,
+      query: searchQuery,
+      filters: filters,
+    );
   }
 
   Future<Car?> getCarById(String carId) async {
@@ -240,9 +234,16 @@ class CarRepository {
     return request;
   }
 
-  int _parsePrice(String value) {
-    return int.tryParse(value.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
-  }
+  String _normalize(String value) => value
+      .trim()
+      .toLowerCase()
+      .replaceAll('ё', 'е')
+      .replaceAll(
+        RegExp(r'[^a-zа-яқғӣӯҳҷәөұүңһі0-9]+', unicode: true),
+        ' ',
+      )
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
 
   String _readError(FirebaseException error) {
     if (error.code == 'permission-denied') {
@@ -271,6 +272,11 @@ class CarRepository {
       country: data['country'] ?? '',
       description: data['description'] ?? '',
       vin: data['vin'] ?? '',
+      make: data['make'] ?? '',
+      model: data['model'] ?? '',
+      transmission: data['transmission'] ?? '',
+      bodyType: data['bodyType'] ?? '',
+      fuelType: data['fuelType'] ?? '',
       imageUrl: data['imageUrl'] ?? '',
       images: List<String>.from(data['images'] ?? const []),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),

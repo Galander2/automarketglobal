@@ -112,6 +112,41 @@ class CarDetailsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (car.transmission.isNotEmpty ||
+                      car.bodyType.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _SpecCard(
+                            icon: Icons.settings_outlined,
+                            title: 'Коробка',
+                            value: car.transmission.isEmpty
+                                ? 'Не указано'
+                                : car.transmission,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _SpecCard(
+                            icon: Icons.directions_car_filled_outlined,
+                            title: 'Кузов',
+                            value: car.bodyType.isEmpty
+                                ? 'Не указано'
+                                : car.bodyType,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (car.fuelType.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _SpecCard(
+                      icon: Icons.local_gas_station_outlined,
+                      title: 'Топливо',
+                      value: car.fuelType,
+                    ),
+                  ],
                   const SizedBox(height: 26),
                   const Text(
                     'Описание',

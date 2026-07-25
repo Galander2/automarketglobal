@@ -61,6 +61,11 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
           images: List<String>.from(data['images'] ?? []),
           description: data['description'] ?? '',
           vin: data['vin'] ?? '',
+          make: data['make'] ?? '',
+          model: data['model'] ?? '',
+          transmission: data['transmission'] ?? '',
+          bodyType: data['bodyType'] ?? '',
+          fuelType: data['fuelType'] ?? '',
           createdAt:
               (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
         );
