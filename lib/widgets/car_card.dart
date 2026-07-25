@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/theme/app_theme.dart';
 import '../models/car.dart';
 import '../repositories/favorite_repository.dart';
 import 'optimized_network_image.dart';
@@ -19,21 +20,11 @@ class CarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      margin: EdgeInsets.zero,
+      child: InkWell(
+        onTap: onTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -71,10 +62,8 @@ class CarCard extends StatelessWidget {
                 // Заголовок
                 Text(
                   car.title,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1a1a1a),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -93,12 +82,15 @@ class CarCard extends StatelessWidget {
                 const SizedBox(height: 10),
 
                 // Характеристики
-                Row(
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 8,
                   children: [
-                    _SpecItem(icon: Icons.calendar_today, text: '${car.year}'),
-                    const SizedBox(width: 16),
+                    _SpecItem(
+                      icon: Icons.calendar_month_outlined,
+                      text: '${car.year}',
+                    ),
                     _SpecItem(icon: Icons.speed, text: '${car.mileage} km'),
-                    const SizedBox(width: 16),
                     _SpecItem(
                       icon: Icons.location_on,
                       text: car.city.isNotEmpty ? car.city : '—',
@@ -126,16 +118,16 @@ class CarCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(
-                              Icons.route,
+                              Icons.route_rounded,
                               size: 14,
-                              color: Color(0xFF2563EB),
+                              color: AppColors.primary,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               car.route,
                               style: const TextStyle(
                                 fontSize: 11,
-                                color: Color(0xFF2563EB),
+                                color: AppColors.primary,
                                 fontWeight: FontWeight.w600,
                               ),
                               maxLines: 1,
@@ -196,7 +188,7 @@ class _FavoriteButtonState extends State<_FavoriteButton> {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white.withValues(alpha: 0.94),
+      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.94),
       shape: const CircleBorder(),
       elevation: 2,
       child: StreamBuilder<bool>(

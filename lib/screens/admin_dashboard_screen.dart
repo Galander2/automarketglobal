@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/router/app_routes.dart';
+import '../core/theme/app_theme.dart';
 import '../models/admin_stats.dart';
 import '../repositories/admin_repository.dart';
 
@@ -57,106 +58,162 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadStats,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Card(
-                color: Colors.red.shade50,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text('Не удалось загрузить статистику: $_error'),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1180),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(),
+                    if (_error != null) ...[
+                      const SizedBox(height: 16),
+                      _ErrorBanner(onRetry: _loadStats),
+                    ],
+                    const SizedBox(height: 24),
+                    if (stats != null)
+                      _buildQuickStats(stats)
+                    else
+                      const Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Text(
+                            'Статистические данные пока отсутствуют',
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 24),
+                    _buildMainGrid(context),
+                    const SizedBox(height: 24),
+                    if (stats != null) _buildModerationSection(stats),
+                  ],
                 ),
               ),
-            ],
-            const SizedBox(height: 24),
-            if (stats != null)
-              _buildQuickStats(stats)
-            else
-              const Card(
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('Статистические данные пока отсутствуют'),
-                ),
-              ),
-            const SizedBox(height: 24),
-            _buildMainGrid(context),
-            const SizedBox(height: 24),
-            if (stats != null) _buildModerationSection(stats),
-          ],
-        ),
+            ),
+          );
+        },
       ),
     );
   }
 
   Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Админ панель',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              'Управление платформой',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-          ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.ink, AppColors.primaryDark, AppColors.accent],
         ),
-        IconButton.filled(
-          onPressed: _loadStats,
-          icon: const Icon(Icons.refresh),
-        ),
-      ],
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.2),
+            blurRadius: 26,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(17),
+            ),
+            child: const Icon(
+              Icons.admin_panel_settings_rounded,
+              color: Colors.white,
+              size: 30,
+            ),
+          ),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Панель управления',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 25,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                SizedBox(height: 3),
+                Text(
+                  'Безопасное управление платформой',
+                  style: TextStyle(color: Color(0xFFCBD5E1), fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Обновить статистику',
+            onPressed: _loadStats,
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white.withValues(alpha: 0.14),
+              foregroundColor: Colors.white,
+            ),
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildQuickStats(AdminStats stats) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildStatCard(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 900
+            ? 4
+            : constraints.maxWidth >= 520
+            ? 2
+            : 1;
+        const gap = 12.0;
+        final width =
+            (constraints.maxWidth - (gap * (columns - 1))) / columns;
+        final cards = [
+          _buildStatCard(
             'Пользователи',
             stats.totalUsers.toString(),
             Icons.people,
-            const Color(0xFF2563EB),
+            AppColors.primary,
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
+          _buildStatCard(
             'Дилеры',
             stats.totalDealers.toString(),
             Icons.store,
-            const Color(0xFF10B981),
+            AppColors.success,
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
+          _buildStatCard(
             'Авто',
             stats.totalCars.toString(),
             Icons.directions_car,
-            const Color(0xFFF59E0B),
+            AppColors.warning,
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildStatCard(
+          _buildStatCard(
             'Продано',
             stats.soldCars.toString(),
             Icons.check_circle,
             const Color(0xFF8B5CF6),
           ),
-        ),
-      ],
+        ];
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: cards
+              .map((card) => SizedBox(width: width, child: card))
+              .toList(),
+        );
+      },
     );
   }
 
@@ -202,13 +259,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildMainGrid(BuildContext context) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      children: [
+    final cards = [
         _AdminCard(
           icon: Icons.people,
           title: 'Пользователи',
@@ -254,7 +305,27 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Navigator.pushNamed(context, AppRoutes.adminComplaints);
           },
         ),
-      ],
+      ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 900
+            ? 3
+            : constraints.maxWidth >= 520
+            ? 2
+            : 1;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: cards.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: columns == 1 ? 2.35 : 1.45,
+          ),
+          itemBuilder: (context, index) => cards[index],
+        );
+      },
     );
   }
 
@@ -293,7 +364,35 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       ),
     );
   }
+}
 
+class _ErrorBanner extends StatelessWidget {
+  const _ErrorBanner({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: Theme.of(context).colorScheme.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(
+              Icons.cloud_off_outlined,
+              color: Theme.of(context).colorScheme.onErrorContainer,
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text('Не удалось загрузить актуальную статистику.'),
+            ),
+            TextButton(onPressed: onRetry, child: const Text('Повторить')),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _AdminCard extends StatelessWidget {

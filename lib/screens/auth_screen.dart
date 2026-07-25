@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 import 'package:provider/provider.dart';
 import '../core/auth/auth_validators.dart';
+import '../core/theme/app_theme.dart';
 import '../repositories/auth_repository.dart';
 import '../widgets/international_phone_field.dart';
 
@@ -89,14 +90,30 @@ class _AuthScreenState extends State<AuthScreen> {
     setState(() => _isLoading = true);
     try {
       await context.read<AuthProvider>().signInWithGoogle();
-    } catch (error) {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString()), backgroundColor: Colors.red),
+        const SnackBar(
+          content: Text(
+            'Не удалось войти через Google. Проверьте подключение и настройки аккаунта.',
+          ),
+          backgroundColor: AppColors.danger,
+        ),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _switchMode(bool login) {
+    if (_isLogin == login || _isLoading) return;
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _isLogin = login;
+      _obscurePassword = true;
+      _obscureConfirmPassword = true;
+    });
+    _formKey.currentState?.reset();
   }
 
   Future<void> _showForgotPasswordDialog() async {
@@ -174,295 +191,703 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    final busy = _isLoading || authProvider.isLoading;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isLogin ? 'Вход' : 'Регистрация'),
-        centerTitle: true,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Theme.of(context).scaffoldBackgroundColor,
+              Theme.of(context).colorScheme.primary.withValues(alpha: 0.06),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final wide = constraints.maxWidth >= 940;
+              return SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: wide ? 48 : 18,
+                  vertical: wide ? 40 : 20,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight > (wide ? 80 : 40)
+                        ? constraints.maxHeight - (wide ? 80 : 40)
+                        : 0,
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1180),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          if (wide) ...[
+                            const Expanded(child: _BrandPanel()),
+                            const SizedBox(width: 56),
+                          ],
+                          Expanded(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 520),
+                              child: Card(
+                                child: Padding(
+                                  padding: EdgeInsets.all(wide ? 34 : 22),
+                                  child: AutofillGroup(
+                                    child: Form(
+                                      key: _formKey,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          if (!wide) const _CompactBrand(),
+                                          _AuthModeSelector(
+                                            isLogin: _isLogin,
+                                            enabled: !busy,
+                                            onChanged: _switchMode,
+                                          ),
+                                          const SizedBox(height: 28),
+                                          AnimatedSwitcher(
+                                            duration: const Duration(
+                                              milliseconds: 220,
+                                            ),
+                                            child: Column(
+                                              key: ValueKey(_isLogin),
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  _isLogin
+                                                      ? 'С возвращением'
+                                                      : 'Создайте аккаунт',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .headlineMedium
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.w900,
+                                                        letterSpacing: -0.8,
+                                                      ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  _isLogin
+                                                      ? 'Войдите, чтобы продолжить работу с Auto Market Global.'
+                                                      : 'Заполните данные — это займёт меньше минуты.',
+                                                  style: const TextStyle(
+                                                    color: AppColors.muted,
+                                                    height: 1.45,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 26),
+                                                if (!_isLogin) ...[
+                                                  _NameFields(
+                                                    firstNameController:
+                                                        _firstNameController,
+                                                    lastNameController:
+                                                        _lastNameController,
+                                                    enabled: !busy,
+                                                  ),
+                                                  const SizedBox(height: 16),
+                                                  InternationalPhoneField(
+                                                    initialValue:
+                                                        _registrationPhone,
+                                                    enabled: !busy,
+                                                    onChanged: (phone) {
+                                                      if (phone != null) {
+                                                        _registrationPhone =
+                                                            phone;
+                                                      }
+                                                    },
+                                                  ),
+                                                  const SizedBox(height: 16),
+                                                ],
+                                                TextFormField(
+                                                  controller: _emailController,
+                                                  enabled: !busy,
+                                                  decoration:
+                                                      const InputDecoration(
+                                                        labelText: 'Email',
+                                                        hintText:
+                                                            'name@example.com',
+                                                        prefixIcon: Icon(
+                                                          Icons
+                                                              .alternate_email_rounded,
+                                                        ),
+                                                      ),
+                                                  keyboardType: TextInputType
+                                                      .emailAddress,
+                                                  autofillHints: const [
+                                                    AutofillHints.email,
+                                                  ],
+                                                  textInputAction:
+                                                      TextInputAction.next,
+                                                  validator:
+                                                      AuthValidators.email,
+                                                ),
+                                                const SizedBox(height: 16),
+                                                _PasswordField(
+                                                  controller:
+                                                      _passwordController,
+                                                  label: 'Пароль',
+                                                  obscure: _obscurePassword,
+                                                  enabled: !busy,
+                                                  autofillHint: _isLogin
+                                                      ? AutofillHints.password
+                                                      : AutofillHints
+                                                            .newPassword,
+                                                  onToggle: () => setState(
+                                                    () => _obscurePassword =
+                                                        !_obscurePassword,
+                                                  ),
+                                                  onSubmitted: _isLogin
+                                                      ? _handleSubmit
+                                                      : null,
+                                                  validator: (value) =>
+                                                      _isLogin
+                                                      ? ((value == null ||
+                                                                value.isEmpty)
+                                                            ? 'Введите пароль'
+                                                            : null)
+                                                      : AuthValidators.password(
+                                                          value,
+                                                        ),
+                                                ),
+                                                if (!_isLogin) ...[
+                                                  const SizedBox(height: 16),
+                                                  _PasswordField(
+                                                    controller:
+                                                        _confirmPasswordController,
+                                                    label: 'Повторите пароль',
+                                                    obscure:
+                                                        _obscureConfirmPassword,
+                                                    enabled: !busy,
+                                                    autofillHint: AutofillHints
+                                                        .newPassword,
+                                                    onToggle: () => setState(
+                                                      () =>
+                                                          _obscureConfirmPassword =
+                                                              !_obscureConfirmPassword,
+                                                    ),
+                                                    validator: (value) {
+                                                      if (value == null ||
+                                                          value.isEmpty) {
+                                                        return 'Подтвердите пароль';
+                                                      }
+                                                      if (value !=
+                                                          _passwordController
+                                                              .text) {
+                                                        return 'Пароли не совпадают';
+                                                      }
+                                                      return null;
+                                                    },
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                          ),
+                                          if (_isLogin)
+                                            Align(
+                                              alignment: Alignment.centerRight,
+                                              child: TextButton(
+                                                onPressed: busy
+                                                    ? null
+                                                    : _showForgotPasswordDialog,
+                                                child: const Text(
+                                                  'Забыли пароль?',
+                                                ),
+                                              ),
+                                            )
+                                          else
+                                            const SizedBox(height: 20),
+                                          FilledButton(
+                                            onPressed: busy
+                                                ? null
+                                                : _handleSubmit,
+                                            child: busy
+                                                ? const SizedBox.square(
+                                                    dimension: 22,
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                          strokeWidth: 2.4,
+                                                          color: Colors.white,
+                                                        ),
+                                                  )
+                                                : Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.center,
+                                                    children: [
+                                                      Text(
+                                                        _isLogin
+                                                            ? 'Войти'
+                                                            : 'Создать аккаунт',
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      const Icon(
+                                                        Icons
+                                                            .arrow_forward_rounded,
+                                                        size: 20,
+                                                      ),
+                                                    ],
+                                                  ),
+                                          ),
+                                          const SizedBox(height: 22),
+                                          const _DividerLabel(),
+                                          const SizedBox(height: 18),
+                                          OutlinedButton(
+                                            onPressed: busy
+                                                ? null
+                                                : _handleGoogleSignIn,
+                                            child: const Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                _GoogleMark(),
+                                                SizedBox(width: 12),
+                                                Text('Продолжить с Google'),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 18),
+                                          const Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.shield_outlined,
+                                                size: 16,
+                                                color: AppColors.success,
+                                              ),
+                                              SizedBox(width: 6),
+                                              Flexible(
+                                                child: Text(
+                                                  'Защищённая авторизация Firebase',
+                                                  style: TextStyle(
+                                                    color: AppColors.muted,
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 32),
-                const Icon(
-                  Icons.account_circle_outlined,
-                  size: 100,
-                  color: Color(0xFF2563EB),
-                ),
-                const SizedBox(height: 32),
-                Text(
-                  _isLogin ? 'С возвращением!' : 'Создать аккаунт',
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _isLogin
-                      ? 'Войдите для продолжения'
-                      : 'Заполните форму для регистрации',
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 40),
+    );
+  }
+}
 
-                if (!_isLogin) ...[
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _firstNameController,
-                          textCapitalization: TextCapitalization.words,
-                          autofillHints: const [AutofillHints.givenName],
-                          decoration: const InputDecoration(
-                            labelText: 'Имя',
-                            prefixIcon: Icon(Icons.person_outline),
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) =>
-                              AuthValidators.name(value, 'имя'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _lastNameController,
-                          textCapitalization: TextCapitalization.words,
-                          autofillHints: const [AutofillHints.familyName],
-                          decoration: const InputDecoration(
-                            labelText: 'Фамилия',
-                            prefixIcon: Icon(Icons.person_outline),
-                            border: OutlineInputBorder(),
-                          ),
-                          validator: (value) =>
-                              AuthValidators.name(value, 'фамилию'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  InternationalPhoneField(
-                    initialValue: _registrationPhone,
-                    enabled: !_isLoading && !authProvider.isLoading,
-                    onChanged: (phone) {
-                      if (phone != null) _registrationPhone = phone;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                ],
+class _BrandPanel extends StatelessWidget {
+  const _BrandPanel();
 
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  autofillHints: const [AutofillHints.email],
-                  textInputAction: TextInputAction.next,
-                  validator: AuthValidators.email,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  autofillHints: [
-                    _isLogin
-                        ? AutofillHints.password
-                        : AutofillHints.newPassword,
-                  ],
-                  onFieldSubmitted: (_) {
-                    if (_isLogin && !_isLoading && !authProvider.isLoading) {
-                      _handleSubmit();
-                    }
-                  },
-                  decoration: InputDecoration(
-                    labelText: 'Пароль',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
-                  ),
-                  validator: (value) => _isLogin
-                      ? ((value == null || value.isEmpty)
-                            ? 'Введите пароль'
-                            : null)
-                      : AuthValidators.password(value),
-                ),
-
-                if (!_isLogin) ...[
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _confirmPasswordController,
-                    obscureText: _obscureConfirmPassword,
-                    autofillHints: const [AutofillHints.newPassword],
-                    decoration: InputDecoration(
-                      labelText: 'Подтверждение пароля',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscureConfirmPassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscureConfirmPassword = !_obscureConfirmPassword;
-                          });
-                        },
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Подтвердите пароль';
-                      }
-                      if (value != _passwordController.text) {
-                        return 'Пароли не совпадают';
-                      }
-                      return null;
-                    },
-                  ),
-                ],
-
-                if (_isLogin) ...[
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: _isLoading ? null : _showForgotPasswordDialog,
-                      child: const Text('Забыли пароль?'),
-                    ),
-                  ),
-                ],
-
-                const SizedBox(height: 32),
-
-                SizedBox(
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _isLoading || authProvider.isLoading
-                        ? null
-                        : _handleSubmit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2563EB),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: _isLoading || authProvider.isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            _isLogin ? 'Войти' : 'Зарегистрироваться',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                Row(
-                  children: [
-                    const Expanded(child: Divider()),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        'или',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ),
-                    const Expanded(child: Divider()),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 52,
-                  child: OutlinedButton(
-                    onPressed: _isLoading || authProvider.isLoading
-                        ? null
-                        : _handleGoogleSignIn,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.black87,
-                      side: BorderSide(color: Colors.grey.shade300),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'G',
-                          style: TextStyle(
-                            color: Color(0xFF4285F4),
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        Text(
-                          'Продолжить с Google',
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _isLogin ? 'Нет аккаунта?' : 'Уже есть аккаунт?',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _isLogin = !_isLogin;
-                        });
-                      },
-                      child: Text(
-                        _isLogin ? 'Создать' : 'Войти',
-                        style: const TextStyle(
-                          color: Color(0xFF2563EB),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 620),
+      padding: const EdgeInsets.all(48),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0F172A),
+            Color(0xFF1D4ED8),
+            Color(0xFF0891B2),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.22),
+            blurRadius: 42,
+            offset: const Offset(0, 20),
+          ),
+        ],
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _BrandMark(dark: true),
+          Spacer(),
+          Text(
+            'Ваш автомобиль.\nВаш рынок.\nВаш выбор.',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 42,
+              height: 1.08,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1.5,
             ),
           ),
+          SizedBox(height: 20),
+          Text(
+            'Покупайте, продавайте и общайтесь безопасно на единой международной платформе.',
+            style: TextStyle(
+              color: Color(0xFFDCE8FF),
+              fontSize: 17,
+              height: 1.55,
+            ),
+          ),
+          SizedBox(height: 34),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _TrustBadge(icon: Icons.verified_outlined, label: 'Проверенные'),
+              _TrustBadge(icon: Icons.public, label: 'Международные'),
+              _TrustBadge(icon: Icons.lock_outline, label: 'Защищённые'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactBrand extends StatelessWidget {
+  const _CompactBrand();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.only(bottom: 24),
+      child: _BrandMark(dark: false),
+    );
+  }
+}
+
+class _BrandMark extends StatelessWidget {
+  const _BrandMark({required this.dark});
+
+  final bool dark;
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = dark
+        ? Colors.white
+        : Theme.of(context).colorScheme.onSurface;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: dark ? Colors.white : AppColors.primary,
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Icon(
+            Icons.directions_car_filled_rounded,
+            color: dark ? AppColors.primary : Colors.white,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          'Auto Market Global',
+          style: TextStyle(
+            color: foreground,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.4,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TrustBadge extends StatelessWidget {
+  const _TrustBadge({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white, size: 17),
+          const SizedBox(width: 7),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AuthModeSelector extends StatelessWidget {
+  const _AuthModeSelector({
+    required this.isLogin,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final bool isLogin;
+  final bool enabled;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _ModeButton(
+              label: 'Вход',
+              selected: isLogin,
+              enabled: enabled,
+              onTap: () => onChanged(true),
+            ),
+          ),
+          Expanded(
+            child: _ModeButton(
+              label: 'Регистрация',
+              selected: !isLogin,
+              enabled: enabled,
+              onTap: () => onChanged(false),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModeButton extends StatelessWidget {
+  const _ModeButton({
+    required this.label,
+    required this.selected,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      decoration: BoxDecoration(
+        color: selected ? Theme.of(context).cardColor : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.07),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: enabled ? onTap : null,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: selected ? AppColors.primary : AppColors.muted,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NameFields extends StatelessWidget {
+  const _NameFields({
+    required this.firstNameController,
+    required this.lastNameController,
+    required this.enabled,
+  });
+
+  final TextEditingController firstNameController;
+  final TextEditingController lastNameController;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final vertical = constraints.maxWidth < 390;
+        final fields = [
+          TextFormField(
+            controller: firstNameController,
+            enabled: enabled,
+            textCapitalization: TextCapitalization.words,
+            autofillHints: const [AutofillHints.givenName],
+            decoration: const InputDecoration(
+              labelText: 'Имя',
+              prefixIcon: Icon(Icons.person_outline_rounded),
+            ),
+            validator: (value) => AuthValidators.name(value, 'имя'),
+          ),
+          TextFormField(
+            controller: lastNameController,
+            enabled: enabled,
+            textCapitalization: TextCapitalization.words,
+            autofillHints: const [AutofillHints.familyName],
+            decoration: const InputDecoration(
+              labelText: 'Фамилия',
+              prefixIcon: Icon(Icons.person_outline_rounded),
+            ),
+            validator: (value) => AuthValidators.name(value, 'фамилию'),
+          ),
+        ];
+        if (vertical) {
+          return Column(
+            children: [fields.first, const SizedBox(height: 16), fields.last],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: fields.first),
+            const SizedBox(width: 12),
+            Expanded(child: fields.last),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PasswordField extends StatelessWidget {
+  const _PasswordField({
+    required this.controller,
+    required this.label,
+    required this.obscure,
+    required this.enabled,
+    required this.autofillHint,
+    required this.onToggle,
+    required this.validator,
+    this.onSubmitted,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final bool obscure;
+  final bool enabled;
+  final String autofillHint;
+  final VoidCallback onToggle;
+  final FormFieldValidator<String> validator;
+  final Future<void> Function()? onSubmitted;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      enabled: enabled,
+      obscureText: obscure,
+      autofillHints: [autofillHint],
+      textInputAction: onSubmitted == null
+          ? TextInputAction.next
+          : TextInputAction.done,
+      onFieldSubmitted: onSubmitted == null ? null : (_) => onSubmitted!(),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: const Icon(Icons.lock_outline_rounded),
+        suffixIcon: IconButton(
+          tooltip: obscure ? 'Показать пароль' : 'Скрыть пароль',
+          onPressed: enabled ? onToggle : null,
+          icon: Icon(
+            obscure
+                ? Icons.visibility_off_outlined
+                : Icons.visibility_outlined,
+          ),
+        ),
+      ),
+      validator: validator,
+    );
+  }
+}
+
+class _DividerLabel extends StatelessWidget {
+  const _DividerLabel();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        Expanded(child: Divider()),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 14),
+          child: Text(
+            'или',
+            style: TextStyle(color: AppColors.muted, fontSize: 13),
+          ),
+        ),
+        Expanded(child: Divider()),
+      ],
+    );
+  }
+}
+
+class _GoogleMark extends StatelessWidget {
+  const _GoogleMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 28,
+      height: 28,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: const Text(
+        'G',
+        style: TextStyle(
+          color: Color(0xFF4285F4),
+          fontSize: 17,
+          fontWeight: FontWeight.w900,
         ),
       ),
     );
