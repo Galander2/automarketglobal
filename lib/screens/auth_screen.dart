@@ -523,10 +523,11 @@ class _BrandPanel extends StatelessWidget {
         ],
       ),
       child: const Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _BrandMark(dark: true),
-          Spacer(),
+          SizedBox(height: 180),
           Text(
             'Ваш автомобиль.\nВаш рынок.\nВаш выбор.',
             style: TextStyle(
