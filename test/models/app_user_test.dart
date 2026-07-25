@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('copyWith preserves protected account fields', () {
-    final original = AppUser(
+    const original = AppUser(
       uid: 'user-1',
       firstName: 'Ахмад',
       lastName: 'Давлатов',
@@ -31,7 +31,7 @@ void main() {
   });
 
   test('copyWith can explicitly clear an avatar', () {
-    final original = AppUser(
+    const original = AppUser(
       uid: 'user-1',
       firstName: 'Ахмад',
       lastName: 'Давлатов',
