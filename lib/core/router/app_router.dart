@@ -26,6 +26,7 @@ import '../../screens/admin_reports_screen.dart';
 import '../../screens/admin_complaints_screen.dart';
 import '../../screens/admin_markets_screen.dart';
 import '../../models/car.dart';
+import '../../models/car_search_filters.dart';
 import '../../models/chat_thread.dart';
 import '../../models/app_user.dart';
 import '../../widgets/admin_guard.dart';
@@ -92,7 +93,14 @@ class AppRouter {
           builder: (_) => const LanguageSelectionScreen(),
         );
       case AppRoutes.searchFilters:
-        return MaterialPageRoute(builder: (_) => const SearchFiltersScreen());
+        final filters = settings.arguments;
+        return MaterialPageRoute(
+          builder: (_) => SearchFiltersScreen(
+            initialFilters: filters is CarSearchFilters
+                ? filters
+                : const CarSearchFilters(),
+          ),
+        );
       case AppRoutes.adminUsers:
         return _adminRoute(
           const AdminUsersScreen(),

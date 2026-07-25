@@ -15,6 +15,11 @@ class Car {
   final List<String> images;
   final String description;
   final String vin;
+  final String make;
+  final String model;
+  final String transmission;
+  final String bodyType;
+  final String fuelType;
   final DateTime createdAt;
 
   const Car({
@@ -32,6 +37,11 @@ class Car {
     this.images = const [],
     this.description = '',
     this.vin = '',
+    this.make = '',
+    this.model = '',
+    this.transmission = '',
+    this.bodyType = '',
+    this.fuelType = '',
     required this.createdAt,
   });
 

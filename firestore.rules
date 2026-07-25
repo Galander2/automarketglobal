@@ -51,8 +51,9 @@ service cloud.firestore {
         ])
         && request.resource.data.keys().hasOnly([
           'sellerId', 'title', 'price', 'year', 'mileage', 'city', 'route',
-          'country', 'description', 'vin', 'imageUrl', 'images', 'status',
-          'createdAt', 'updatedAt'
+          'country', 'description', 'vin', 'make', 'model', 'transmission',
+          'bodyType', 'fuelType', 'imageUrl', 'images', 'status', 'createdAt',
+          'updatedAt'
         ])
         && request.resource.data.sellerId is string
         && request.resource.data.title is string
@@ -72,6 +73,27 @@ service cloud.firestore {
         && request.resource.data.country.size() >= 2
         && request.resource.data.description is string
         && request.resource.data.description.size() <= 5000
+        && (!request.resource.data.keys().hasAny(['make'])
+          || (request.resource.data.make is string
+            && request.resource.data.make.size() >= 2
+            && request.resource.data.make.size() <= 60))
+        && (!request.resource.data.keys().hasAny(['model'])
+          || (request.resource.data.model is string
+            && request.resource.data.model.size() >= 1
+            && request.resource.data.model.size() <= 80))
+        && (!request.resource.data.keys().hasAny(['transmission'])
+          || request.resource.data.transmission in [
+            'Автомат', 'Механика', 'Робот', 'Вариатор'
+          ])
+        && (!request.resource.data.keys().hasAny(['bodyType'])
+          || request.resource.data.bodyType in [
+            'Седан', 'Хэтчбек', 'Универсал', 'Кроссовер', 'Внедорожник',
+            'Купе', 'Минивэн', 'Пикап', 'Кабриолет'
+          ])
+        && (!request.resource.data.keys().hasAny(['fuelType'])
+          || request.resource.data.fuelType in [
+            'Бензин', 'Дизель', 'Гибрид', 'Электро', 'Газ'
+          ])
         && request.resource.data.imageUrl is string
         && request.resource.data.images is list
         && request.resource.data.images.size() >= 1
@@ -201,7 +223,8 @@ service cloud.firestore {
         owns(resource.data.sellerId)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'title', 'price', 'year', 'mileage', 'city', 'route', 'country',
-          'description', 'vin', 'imageUrl', 'images', 'updatedAt'
+          'description', 'vin', 'make', 'model', 'transmission', 'bodyType',
+          'fuelType', 'imageUrl', 'images', 'updatedAt'
         ])
         && validCarData()
       );

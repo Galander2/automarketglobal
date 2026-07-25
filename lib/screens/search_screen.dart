@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../core/router/app_routes.dart';
 import '../l10n/app_localizations.dart';
 import '../models/car.dart';
+import '../models/car_search_filters.dart';
 import '../repositories/auth_repository.dart';
 import '../repositories/car_repository.dart';
 import '../widgets/car_card.dart';
@@ -18,20 +19,12 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  static const _countries = <String>[
-    'Все',
-    'Таджикистан',
-    'Узбекистан',
-    'Казахстан',
-    'Кыргызстан',
-  ];
-
   final TextEditingController _searchController = TextEditingController();
   final CarRepository _carRepository = CarRepository();
 
   Timer? _debounce;
   List<Car> _cars = const [];
-  String _selectedCountry = _countries.first;
+  CarSearchFilters _filters = const CarSearchFilters();
   String? _error;
   bool _isLoading = true;
   int _requestGeneration = 0;
@@ -50,6 +43,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _scheduleSearch(String _) {
+    setState(() {});
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 350), _loadCars);
   }
@@ -66,9 +60,7 @@ class _SearchScreenState extends State<SearchScreen> {
     try {
       final cars = await _carRepository.searchCars(
         query: _searchController.text,
-        country: _selectedCountry == _countries.first
-            ? null
-            : _selectedCountry,
+        filters: _filters,
         forceRefresh: forceRefresh,
       );
       if (!mounted || generation != _requestGeneration) return;
@@ -96,13 +88,20 @@ class _SearchScreenState extends State<SearchScreen> {
         actions: [
           IconButton(
             tooltip: 'Фильтры',
-            icon: const Icon(Icons.filter_list),
+            icon: Badge(
+              isLabelVisible: _filters.activeCount > 0,
+              label: Text('${_filters.activeCount}'),
+              child: const Icon(Icons.tune_rounded),
+            ),
             onPressed: () async {
-              final result = await Navigator.pushNamed(
+              final result = await Navigator.pushNamed<CarSearchFilters>(
                 context,
                 AppRoutes.searchFilters,
+                arguments: _filters,
               );
-              if (result != null) await _loadCars();
+              if (result == null) return;
+              setState(() => _filters = result);
+              await _loadCars();
             },
           ),
         ],
@@ -138,28 +137,59 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
           ),
-          SizedBox(
-            height: 50,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _countries.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final country = _countries[index];
-                return ChoiceChip(
-                  label: Text(country),
-                  selected: _selectedCountry == country,
-                  onSelected: (_) {
-                    if (_selectedCountry == country) return;
-                    setState(() => _selectedCountry = country);
-                    _loadCars();
+          if (_filters.activeCount > 0)
+            SizedBox(
+              height: 46,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  ActionChip(
+                    avatar: const Icon(Icons.close_rounded, size: 18),
+                    label: const Text('Сбросить фильтры'),
+                    onPressed: () {
+                      setState(() => _filters = const CarSearchFilters());
+                      _loadCars();
+                    },
+                  ),
+                  ..._filterLabels().map(
+                    (label) => Padding(
+                      padding: const EdgeInsetsDirectional.only(start: 8),
+                      child: Chip(label: Text(label)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            child: Row(
+              children: [
+                Text(
+                  _isLoading ? 'Поиск…' : 'Найдено: ${_cars.length}',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: () async {
+                    final result =
+                        await Navigator.pushNamed<CarSearchFilters>(
+                          context,
+                          AppRoutes.searchFilters,
+                          arguments: _filters,
+                        );
+                    if (result == null) return;
+                    setState(() => _filters = result);
+                    await _loadCars();
                   },
-                );
-              },
+                  icon: const Icon(Icons.tune_rounded, size: 18),
+                  label: const Text('Все фильтры'),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
           Expanded(child: _buildResults()),
         ],
       ),
@@ -188,32 +218,71 @@ class _SearchScreenState extends State<SearchScreen> {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: () => _loadCars(forceRefresh: true),
-      child: ListView.builder(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-        itemCount: _cars.length,
-        itemBuilder: (context, index) {
-          final car = _cars[index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: CarCard(
-              key: ValueKey(car.id),
-              car: car,
-              favoriteUserId: userId,
-              onTap: () {
-                Navigator.pushNamed(
-                  context,
-                  AppRoutes.carDetails,
-                  arguments: {'car': car},
-                );
-              },
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 1100
+            ? 4
+            : constraints.maxWidth >= 760
+            ? 3
+            : constraints.maxWidth >= 520
+            ? 2
+            : 1;
+        return RefreshIndicator(
+          onRefresh: () => _loadCars(forceRefresh: true),
+          child: GridView.builder(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              crossAxisSpacing: 14,
+              mainAxisSpacing: 14,
+              childAspectRatio: 0.72,
             ),
-          );
-        },
-      ),
+            itemCount: _cars.length,
+            itemBuilder: (context, index) {
+              final car = _cars[index];
+              return CarCard(
+                key: ValueKey(car.id),
+                car: car,
+                favoriteUserId: userId,
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.carDetails,
+                    arguments: {'car': car},
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
     );
+  }
+
+  List<String> _filterLabels() {
+    final labels = <String>[];
+    if (_filters.make.isNotEmpty) labels.add(_filters.make);
+    if (_filters.model.isNotEmpty) labels.add(_filters.model);
+    if (_filters.country.isNotEmpty) labels.add(_filters.country);
+    if (_filters.city.isNotEmpty) labels.add(_filters.city);
+    if (_filters.transmission.isNotEmpty) {
+      labels.add(_filters.transmission);
+    }
+    if (_filters.bodyType.isNotEmpty) labels.add(_filters.bodyType);
+    if (_filters.fuelType.isNotEmpty) labels.add(_filters.fuelType);
+    if (_filters.minPrice != null || _filters.maxPrice != null) {
+      labels.add(
+        '\$${_filters.minPrice ?? 0}–${_filters.maxPrice ?? '∞'}',
+      );
+    }
+    if (_filters.minYear != null || _filters.maxYear != null) {
+      labels.add('${_filters.minYear ?? '…'}–${_filters.maxYear ?? '…'} г.');
+    }
+    if (_filters.maxMileage != null) {
+      labels.add('до ${_filters.maxMileage} км');
+    }
+    return labels;
   }
 }
 
