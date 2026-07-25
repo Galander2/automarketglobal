@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/router/app_routes.dart';
+import '../models/app_user.dart';
 import '../repositories/auth_repository.dart';
 import '../services/language_service.dart';
 
@@ -205,48 +206,48 @@ class UserSettingsScreen extends StatelessWidget {
           if (user.isAdmin) ...[
             const SizedBox(height: 16),
             _Section(
-              title: user.isSuperAdmin
+              title: user.role == UserRole.superAdmin
                   ? 'Управление платформой'
                   : 'Управление',
               children: [
-                _ManagementTile(
+                const _ManagementTile(
                   icon: Icons.dashboard_outlined,
                   title: 'Панель управления',
                   subtitle: 'Сводка и доступные инструменты',
                   route: AppRoutes.admin,
                 ),
-                _ManagementTile(
+                const _ManagementTile(
                   icon: Icons.directions_car_outlined,
                   title: 'Объявления',
                   subtitle: 'Проверка и управление публикациями',
                   route: AppRoutes.adminCars,
                 ),
-                _ManagementTile(
+                const _ManagementTile(
                   icon: Icons.report_problem_outlined,
                   title: 'Жалобы',
                   subtitle: 'Рассмотрение обращений пользователей',
                   route: AppRoutes.adminComplaints,
                 ),
-                if (user.isSuperAdmin) ...[
-                  _ManagementTile(
+                if (user.role == UserRole.superAdmin) ...[
+                  const _ManagementTile(
                     icon: Icons.people_outline,
                     title: 'Пользователи и роли',
                     subtitle: 'Управление доступом пользователей',
                     route: AppRoutes.adminUsers,
                   ),
-                  _ManagementTile(
+                  const _ManagementTile(
                     icon: Icons.storefront_outlined,
                     title: 'Дилеры',
                     subtitle: 'Управление дилерами',
                     route: AppRoutes.adminDealers,
                   ),
-                  _ManagementTile(
+                  const _ManagementTile(
                     icon: Icons.public_outlined,
                     title: 'Рынки',
                     subtitle: 'Настройка доступных рынков',
                     route: AppRoutes.adminMarkets,
                   ),
-                  _ManagementTile(
+                  const _ManagementTile(
                     icon: Icons.analytics_outlined,
                     title: 'Отчёты',
                     subtitle: 'Статистика и отчётность платформы',
