@@ -82,13 +82,6 @@ service cloud.firestore {
         ];
     }
 
-    function protectedUserFieldsUnchanged() {
-      return request.resource.data.role == resource.data.role
-        && request.resource.data.isBlocked == resource.data.isBlocked
-        && request.resource.data.isVerified == resource.data.isVerified
-        && request.resource.data.rating == resource.data.rating;
-    }
-
     function validStoredPhone(phone) {
       return phone is string
         && (
@@ -98,8 +91,7 @@ service cloud.firestore {
     }
 
     function validSelfProfileUpdate() {
-      return protectedUserFieldsUnchanged()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'firstName', 'lastName', 'phone', 'avatar', 'country', 'city',
           'emailVerified', 'lastLogin', 'updatedAt'
         ])
