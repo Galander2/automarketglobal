@@ -79,6 +79,14 @@ service cloud.firestore {
         && request.resource.data.rating == resource.data.rating;
     }
 
+    function validStoredPhone(phone) {
+      return phone is string
+        && (
+          phone == ''
+          || phone.matches('^\\+[1-9][0-9]{5,14}$')
+        );
+    }
+
     function validSelfProfileUpdate() {
       return protectedUserFieldsUnchanged()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
@@ -106,10 +114,7 @@ service cloud.firestore {
         && (
           !request.resource.data.diff(resource.data).affectedKeys()
             .hasAny(['phone'])
-          || (
-            request.resource.data.phone is string
-            && request.resource.data.phone.matches('^\\+?[0-9]{8,15}$')
-          )
+          || validStoredPhone(request.resource.data.phone)
         )
         && (
           !request.resource.data.diff(resource.data).affectedKeys()
@@ -150,7 +155,8 @@ service cloud.firestore {
         && request.resource.data.uid == userId
         && request.resource.data.role == 'user'
         && request.resource.data.isBlocked == false
-        && request.resource.data.isVerified == false;
+        && request.resource.data.isVerified == false
+        && validStoredPhone(request.resource.data.phone);
       allow read: if owns(userId) || admin();
       allow update: if superAdmin()
         || adminCanManageRegularUser()

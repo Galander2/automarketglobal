@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:phone_form_field/phone_form_field.dart';
 import 'package:provider/provider.dart';
 import '../core/auth/auth_validators.dart';
 import '../repositories/auth_repository.dart';
+import '../widgets/international_phone_field.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -17,8 +18,8 @@ class _AuthScreenState extends State<AuthScreen> {
   final _passwordController = TextEditingController();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  PhoneNumber _registrationPhone = PhoneNumber.parse('+992');
 
   bool _isLogin = true;
   bool _isLoading = false;
@@ -31,7 +32,6 @@ class _AuthScreenState extends State<AuthScreen> {
     _passwordController.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
-    _phoneController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
@@ -57,7 +57,7 @@ class _AuthScreenState extends State<AuthScreen> {
           password: _passwordController.text,
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
-          phone: _phoneController.text.trim(),
+          phone: InternationalPhoneField.normalized(_registrationPhone),
         );
       }
 
@@ -65,6 +65,7 @@ class _AuthScreenState extends State<AuthScreen> {
       if (mounted) {
         // Очищаем форму после успешного входа/регистрации
         _formKey.currentState?.reset();
+        _registrationPhone = PhoneNumber.parse('+992');
       }
     } catch (e) {
       if (mounted) {
@@ -247,21 +248,12 @@ class _AuthScreenState extends State<AuthScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _phoneController,
-                    decoration: const InputDecoration(
-                      labelText: 'Телефон',
-                      prefixIcon: Icon(Icons.phone_outlined),
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.phone,
-                    autofillHints: const [AutofillHints.telephoneNumber],
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                        RegExp(r'[0-9+\-\s()]'),
-                      ),
-                    ],
-                    validator: AuthValidators.phone,
+                  InternationalPhoneField(
+                    initialValue: _registrationPhone,
+                    enabled: !_isLoading && !authProvider.isLoading,
+                    onChanged: (phone) {
+                      if (phone != null) _registrationPhone = phone;
+                    },
                   ),
                   const SizedBox(height: 16),
                 ],

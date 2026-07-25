@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:phone_form_field/phone_form_field.dart';
 import 'package:provider/provider.dart';
 
 import '../core/auth/auth_validators.dart';
 import '../models/app_user.dart';
 import '../repositories/auth_repository.dart';
+import '../widgets/international_phone_field.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -16,9 +18,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _countryController = TextEditingController();
   final _cityController = TextEditingController();
+  PhoneNumber _phone = PhoneNumber.parse('+992');
 
   _ProfileFormValue? _initialValue;
   bool _initialized = false;
@@ -37,7 +39,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     _firstNameController.text = user.firstName;
     _lastNameController.text = user.lastName;
-    _phoneController.text = user.phone;
+    _phone = InternationalPhoneField.parseOrDefault(user.phone);
     _countryController.text = user.country ?? '';
     _cityController.text = user.city ?? '';
     _initialValue = _currentValue;
@@ -50,7 +52,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   List<TextEditingController> get _controllers => [
     _firstNameController,
     _lastNameController,
-    _phoneController,
     _countryController,
     _cityController,
   ];
@@ -58,7 +59,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   _ProfileFormValue get _currentValue => _ProfileFormValue(
     firstName: _firstNameController.text.trim(),
     lastName: _lastNameController.text.trim(),
-    phone: AuthValidators.normalizePhone(_phoneController.text),
+    phone: InternationalPhoneField.normalized(_phone),
     country: _countryController.text.trim(),
     city: _cityController.text.trim(),
     removeAvatar: _removeAvatar,
@@ -318,21 +319,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             AuthValidators.name(value, 'фамилию'),
                       ),
                       const SizedBox(height: 4),
-                      TextFormField(
-                        controller: _phoneController,
+                      InternationalPhoneField(
+                        initialValue: _phone,
                         enabled: !authProvider.isLoading,
-                        keyboardType: TextInputType.phone,
-                        textInputAction: TextInputAction.next,
-                        autofillHints: const [
-                          AutofillHints.telephoneNumber,
-                        ],
-                        maxLength: 24,
-                        decoration: const InputDecoration(
-                          labelText: 'Телефон',
-                          hintText: '+992 900 00 00 00',
-                          prefixIcon: Icon(Icons.phone_outlined),
-                        ),
-                        validator: AuthValidators.phone,
+                        onChanged: (phone) {
+                          if (phone == null) return;
+                          setState(() {
+                            _phone = phone;
+                            _saveError = null;
+                          });
+                        },
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
