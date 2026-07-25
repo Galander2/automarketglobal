@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import '../core/security/admin_action_policy.dart';
 import '../models/app_user.dart';
+import '../repositories/admin_repository.dart';
+import '../repositories/auth_repository.dart';
 
 class AdminUsersScreen extends StatefulWidget {
   const AdminUsersScreen({super.key});
@@ -10,6 +14,8 @@ class AdminUsersScreen extends StatefulWidget {
 }
 
 class _AdminUsersScreenState extends State<AdminUsersScreen> {
+  final AdminRepository _adminRepository = AdminRepository();
+  final AdminActionPolicy _policy = const AdminActionPolicy();
   List<AppUser> _users = [];
   List<AppUser> _filteredUsers = [];
   bool _isLoading = true;
@@ -76,10 +82,13 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   }
 
   Future<void> _changeUserRole(AppUser user, UserRole newRole) async {
+    final actor = context.read<AuthProvider>().currentUser;
+    if (!_policy.canChangeRole(actor: actor, target: user, newRole: newRole)) {
+      _showError('Недостаточно прав для изменения этой роли');
+      return;
+    }
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user.id).update({
-        'role': newRole.name,
-      });
+      await _adminRepository.changeUserRole(user, newRole);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -97,10 +106,13 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   }
 
   Future<void> _toggleUserBlock(AppUser user) async {
+    final actor = context.read<AuthProvider>().currentUser;
+    if (!_policy.canChangeBlockStatus(actor: actor, target: user)) {
+      _showError('Нельзя изменить статус этого пользователя');
+      return;
+    }
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user.id).update({
-        'isBlocked': !user.isBlocked,
-      });
+      await _adminRepository.setUserBlocked(user, !user.isBlocked);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -123,49 +135,11 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     }
   }
 
-  Future<void> _deleteUser(AppUser user) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Удаление пользователя'),
-        content: Text('Вы уверены, что хотите удалить ${user.fullName}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Отмена'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Удалить'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.id)
-            .delete();
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Пользователь удалён')));
-          _loadUsers();
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Ошибка при удалении')));
-        }
-      }
-    }
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _showUserDetails(AppUser user) {
@@ -248,8 +222,8 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 },
               ),
               _buildActionTile(
-                icon: user.role == UserRole.user ? Icons.lock_open : Icons.lock,
-                title: user.role == UserRole.user
+                icon: user.isBlocked ? Icons.lock_open : Icons.lock,
+                title: user.isBlocked
                     ? 'Разблокировать'
                     : 'Заблокировать',
                 color: Colors.orange,
@@ -258,14 +232,13 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                   _toggleUserBlock(user);
                 },
               ),
-              _buildActionTile(
-                icon: Icons.delete,
-                title: 'Удалить пользователя',
-                color: Colors.red,
-                onTap: () {
-                  Navigator.pop(context);
-                  _deleteUser(user);
-                },
+              const Padding(
+                padding: EdgeInsets.all(12),
+                child: Text(
+                  'Полное удаление учётной записи выполняется только '
+                  'защищённым серверным процессом.',
+                  style: TextStyle(color: Colors.grey),
+                ),
               ),
             ],
           ),

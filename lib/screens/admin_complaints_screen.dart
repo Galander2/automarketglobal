@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../repositories/admin_repository.dart';
 
 class AdminComplaintsScreen extends StatefulWidget {
   const AdminComplaintsScreen({super.key});
@@ -9,6 +10,7 @@ class AdminComplaintsScreen extends StatefulWidget {
 }
 
 class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
+  final AdminRepository _adminRepository = AdminRepository();
   List<Map<String, dynamic>> _complaints = [];
   bool _isLoading = true;
 
@@ -45,9 +47,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
 
   Future<void> _blockUser(String userId, String userName) async {
     try {
-      await FirebaseFirestore.instance.collection('users').doc(userId).update({
-        'isBlocked': true,
-      });
+      await _adminRepository.setUserBlockedById(userId, true);
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -66,7 +66,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
 
   Future<void> _deleteCar(String carId, String carTitle) async {
     try {
-      await FirebaseFirestore.instance.collection('cars').doc(carId).delete();
+      await _adminRepository.deleteCar(carId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -85,10 +85,7 @@ class _AdminComplaintsScreenState extends State<AdminComplaintsScreen> {
 
   Future<void> _resolveComplaint(String complaintId) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('complaints')
-          .doc(complaintId)
-          .update({'status': 'resolved'});
+      await _adminRepository.resolveComplaint(complaintId);
 
       if (mounted) {
         ScaffoldMessenger.of(

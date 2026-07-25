@@ -27,6 +27,8 @@ import '../../screens/admin_markets_screen.dart';
 import '../../screens/admin_settings_screen.dart';
 import '../../models/car.dart';
 import '../../models/chat_thread.dart';
+import '../../models/app_user.dart';
+import '../../widgets/admin_guard.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -80,7 +82,7 @@ class AppRouter {
       case AppRoutes.myPublications:
         return MaterialPageRoute(builder: (_) => const MyPublicationsScreen());
       case AppRoutes.admin:
-        return MaterialPageRoute(builder: (_) => const AdminDashboardScreen());
+        return _adminRoute(const AdminDashboardScreen());
       case AppRoutes.aiVinCheck:
         return MaterialPageRoute(builder: (_) => const AiVinCheckScreen());
       case AppRoutes.languageSelection:
@@ -90,19 +92,34 @@ class AppRouter {
       case AppRoutes.searchFilters:
         return MaterialPageRoute(builder: (_) => const SearchFiltersScreen());
       case AppRoutes.adminUsers:
-        return MaterialPageRoute(builder: (_) => const AdminUsersScreen());
+        return _adminRoute(
+          const AdminUsersScreen(),
+          permission: (user) => user.role == UserRole.superAdmin,
+        );
       case AppRoutes.adminCars:
-        return MaterialPageRoute(builder: (_) => const AdminCarsScreen());
+        return _adminRoute(const AdminCarsScreen());
       case AppRoutes.adminDealers:
-        return MaterialPageRoute(builder: (_) => const AdminDealersScreen());
+        return _adminRoute(
+          const AdminDealersScreen(),
+          permission: (user) => user.role == UserRole.superAdmin,
+        );
       case AppRoutes.adminReports:
-        return MaterialPageRoute(builder: (_) => const AdminReportsScreen());
+        return _adminRoute(
+          const AdminReportsScreen(),
+          permission: (user) => user.role == UserRole.superAdmin,
+        );
       case AppRoutes.adminComplaints:
-        return MaterialPageRoute(builder: (_) => const AdminComplaintsScreen());
+        return _adminRoute(const AdminComplaintsScreen());
       case AppRoutes.adminMarkets:
-        return MaterialPageRoute(builder: (_) => const AdminMarketsScreen());
+        return _adminRoute(
+          const AdminMarketsScreen(),
+          permission: (user) => user.role == UserRole.superAdmin,
+        );
       case AppRoutes.adminSettings:
-        return MaterialPageRoute(builder: (_) => const AdminSettingsScreen());
+        return _adminRoute(
+          const AdminSettingsScreen(),
+          permission: (user) => user.role == UserRole.superAdmin,
+        );
       default:
         return _errorRoute('Нет маршрута: ${settings.name}');
     }
@@ -111,6 +128,15 @@ class AppRouter {
   static Route<dynamic> _errorRoute(String message) {
     return MaterialPageRoute(
       builder: (_) => Scaffold(body: Center(child: Text(message))),
+    );
+  }
+
+  static Route<dynamic> _adminRoute(
+    Widget child, {
+    AdminPermission? permission,
+  }) {
+    return MaterialPageRoute(
+      builder: (_) => AdminGuard(permission: permission, child: child),
     );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../core/router/app_routes.dart';
 import '../models/admin_stats.dart';
+import '../repositories/admin_repository.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -11,6 +11,7 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  final AdminRepository _adminRepository = AdminRepository();
   AdminStats? _stats;
   bool _isLoading = true;
   String? _error;
@@ -30,34 +31,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         });
       }
 
-      // Load stats from Firestore
-      final statsDoc = await FirebaseFirestore.instance
-          .collection('admin')
-          .doc('stats')
-          .get();
-
+      final stats = await _adminRepository.loadStats();
       if (!mounted) return;
-
-      if (statsDoc.exists) {
-        final data = statsDoc.data()!;
-        setState(() {
-          _stats = AdminStats(
-            totalUsers: data['totalUsers'] ?? 0,
-            totalDealers: data['totalDealers'] ?? 0,
-            totalCars: data['totalCars'] ?? 0,
-            pendingCars: data['pendingCars'] ?? 0,
-            approvedCars: data['approvedCars'] ?? 0,
-            soldCars: data['soldCars'] ?? 0,
-            platformRevenue: (data['platformRevenue'] ?? 0).toDouble(),
-            todayVisits: data['todayVisits'] ?? 0,
-          );
-        });
-      } else {
-        setState(() {
-          _stats = null;
-          _error = 'Документ admin/stats не найден';
-        });
-      }
+      setState(() => _stats = stats);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -110,7 +86,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             const SizedBox(height: 24),
             _buildMainGrid(context),
             const SizedBox(height: 24),
-            _buildChartsSection(),
+            if (stats != null) _buildModerationSection(stats),
           ],
         ),
       ),
@@ -291,7 +267,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildChartsSection() {
+  Widget _buildModerationSection(AdminStats stats) {
+    final totalReviewed = stats.approvedCars + stats.soldCars;
+    final totalModeration = totalReviewed + stats.pendingCars;
+    final progress = totalModeration == 0
+        ? 0.0
+        : totalReviewed / totalModeration;
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -304,56 +286,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Активность за неделю',
+              'Состояние модерации',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            _buildMiniChart(),
+            LinearProgressIndicator(value: progress),
+            const SizedBox(height: 12),
+            Text(
+              'Ожидают проверки: ${stats.pendingCars}. '
+              'Опубликованы: ${stats.approvedCars}. '
+              'Проданы: ${stats.soldCars}.',
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMiniChart() {
-    final days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-    final values = [65, 78, 52, 89, 73, 45, 82];
-
-    return SizedBox(
-      height: 150,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: List.generate(7, (index) {
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Container(
-                width: 30,
-                height: (values[index] / 100) * 100,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      const Color(0xFF2563EB).withValues(alpha: 0.8),
-                      const Color(0xFF2563EB).withValues(alpha: 0.3),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                days[index],
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-              ),
-            ],
-          );
-        }),
-      ),
-    );
-  }
 }
 
 class _AdminCard extends StatelessWidget {

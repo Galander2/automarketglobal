@@ -25,10 +25,20 @@ service cloud.firestore {
         && currentUser().data.isBlocked == false;
     }
 
-    function adminCanManageRegularUser() {
+    function adminCanModerateRegularUser() {
       return admin()
         && resource.data.role in ['user', 'seller', 'dealer']
-        && request.resource.data.role in ['user', 'seller', 'dealer']
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'isBlocked', 'isVerified', 'rating', 'updatedAt'
+        ]);
+    }
+
+    function superAdminCanManageUser(userId) {
+      return superAdmin()
+        && request.auth.uid != userId
+        && resource.data.role != 'superAdmin'
+        && request.resource.data.role != 'superAdmin'
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'role', 'isBlocked', 'isVerified', 'rating', 'updatedAt'
         ]);
@@ -158,10 +168,10 @@ service cloud.firestore {
         && request.resource.data.isVerified == false
         && validStoredPhone(request.resource.data.phone);
       allow read: if owns(userId) || admin();
-      allow update: if superAdmin()
-        || adminCanManageRegularUser()
+      allow update: if superAdminCanManageUser(userId)
+        || adminCanModerateRegularUser()
         || (owns(userId) && validSelfProfileUpdate());
-      allow delete: if superAdmin();
+      allow delete: if false;
     }
 
     match /users/{userId}/favorites/{carId} {
@@ -187,7 +197,15 @@ service cloud.firestore {
         && request.resource.data.status == 'pending'
         && validCarData();
 
-      allow update: if admin() || (
+      allow update: if (
+        admin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'updatedAt'
+        ])
+        && request.resource.data.status in [
+          'pending', 'approved', 'rejected', 'sold', 'draft'
+        ]
+      ) || (
         owns(resource.data.sellerId)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'title', 'price', 'year', 'mileage', 'city', 'route', 'country',
@@ -349,8 +367,68 @@ service cloud.firestore {
       }
     }
 
+    match /complaints/{complaintId} {
+      allow read: if admin();
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'open'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() >= 3
+        && request.resource.data.reason.size() <= 500
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 3000;
+      allow update: if admin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'status', 'resolvedAt', 'resolvedBy', 'updatedAt'
+        ])
+        && request.resource.data.status in ['open', 'resolved', 'dismissed']
+        && request.resource.data.resolvedBy == request.auth.uid;
+      allow delete: if false;
+    }
+
+    match /admin_audit_logs/{logId} {
+      allow read: if superAdmin();
+      allow create: if admin()
+        && request.resource.data.keys().hasAll([
+          'actorId', 'action', 'targetType', 'targetId', 'metadata', 'createdAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'actorId', 'action', 'targetType', 'targetId', 'metadata', 'createdAt'
+        ])
+        && request.resource.data.actorId == request.auth.uid
+        && request.resource.data.action is string
+        && request.resource.data.action.size() >= 3
+        && request.resource.data.action.size() <= 100
+        && request.resource.data.targetType in ['user', 'car', 'complaint']
+        && request.resource.data.targetId is string
+        && request.resource.data.metadata is map
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /admin_settings/{documentId} {
+      allow read: if admin();
+      allow write: if superAdmin();
+    }
+
+    match /analytics/{documentId} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
+    match /dealers/{dealerId} {
+      allow read: if true;
+      allow create, update, delete: if superAdmin();
+    }
+
+    match /admin/{documentId} {
+      allow read: if admin();
+      allow write: if false;
+    }
+
     match /{document=**} {
-      allow read, write: if admin();
+      allow read, write: if false;
     }
   }
 }

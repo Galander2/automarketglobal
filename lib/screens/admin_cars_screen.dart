@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/car.dart';
+import '../repositories/admin_repository.dart';
 
 class AdminCarsScreen extends StatefulWidget {
   const AdminCarsScreen({super.key});
@@ -10,6 +11,7 @@ class AdminCarsScreen extends StatefulWidget {
 }
 
 class _AdminCarsScreenState extends State<AdminCarsScreen> {
+  final AdminRepository _adminRepository = AdminRepository();
   List<Car> _cars = [];
   List<Car> _filteredCars = [];
   bool _isLoading = true;
@@ -99,9 +101,7 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
 
   Future<void> _approveCar(Car car) async {
     try {
-      await FirebaseFirestore.instance.collection('cars').doc(car.id).update({
-        'status': CarStatus.approved.name,
-      });
+      await _adminRepository.setCarStatus(car, CarStatus.approved);
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -120,9 +120,7 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
 
   Future<void> _rejectCar(Car car) async {
     try {
-      await FirebaseFirestore.instance.collection('cars').doc(car.id).update({
-        'status': CarStatus.rejected.name,
-      });
+      await _adminRepository.setCarStatus(car, CarStatus.rejected);
 
       if (mounted) {
         ScaffoldMessenger.of(
@@ -164,10 +162,7 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
 
     if (confirmed == true) {
       try {
-        await FirebaseFirestore.instance
-            .collection('cars')
-            .doc(car.id)
-            .delete();
+        await _adminRepository.deleteCar(car.id);
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -282,15 +277,6 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
                   },
                 ),
               ],
-              _buildActionTile(
-                icon: Icons.edit,
-                title: 'Редактировать',
-                color: Colors.blue,
-                onTap: () {
-                  Navigator.pop(context);
-                  // Navigate to edit screen
-                },
-              ),
               _buildActionTile(
                 icon: Icons.delete,
                 title: 'Удалить объявление',
