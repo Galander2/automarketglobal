@@ -202,6 +202,60 @@ class UserSettingsScreen extends StatelessWidget {
               ),
             ],
           ),
+          if (user.isAdmin) ...[
+            const SizedBox(height: 16),
+            _Section(
+              title: user.isSuperAdmin
+                  ? 'Управление платформой'
+                  : 'Управление',
+              children: [
+                _ManagementTile(
+                  icon: Icons.dashboard_outlined,
+                  title: 'Панель управления',
+                  subtitle: 'Сводка и доступные инструменты',
+                  route: AppRoutes.admin,
+                ),
+                _ManagementTile(
+                  icon: Icons.directions_car_outlined,
+                  title: 'Объявления',
+                  subtitle: 'Проверка и управление публикациями',
+                  route: AppRoutes.adminCars,
+                ),
+                _ManagementTile(
+                  icon: Icons.report_problem_outlined,
+                  title: 'Жалобы',
+                  subtitle: 'Рассмотрение обращений пользователей',
+                  route: AppRoutes.adminComplaints,
+                ),
+                if (user.isSuperAdmin) ...[
+                  _ManagementTile(
+                    icon: Icons.people_outline,
+                    title: 'Пользователи и роли',
+                    subtitle: 'Управление доступом пользователей',
+                    route: AppRoutes.adminUsers,
+                  ),
+                  _ManagementTile(
+                    icon: Icons.storefront_outlined,
+                    title: 'Дилеры',
+                    subtitle: 'Управление дилерами',
+                    route: AppRoutes.adminDealers,
+                  ),
+                  _ManagementTile(
+                    icon: Icons.public_outlined,
+                    title: 'Рынки',
+                    subtitle: 'Настройка доступных рынков',
+                    route: AppRoutes.adminMarkets,
+                  ),
+                  _ManagementTile(
+                    icon: Icons.analytics_outlined,
+                    title: 'Отчёты',
+                    subtitle: 'Статистика и отчётность платформы',
+                    route: AppRoutes.adminReports,
+                  ),
+                ],
+              ],
+            ),
+          ],
           const SizedBox(height: 24),
           OutlinedButton.icon(
             onPressed: auth.isLoading ? null : () => _signOut(context, auth),
@@ -214,6 +268,31 @@ class UserSettingsScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ManagementTile extends StatelessWidget {
+  const _ManagementTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.route,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final String route;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => Navigator.pushNamed(context, route),
     );
   }
 }

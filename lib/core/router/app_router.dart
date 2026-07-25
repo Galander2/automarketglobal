@@ -25,7 +25,6 @@ import '../../screens/admin_dealers_screen.dart';
 import '../../screens/admin_reports_screen.dart';
 import '../../screens/admin_complaints_screen.dart';
 import '../../screens/admin_markets_screen.dart';
-import '../../screens/admin_settings_screen.dart';
 import '../../models/car.dart';
 import '../../models/chat_thread.dart';
 import '../../models/app_user.dart';
@@ -118,8 +117,6 @@ class AppRouter {
           const AdminMarketsScreen(),
           permission: (user) => user.role == UserRole.superAdmin,
         );
-      case AppRoutes.adminSettings:
-        return _adminRoute(const AdminSettingsScreen());
       default:
         return _errorRoute('Нет маршрута: ${settings.name}');
     }

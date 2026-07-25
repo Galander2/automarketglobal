@@ -254,15 +254,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Navigator.pushNamed(context, AppRoutes.adminComplaints);
           },
         ),
-        _AdminCard(
-          icon: Icons.settings,
-          title: 'Настройки',
-          subtitle: 'Настройки системы',
-          color: const Color(0xFF6B7280),
-          onTap: () {
-            Navigator.pushNamed(context, AppRoutes.adminSettings);
-          },
-        ),
       ],
     );
   }

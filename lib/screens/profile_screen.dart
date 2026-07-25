@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../repositories/auth_repository.dart';
 import '../core/router/app_routes.dart';
 import '../l10n/app_localizations.dart';
-import '../services/language_service.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -121,19 +120,12 @@ class ProfileScreen extends StatelessWidget {
             },
           ),
 
-          // Переключатель языка
-          _ProfileMenuItem(
-            icon: Icons.language,
-            title: l10n.translate('language'),
-            subtitle: context.watch<LanguageService>().getLanguageName(),
-            onTap: () {
-              Navigator.pushNamed(context, AppRoutes.languageSelection);
-            },
-          ),
           _ProfileMenuItem(
             icon: Icons.settings_outlined,
             title: 'Настройки',
-            subtitle: 'Аккаунт, тема и безопасность',
+            subtitle: authProvider.isAdmin
+                ? 'Аккаунт, приложение и управление'
+                : 'Аккаунт, язык, тема и безопасность',
             onTap: () {
               Navigator.pushNamed(context, AppRoutes.settings);
             },
@@ -150,57 +142,6 @@ class ProfileScreen extends StatelessWidget {
               },
             ),
           ],
-
-          const SizedBox(height: 24),
-
-          OutlinedButton.icon(
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('Выход из аккаунта'),
-                  content: const Text('Вы уверены, что хотите выйти?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('Отмена'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        Navigator.pop(context);
-                        try {
-                          await authProvider.signOut();
-                        } catch (error) {
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(error.toString()),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('Выйти'),
-                    ),
-                  ],
-                ),
-              );
-            },
-            icon: const Icon(Icons.logout),
-            label: Text(l10n.translate('logout')),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.red,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              side: const BorderSide(color: Colors.red),
-            ),
-          ),
         ],
       ),
     );
