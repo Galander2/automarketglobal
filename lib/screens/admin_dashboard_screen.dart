@@ -6,14 +6,17 @@ import '../models/admin_stats.dart';
 import '../repositories/admin_repository.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
-  const AdminDashboardScreen({super.key});
+  final AdminRepository? repository;
+
+  const AdminDashboardScreen({super.key, this.repository});
 
   @override
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  final AdminRepository _adminRepository = AdminRepository();
+  late final AdminRepository _adminRepository =
+      widget.repository ?? AdminRepository();
   AdminStats? _stats;
   bool _isLoading = true;
   String? _error;
@@ -36,10 +39,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       final stats = await _adminRepository.loadStats();
       if (!mounted) return;
       setState(() => _stats = stats);
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() {
-        _error = e.toString();
+        _error = 'load_failed';
         _stats = null;
       });
     } finally {
@@ -70,7 +73,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildHeader(),
+                    _buildHeader(context),
                     if (_error != null) ...[
                       const SizedBox(height: 16),
                       _ErrorBanner(onRetry: _loadStats),
@@ -79,14 +82,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     if (stats != null)
                       _buildQuickStats(stats)
                     else
-                      const Card(
-                        child: Padding(
-                          padding: EdgeInsets.all(20),
-                          child: Text(
-                            'Статистические данные пока отсутствуют',
-                          ),
-                        ),
-                      ),
+                      const SizedBox.shrink(),
                     const SizedBox(height: 24),
                     _buildMainGrid(context),
                     const SizedBox(height: 24),
@@ -101,7 +97,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -120,43 +116,54 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(17),
-            ),
-            child: const Icon(
-              Icons.admin_panel_settings_rounded,
-              color: Colors.white,
-              size: 30,
-            ),
-          ),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Панель управления',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 25,
-                    fontWeight: FontWeight.w900,
-                  ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 520;
+          final identity = Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(17),
                 ),
-                SizedBox(height: 3),
-                Text(
-                  'Безопасное управление платформой',
-                  style: TextStyle(color: Color(0xFFCBD5E1), fontSize: 13),
+                child: const Icon(
+                  Icons.admin_panel_settings_rounded,
+                  color: Colors.white,
+                  size: 30,
                 ),
-              ],
-            ),
-          ),
-          IconButton(
+              ),
+              const SizedBox(width: 16),
+              const Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Панель управления',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 25,
+                        fontWeight: FontWeight.w900,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                    SizedBox(height: 3),
+                    Text(
+                      'Безопасное управление платформой',
+                      style: TextStyle(
+                        color: Color(0xFFD7E3F4),
+                        fontSize: 13,
+                        decoration: TextDecoration.none,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+          final refresh = IconButton(
             tooltip: 'Обновить статистику',
             onPressed: _loadStats,
             style: IconButton.styleFrom(
@@ -164,8 +171,25 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               foregroundColor: Colors.white,
             ),
             icon: const Icon(Icons.refresh_rounded),
-          ),
-        ],
+          );
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                identity,
+                const SizedBox(height: 16),
+                Align(alignment: Alignment.centerRight, child: refresh),
+              ],
+            );
+          }
+          return Row(
+            children: [
+              Expanded(child: identity),
+              const SizedBox(width: 16),
+              refresh,
+            ],
+          );
+        },
       ),
     );
   }
@@ -224,11 +248,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     IconData icon,
     Color color,
   ) {
+    final scheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey[200]!),
+        side: BorderSide(color: scheme.outlineVariant),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -251,7 +276,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 12,
+                color: scheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -261,55 +289,55 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildMainGrid(BuildContext context) {
     final cards = [
-        _AdminCard(
-          icon: Icons.people,
-          title: 'Пользователи',
-          subtitle: 'Управление пользователями',
-          color: const Color(0xFF2563EB),
-          onTap: () {
-            Navigator.pushNamed(context, AppRoutes.adminUsers);
-          },
-        ),
-        _AdminCard(
-          icon: Icons.car_rental,
-          title: 'Автомобили',
-          subtitle: 'Модерация объявлений',
-          color: const Color(0xFF10B981),
-          onTap: () {
-            Navigator.pushNamed(context, AppRoutes.adminCars);
-          },
-        ),
-        _AdminCard(
-          icon: Icons.store,
-          title: 'Дилеры',
-          subtitle: 'Управление дилерами',
-          color: const Color(0xFF8B5CF6),
-          onTap: () {
-            Navigator.pushNamed(context, AppRoutes.adminDealers);
-          },
-        ),
-        _AdminCard(
-          icon: Icons.bar_chart,
-          title: 'Отчёты',
-          subtitle: 'Статистика и аналитика',
-          color: const Color(0xFFF59E0B),
-          onTap: () {
-            Navigator.pushNamed(context, AppRoutes.adminReports);
-          },
-        ),
-        _AdminCard(
-          icon: Icons.chat,
-          title: 'Жалобы',
-          subtitle: 'Рассмотрение жалоб',
-          color: const Color(0xFFEF4444),
-          onTap: () {
-            Navigator.pushNamed(context, AppRoutes.adminComplaints);
-          },
-        ),
-      ];
+      _AdminCard(
+        icon: Icons.people,
+        title: 'Пользователи',
+        subtitle: 'Управление пользователями',
+        color: const Color(0xFF2563EB),
+        onTap: () {
+          Navigator.pushNamed(context, AppRoutes.adminUsers);
+        },
+      ),
+      _AdminCard(
+        icon: Icons.car_rental,
+        title: 'Автомобили',
+        subtitle: 'Модерация объявлений',
+        color: const Color(0xFF10B981),
+        onTap: () {
+          Navigator.pushNamed(context, AppRoutes.adminCars);
+        },
+      ),
+      _AdminCard(
+        icon: Icons.store,
+        title: 'Дилеры',
+        subtitle: 'Управление дилерами',
+        color: const Color(0xFF8B5CF6),
+        onTap: () {
+          Navigator.pushNamed(context, AppRoutes.adminDealers);
+        },
+      ),
+      _AdminCard(
+        icon: Icons.bar_chart,
+        title: 'Отчёты',
+        subtitle: 'Статистика и аналитика',
+        color: const Color(0xFFF59E0B),
+        onTap: () {
+          Navigator.pushNamed(context, AppRoutes.adminReports);
+        },
+      ),
+      _AdminCard(
+        icon: Icons.chat,
+        title: 'Жалобы',
+        subtitle: 'Рассмотрение жалоб',
+        color: const Color(0xFFEF4444),
+        onTap: () {
+          Navigator.pushNamed(context, AppRoutes.adminComplaints);
+        },
+      ),
+    ];
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 900
+        final columns = constraints.maxWidth >= 980
             ? 3
             : constraints.maxWidth >= 520
             ? 2
@@ -322,7 +350,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             crossAxisCount: columns,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: columns == 1 ? 2.35 : 1.45,
+            mainAxisExtent: columns == 1 ? 156 : 190,
           ),
           itemBuilder: (context, index) => cards[index],
         );
@@ -337,11 +365,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ? 0.0
         : totalReviewed / totalModeration;
 
+    final scheme = Theme.of(context).colorScheme;
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey[200]!),
+        side: BorderSide(color: scheme.outlineVariant),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -413,56 +442,63 @@ class _AdminCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return AppHoverLift(
       borderRadius: BorderRadius.circular(16),
       child: Card(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.grey[200]!),
+          side: BorderSide(color: scheme.outlineVariant),
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: onTap,
           child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                color.withValues(alpha: 0.1),
-                color.withValues(alpha: 0.05),
-              ],
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  color.withValues(alpha: 0.1),
+                  color.withValues(alpha: 0.05),
+                ],
+              ),
             ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, size: 32, color: color),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, size: 32, color: color),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+            ),
           ),
         ),
       ),
