@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../l10n/app_extra_translations.dart';
+
 class LanguageService extends ChangeNotifier {
   Locale _locale = const Locale('ru');
   ThemeMode _themeMode = ThemeMode.system;
@@ -13,18 +15,33 @@ class LanguageService extends ChangeNotifier {
   }
 
   Future<void> _loadPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    final languageCode = prefs.getString('language_code') ?? 'ru';
-    _locale = Locale(languageCode);
-    _themeMode = _themeModeFromName(prefs.getString('theme_mode'));
-    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedCode = prefs.getString('language_code') ?? 'ru';
+      final languageCode =
+          AppExtraTranslations.supportedCodes.contains(savedCode)
+              ? savedCode
+              : 'ru';
+      _locale = Locale(languageCode);
+      _themeMode = _themeModeFromName(prefs.getString('theme_mode'));
+      notifyListeners();
+    } catch (_) {
+      // Keep safe in-memory defaults when local storage is unavailable.
+    }
   }
 
   Future<void> setLocale(Locale locale) async {
-    _locale = locale;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('language_code', locale.languageCode);
+    final languageCode = locale.languageCode;
+    if (!AppExtraTranslations.supportedCodes.contains(languageCode)) return;
+    if (_locale.languageCode == languageCode) return;
+    _locale = Locale(languageCode);
     notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('language_code', languageCode);
+    } catch (_) {
+      // The selected locale remains active for the current session.
+    }
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {

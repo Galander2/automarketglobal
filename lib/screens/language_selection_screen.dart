@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../core/theme/app_colors.dart';
+import '../l10n/app_localizations.dart';
 import '../services/language_service.dart';
+import '../widgets/app_hover_lift.dart';
 
 class LanguageSelectionScreen extends StatelessWidget {
   const LanguageSelectionScreen({super.key});
@@ -9,21 +12,26 @@ class LanguageSelectionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final languageService = Provider.of<LanguageService>(context);
     final currentLocale = languageService.locale.languageCode;
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
 
-    final languages = [
+    const languages = [
       {'code': 'ru', 'name': 'Русский', 'flag': '🇷🇺'},
       {'code': 'en', 'name': 'English', 'flag': '🇬🇧'},
-      {'code': 'tj', 'name': 'Тоҷикӣ', 'flag': '🇹'},
-      {'code': 'uz', 'name': 'O\'zbek', 'flag': '🇿'},
+      {'code': 'tj', 'name': 'Тоҷикӣ', 'flag': '🇹🇯'},
+      {'code': 'uz', 'name': 'O\'zbek', 'flag': '🇺🇿'},
       {'code': 'zh', 'name': '中文', 'flag': '🇨🇳'},
       {'code': 'ky', 'name': 'Кыргызча', 'flag': '🇰🇬'},
-      {'code': 'kk', 'name': 'Қазақша', 'flag': '🇿'},
+      {'code': 'kk', 'name': 'Қазақша', 'flag': '🇰🇿'},
       {'code': 'ar', 'name': 'العربية', 'flag': '🇸🇦'},
       {'code': 'ko', 'name': '한국어', 'flag': '🇰🇷'},
     ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Выберите язык'), centerTitle: true),
+      appBar: AppBar(
+        title: Text(l10n.translate('selectLanguage')),
+        centerTitle: true,
+      ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: languages.length,
@@ -31,34 +39,52 @@ class LanguageSelectionScreen extends StatelessWidget {
           final lang = languages[index];
           final isSelected = currentLocale == lang['code'];
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(
-                color: isSelected ? const Color(0xFF2563EB) : Colors.grey[300]!,
-                width: isSelected ? 2 : 1,
-              ),
-            ),
-            child: ListTile(
-              leading: Text(
-                lang['flag'] as String,
-                style: const TextStyle(fontSize: 32),
-              ),
-              title: Text(
-                lang['name'] as String,
-                style: TextStyle(
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? const Color(0xFF2563EB) : Colors.black,
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: AppHoverLift(
+              borderRadius: BorderRadius.circular(18),
+              child: Card(
+                margin: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  side: BorderSide(
+                    color: isSelected
+                        ? AppColors.primary
+                        : theme.dividerColor,
+                    width: isSelected ? 2 : 1,
+                  ),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 8,
+                  ),
+                  leading: Text(
+                    lang['flag']!,
+                    style: const TextStyle(fontSize: 32),
+                  ),
+                  title: Text(
+                    lang['name']!,
+                    style: TextStyle(
+                      fontWeight:
+                          isSelected ? FontWeight.w800 : FontWeight.w600,
+                      color: isSelected
+                          ? AppColors.primary
+                          : theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? const Icon(
+                          Icons.check_circle_rounded,
+                          color: AppColors.primary,
+                        )
+                      : const Icon(Icons.chevron_right_rounded),
+                  onTap: () async {
+                    await languageService.setLocale(Locale(lang['code']!));
+                    if (context.mounted) Navigator.pop(context);
+                  },
                 ),
               ),
-              trailing: isSelected
-                  ? const Icon(Icons.check_circle, color: Color(0xFF2563EB))
-                  : null,
-              onTap: () {
-                languageService.setLocale(Locale(lang['code'] as String));
-                Navigator.pop(context);
-              },
             ),
           );
         },

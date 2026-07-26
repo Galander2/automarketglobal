@@ -208,7 +208,7 @@ class _MainShellState extends State<MainShell> {
       bottomNavigationBar: SafeArea(
         top: false,
         child: BottomAppBar(
-          height: 78,
+          height: 92,
           padding: EdgeInsets.zero,
           shape: const CircularNotchedRectangle(),
           notchMargin: 10,
@@ -218,7 +218,7 @@ class _MainShellState extends State<MainShell> {
           color: Theme.of(context).cardColor,
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 860),
+              constraints: const BoxConstraints(maxWidth: 1180),
               child: Row(
                 children: [
                   Expanded(
@@ -239,7 +239,7 @@ class _MainShellState extends State<MainShell> {
                       onTap: () => setState(() => currentIndex = 1),
                     ),
                   ),
-                  const SizedBox(width: 82),
+                  const SizedBox(width: 98),
                   Expanded(
                     child: _NavItem(
                       icon: Icons.favorite_border_rounded,
@@ -268,7 +268,7 @@ class _MainShellState extends State<MainShell> {
   }
 }
 
-class _NavItem extends StatelessWidget {
+class _NavItem extends StatefulWidget {
   final IconData icon;
   final IconData selectedIcon;
   final String label;
@@ -284,60 +284,108 @@ class _NavItem extends StatelessWidget {
   });
 
   @override
+  State<_NavItem> createState() => _NavItemState();
+}
+
+class _NavItemState extends State<_NavItem> {
+  bool _isHovered = false;
+  bool _isPressed = false;
+  bool _isFocused = false;
+
+  @override
   Widget build(BuildContext context) {
-    final color = isSelected ? AppColors.primary : AppColors.muted;
+    final isEmphasized = widget.isSelected || _isHovered || _isFocused;
+    final color = isEmphasized ? AppColors.primary : AppColors.muted;
+    final scale = _isPressed ? 0.97 : (_isHovered ? 1.035 : 1.0);
 
     return Semantics(
       button: true,
-      selected: isSelected,
-      label: label,
+      selected: widget.isSelected,
+      label: widget.label,
       child: Tooltip(
-        message: label,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: onTap,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 112),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 13,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.primary.withValues(alpha: 0.11)
+        message: widget.label,
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() {
+            _isHovered = false;
+            _isPressed = false;
+          }),
+          child: FocusableActionDetector(
+            onShowFocusHighlight: (value) =>
+                setState(() => _isFocused = value),
+            child: AnimatedScale(
+              scale: scale,
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeOutCubic,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                height: 70,
+                margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                decoration: BoxDecoration(
+                  color: widget.isSelected
+                      ? AppColors.primary.withValues(alpha: 0.13)
+                      : _isHovered
+                          ? AppColors.primary.withValues(alpha: 0.07)
                           : Colors.transparent,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 160),
-                      child: Icon(
-                        isSelected ? selectedIcon : icon,
-                        key: ValueKey(isSelected),
-                        color: color,
-                        size: 23,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isEmphasized
+                        ? AppColors.primary.withValues(alpha: 0.72)
+                        : Colors.transparent,
+                  ),
+                  boxShadow: isEmphasized
+                      ? [
+                          BoxShadow(
+                            color:
+                                AppColors.primary.withValues(alpha: 0.20),
+                            blurRadius: 18,
+                            offset: const Offset(0, 7),
+                          ),
+                        ]
+                      : const [],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: widget.onTap,
+                    onHighlightChanged: (value) =>
+                        setState(() => _isPressed = value),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 160),
+                            child: Icon(
+                              widget.isSelected
+                                  ? widget.selectedIcon
+                                  : widget.icon,
+                              key: ValueKey(widget.isSelected),
+                              color: color,
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            widget.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: color,
+                              fontSize: 12.5,
+                              fontWeight: widget.isSelected
+                                  ? FontWeight.w800
+                                  : FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 11,
-                      fontWeight: isSelected
-                          ? FontWeight.w800
-                          : FontWeight.w600,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

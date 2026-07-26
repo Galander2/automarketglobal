@@ -8,6 +8,7 @@ import 'app_ky.dart';
 import 'app_kk.dart';
 import 'app_ar.dart';
 import 'app_ko.dart';
+import 'app_extra_translations.dart';
 
 class AppLocalizations {
   final Locale locale;
@@ -627,11 +628,18 @@ class AppLocalizations {
           'changeLanguage': AppRu.changeLanguage,
         };
     }
+    _localizedStrings.addAll(
+      AppExtraTranslations.forLocale(locale.languageCode),
+    );
     return true;
   }
 
-  String translate(String key) {
-    return _localizedStrings[key] ?? key;
+  String translate(String key, [Map<String, Object> parameters = const {}]) {
+    var value = _localizedStrings[key] ?? key;
+    for (final entry in parameters.entries) {
+      value = value.replaceAll('{${entry.key}}', '${entry.value}');
+    }
+    return value;
   }
 }
 

@@ -120,12 +120,12 @@ class _SearchScreenState extends State<SearchScreen> {
               onChanged: _scheduleSearch,
               onSubmitted: (_) => _loadCars(),
               decoration: InputDecoration(
-                hintText: 'Марка, модель или город',
+                hintText: l10n.translate('searchHint'),
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchController.text.isEmpty
                     ? null
                     : IconButton(
-                        tooltip: 'Очистить',
+                        tooltip: l10n.translate('clear'),
                         icon: const Icon(Icons.clear),
                         onPressed: () {
                           _searchController.clear();
@@ -149,7 +149,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 children: [
                   ActionChip(
                     avatar: const Icon(Icons.close_rounded, size: 18),
-                    label: const Text('Сбросить фильтры'),
+                    label: Text(l10n.translate('resetFilters')),
                     onPressed: () {
                       setState(() => _filters = const CarSearchFilters());
                       _loadCars();
@@ -170,7 +170,9 @@ class _SearchScreenState extends State<SearchScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _isLoading ? 'Поиск…' : 'Найдено: ${_cars.length}',
+                  _isLoading
+                      ? l10n.translate('searching')
+                      : l10n.translate('found', {'count': _cars.length}),
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -189,7 +191,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           label: Text('${_filters.activeCount}'),
                           child: const Icon(Icons.tune_rounded, size: 18),
                         ),
-                        label: const Text('Все фильтры'),
+                        label: Text(l10n.translate('allFilters')),
                       ),
                       const SizedBox(width: 6),
                       TextButton.icon(
@@ -198,7 +200,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           Icons.directions_car_filled_outlined,
                           size: 18,
                         ),
-                        label: const Text('Автомобили'),
+                        label: Text(l10n.translate('vehicles')),
                       ),
                     ],
                   ),
@@ -206,13 +208,13 @@ class _SearchScreenState extends State<SearchScreen> {
               ],
             ),
           ),
-          Expanded(child: _buildResults()),
+          Expanded(child: _buildResults(l10n)),
         ],
       ),
     );
   }
 
-  Widget _buildResults() {
+  Widget _buildResults(AppLocalizations l10n) {
     final userId = context.read<AuthProvider?>()?.currentUser?.uid;
     if (_isLoading && _cars.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -221,16 +223,16 @@ class _SearchScreenState extends State<SearchScreen> {
     if (_error != null && _cars.isEmpty) {
       return _MessageState(
         icon: Icons.cloud_off_outlined,
-        message: _error!,
-        actionLabel: 'Повторить',
+        message: l10n.translate('loadFailed'),
+        actionLabel: l10n.translate('tryAgain'),
         onAction: () => _loadCars(forceRefresh: true),
       );
     }
 
     if (_cars.isEmpty) {
-      return const _MessageState(
+      return _MessageState(
         icon: Icons.search_off,
-        message: 'По вашему запросу ничего не найдено',
+        message: l10n.translate('nothingFound'),
       );
     }
 
