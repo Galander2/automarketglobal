@@ -13,6 +13,18 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
+    function activeUser() {
+      return signedIn()
+        && exists(
+          /databases/$(database)/documents/users/$(request.auth.uid)
+        )
+        && currentUser().data.get('isBlocked', false) == false;
+    }
+
+    function activeOwner(userId) {
+      return activeUser() && request.auth.uid == userId;
+    }
+
     function admin() {
       return signedIn()
         && currentUser().data.role in ['admin', 'superAdmin']
@@ -184,13 +196,13 @@ service cloud.firestore {
       allow read: if owns(userId) || admin();
       allow update: if superAdminCanManageUser(userId)
         || adminCanModerateRegularUser()
-        || (owns(userId) && validSelfProfileUpdate());
+        || (activeOwner(userId) && validSelfProfileUpdate());
       allow delete: if false;
     }
 
     match /users/{userId}/favorites/{carId} {
       allow read: if owns(userId);
-      allow create: if owns(userId)
+      allow create: if activeOwner(userId)
         && request.resource.data.keys().hasOnly(['carId', 'createdAt'])
         && request.resource.data.carId == carId
         && request.resource.data.createdAt == request.time
@@ -198,7 +210,7 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/cars/$(carId)).data.status
           == 'approved';
       allow update: if false;
-      allow delete: if owns(userId);
+      allow delete: if activeOwner(userId);
     }
 
     match /cars/{carId} {
@@ -206,7 +218,7 @@ service cloud.firestore {
         || owns(resource.data.sellerId)
         || admin();
 
-      allow create: if signedIn()
+      allow create: if activeUser()
         && request.resource.data.sellerId == request.auth.uid
         && request.resource.data.status == 'pending'
         && validCarData();
@@ -220,7 +232,7 @@ service cloud.firestore {
           'pending', 'approved', 'rejected', 'sold', 'draft'
         ]
       ) || (
-        owns(resource.data.sellerId)
+        activeOwner(resource.data.sellerId)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'title', 'price', 'year', 'mileage', 'city', 'route', 'country',
           'description', 'vin', 'make', 'model', 'transmission', 'bodyType',
@@ -229,11 +241,11 @@ service cloud.firestore {
         && validCarData()
       );
 
-      allow delete: if owns(resource.data.sellerId) || admin();
+      allow delete: if activeOwner(resource.data.sellerId) || admin();
     }
 
     function chatParticipant(chatData) {
-      return signedIn()
+      return activeUser()
         && chatData.participantIds is list
         && chatData.participantIds.hasAny([request.auth.uid]);
     }
@@ -369,7 +381,7 @@ service cloud.firestore {
 
     match /chats/{chatId} {
       allow read: if chatParticipant(resource.data);
-      allow create: if signedIn() && validNewChat();
+      allow create: if activeUser() && validNewChat();
       allow update: if validChatUpdate();
       allow delete: if admin();
 
@@ -384,7 +396,7 @@ service cloud.firestore {
 
     match /complaints/{complaintId} {
       allow read: if admin();
-      allow create: if signedIn()
+      allow create: if activeUser()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.status == 'open'
         && request.resource.data.createdAt == request.time
