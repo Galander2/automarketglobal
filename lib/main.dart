@@ -10,6 +10,7 @@ import 'repositories/auth_repository.dart';
 import 'core/router/app_routes.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'widgets/app_hover_lift.dart';
 import 'screens/auth_screen.dart';
 import 'screens/email_verification_screen.dart';
 import 'screens/home_screen.dart';
@@ -173,30 +174,34 @@ class _MainShellState extends State<MainShell> {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: IndexedStack(index: currentIndex, children: screens),
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppColors.primary, AppColors.accent],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.32),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
+      floatingActionButton: AppHoverLift(
+        borderRadius: BorderRadius.circular(32),
+        hoverScale: 1.06,
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.primary, AppColors.accent],
             ),
-          ],
-        ),
-        child: FloatingActionButton(
-          tooltip: l10n.translate('addCar'),
-          onPressed: _openAddMenu,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          hoverElevation: 0,
-          focusElevation: 0,
-          child: const Icon(Icons.add_rounded, size: 34),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.32),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: FloatingActionButton(
+            tooltip: l10n.translate('addCar'),
+            onPressed: _openAddMenu,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            hoverElevation: 0,
+            focusElevation: 0,
+            child: const Icon(Icons.add_rounded, size: 34),
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -286,14 +291,17 @@ class _NavItem extends StatelessWidget {
     final color = isSelected ? AppColors.primary : AppColors.muted;
 
     return Expanded(
-      child: Semantics(
-        button: true,
-        selected: isSelected,
-        label: label,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: onTap,
-          child: Column(
+      child: AppHoverLift(
+        borderRadius: BorderRadius.circular(18),
+        hoverScale: 1.035,
+        child: Semantics(
+          button: true,
+          selected: isSelected,
+          label: label,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: onTap,
+            child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AnimatedContainer(
@@ -327,6 +335,7 @@ class _NavItem extends StatelessWidget {
                 ),
               ),
             ],
+            ),
           ),
         ),
       ),
@@ -349,23 +358,34 @@ class _AddMenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: AppHoverLift(
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Theme.of(context).dividerColor),
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: AppColors.primary.withValues(alpha: 0.10),
-          child: Icon(icon, color: AppColors.primary),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: Theme.of(context).dividerColor),
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
+            leading: CircleAvatar(
+              backgroundColor: AppColors.primary.withValues(alpha: 0.10),
+              child: Icon(icon, color: AppColors.primary),
+            ),
+            title: Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w900),
+            ),
+            subtitle: Text(subtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: onTap,
+          ),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: onTap,
       ),
     );
   }

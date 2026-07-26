@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/auth/auth_validators.dart';
 import '../core/theme/app_theme.dart';
 import '../repositories/auth_repository.dart';
+import '../widgets/app_hover_lift.dart';
 import '../widgets/international_phone_field.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -707,32 +708,36 @@ class _ModeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      decoration: BoxDecoration(
-        color: selected ? Theme.of(context).cardColor : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: selected
-            ? [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.07),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ]
-            : null,
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: enabled ? onTap : null,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: selected ? AppColors.primary : AppColors.muted,
-              fontWeight: FontWeight.w800,
+    return AppHoverLift(
+      enabled: enabled,
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        decoration: BoxDecoration(
+          color: selected ? Theme.of(context).cardColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.07),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: enabled ? onTap : null,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: selected ? AppColors.primary : AppColors.muted,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ),

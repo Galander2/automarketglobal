@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_hover_lift.dart';
 import '../core/router/app_routes.dart';
 import '../core/theme/app_theme.dart';
 import '../models/admin_stats.dart';
@@ -412,16 +413,18 @@ class _AdminCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey[200]!),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Container(
+    return AppHoverLift(
+      borderRadius: BorderRadius.circular(16),
+      child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: Colors.grey[200]!),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
@@ -459,6 +462,7 @@ class _AdminCard extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ],
+          ),
           ),
         ),
       ),
