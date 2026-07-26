@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../core/theme/app_colors.dart';
 import '../l10n/app_localizations.dart';
 import '../services/language_service.dart';
 import '../widgets/app_hover_lift.dart';
@@ -49,7 +48,7 @@ class LanguageSelectionScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(18),
                   side: BorderSide(
                     color: isSelected
-                        ? AppColors.primary
+                        ? theme.colorScheme.primary
                         : theme.dividerColor,
                     width: isSelected ? 2 : 1,
                   ),
@@ -69,14 +68,14 @@ class LanguageSelectionScreen extends StatelessWidget {
                       fontWeight:
                           isSelected ? FontWeight.w800 : FontWeight.w600,
                       color: isSelected
-                          ? AppColors.primary
+                          ? theme.colorScheme.primary
                           : theme.colorScheme.onSurface,
                     ),
                   ),
                   trailing: isSelected
-                      ? const Icon(
+                      ? Icon(
                           Icons.check_circle_rounded,
-                          color: AppColors.primary,
+                          color: theme.colorScheme.primary,
                         )
                       : const Icon(Icons.chevron_right_rounded),
                   onTap: () async {
