@@ -69,6 +69,19 @@ void main() {
     expect(result.map((car) => car.id), ['rav4', 'camry']);
   });
 
+  test('exact catalog year returns only listings from that year', () {
+    final result = CarSearchEngine.apply(
+      [rav4, camry],
+      filters: const CarSearchFilters(
+        make: 'Toyota',
+        minYear: 2022,
+        maxYear: 2022,
+      ),
+    );
+
+    expect(result.map((car) => car.id), ['camry']);
+  });
+
   test('legacy listings remain searchable by title', () {
     final legacy = _car(
       id: 'legacy',

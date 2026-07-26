@@ -10,6 +10,7 @@ import '../models/car_search_filters.dart';
 import '../repositories/auth_repository.dart';
 import '../repositories/car_repository.dart';
 import '../widgets/car_card.dart';
+import 'vehicle_catalog_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -77,6 +78,28 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
+  Future<void> _openFilters() async {
+    final result = await Navigator.pushNamed<CarSearchFilters>(
+      context,
+      AppRoutes.searchFilters,
+      arguments: _filters,
+    );
+    if (!mounted || result == null) return;
+    setState(() => _filters = result);
+    await _loadCars();
+  }
+
+  Future<void> _openVehicleCatalog() async {
+    final result = await Navigator.of(context).push<CarSearchFilters>(
+      MaterialPageRoute(
+        builder: (_) => VehicleCatalogScreen(initialFilters: _filters),
+      ),
+    );
+    if (!mounted || result == null) return;
+    setState(() => _filters = result);
+    await _loadCars();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -85,26 +108,6 @@ class _SearchScreenState extends State<SearchScreen> {
       appBar: AppBar(
         title: Text(l10n.translate('search')),
         centerTitle: true,
-        actions: [
-          IconButton(
-            tooltip: 'Фильтры',
-            icon: Badge(
-              isLabelVisible: _filters.activeCount > 0,
-              label: Text('${_filters.activeCount}'),
-              child: const Icon(Icons.tune_rounded),
-            ),
-            onPressed: () async {
-              final result = await Navigator.pushNamed<CarSearchFilters>(
-                context,
-                AppRoutes.searchFilters,
-                arguments: _filters,
-              );
-              if (result == null) return;
-              setState(() => _filters = result);
-              await _loadCars();
-            },
-          ),
-        ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -163,7 +166,8 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   _isLoading ? 'Поиск…' : 'Найдено: ${_cars.length}',
@@ -171,21 +175,33 @@ class _SearchScreenState extends State<SearchScreen> {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: () async {
-                    final result =
-                        await Navigator.pushNamed<CarSearchFilters>(
-                          context,
-                          AppRoutes.searchFilters,
-                          arguments: _filters,
-                        );
-                    if (result == null) return;
-                    setState(() => _filters = result);
-                    await _loadCars();
-                  },
-                  icon: const Icon(Icons.tune_rounded, size: 18),
-                  label: const Text('Все фильтры'),
+                const SizedBox(height: 4),
+                SizedBox(
+                  height: 42,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    reverse: true,
+                    children: [
+                      TextButton.icon(
+                        onPressed: _openFilters,
+                        icon: Badge(
+                          isLabelVisible: _filters.activeCount > 0,
+                          label: Text('${_filters.activeCount}'),
+                          child: const Icon(Icons.tune_rounded, size: 18),
+                        ),
+                        label: const Text('Все фильтры'),
+                      ),
+                      const SizedBox(width: 6),
+                      TextButton.icon(
+                        onPressed: _openVehicleCatalog,
+                        icon: const Icon(
+                          Icons.directions_car_filled_outlined,
+                          size: 18,
+                        ),
+                        label: const Text('Автомобили'),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
