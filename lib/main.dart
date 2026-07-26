@@ -208,7 +208,7 @@ class _MainShellState extends State<MainShell> {
       bottomNavigationBar: SafeArea(
         top: false,
         child: BottomAppBar(
-          height: 74,
+          height: 78,
           padding: EdgeInsets.zero,
           shape: const CircularNotchedRectangle(),
           notchMargin: 10,
@@ -216,54 +216,51 @@ class _MainShellState extends State<MainShell> {
           shadowColor: Colors.black.withValues(alpha: 0.16),
           surfaceTintColor: Colors.transparent,
           color: Theme.of(context).cardColor,
-          child: Row(
-            children: [
-              _NavItem(
-                icon: Icons.home_outlined,
-                selectedIcon: Icons.home,
-                label: l10n.translate('home'),
-                isSelected: currentIndex == 0,
-                onTap: () {
-                  setState(() {
-                    currentIndex = 0;
-                  });
-                },
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 860),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _NavItem(
+                      icon: Icons.home_outlined,
+                      selectedIcon: Icons.home_rounded,
+                      label: l10n.translate('home'),
+                      isSelected: currentIndex == 0,
+                      onTap: () => setState(() => currentIndex = 0),
+                    ),
+                  ),
+                  Expanded(
+                    child: _NavItem(
+                      icon: Icons.search_rounded,
+                      selectedIcon: Icons.search_rounded,
+                      label: l10n.translate('search'),
+                      isSelected: currentIndex == 1,
+                      onTap: () => setState(() => currentIndex = 1),
+                    ),
+                  ),
+                  const SizedBox(width: 82),
+                  Expanded(
+                    child: _NavItem(
+                      icon: Icons.favorite_border_rounded,
+                      selectedIcon: Icons.favorite_rounded,
+                      label: l10n.translate('favorites'),
+                      isSelected: currentIndex == 2,
+                      onTap: () => setState(() => currentIndex = 2),
+                    ),
+                  ),
+                  Expanded(
+                    child: _NavItem(
+                      icon: Icons.person_outline_rounded,
+                      selectedIcon: Icons.person_rounded,
+                      label: l10n.translate('profile'),
+                      isSelected: currentIndex == 3,
+                      onTap: () => setState(() => currentIndex = 3),
+                    ),
+                  ),
+                ],
               ),
-              _NavItem(
-                icon: Icons.search,
-                selectedIcon: Icons.search,
-                label: l10n.translate('search'),
-                isSelected: currentIndex == 1,
-                onTap: () {
-                  setState(() {
-                    currentIndex = 1;
-                  });
-                },
-              ),
-              const SizedBox(width: 72),
-              _NavItem(
-                icon: Icons.favorite_border,
-                selectedIcon: Icons.favorite,
-                label: l10n.translate('favorites'),
-                isSelected: currentIndex == 2,
-                onTap: () {
-                  setState(() {
-                    currentIndex = 2;
-                  });
-                },
-              ),
-              _NavItem(
-                icon: Icons.person_outline,
-                selectedIcon: Icons.person,
-                label: l10n.translate('profile'),
-                isSelected: currentIndex == 3,
-                onTap: () {
-                  setState(() {
-                    currentIndex = 3;
-                  });
-                },
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -290,51 +287,58 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isSelected ? AppColors.primary : AppColors.muted;
 
-    return Expanded(
-      child: AppHoverLift(
-        borderRadius: BorderRadius.circular(18),
-        hoverScale: 1.035,
-        child: Semantics(
-          button: true,
-          selected: isSelected,
-          label: label,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: onTap,
-            child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppColors.primary.withValues(alpha: 0.11)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 160),
-                  child: Icon(
-                    isSelected ? selectedIcon : icon,
-                    key: ValueKey(isSelected),
-                    color: color,
-                    size: 23,
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: label,
+      child: Tooltip(
+        message: label,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: onTap,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 112),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 13,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.primary.withValues(alpha: 0.11)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 160),
+                      child: Icon(
+                        isSelected ? selectedIcon : icon,
+                        key: ValueKey(isSelected),
+                        color: color,
+                        size: 23,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 3),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 11,
+                      fontWeight: isSelected
+                          ? FontWeight.w800
+                          : FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 3),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                ),
-              ),
-            ],
             ),
           ),
         ),
