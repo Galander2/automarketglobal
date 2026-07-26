@@ -6,6 +6,7 @@ import '../models/car.dart';
 import '../repositories/auth_repository.dart';
 import '../repositories/car_repository.dart';
 import '../widgets/car_card.dart';
+import '../widgets/app_hover_lift.dart';
 
 typedef HomeCarsLoader = Future<List<Car>> Function({
   required bool forceRefresh,
@@ -379,17 +380,19 @@ class _QuickActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      elevation: 0,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: Colors.grey.shade200),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
+    return AppHoverLift(
+      borderRadius: BorderRadius.circular(18),
+      child: Card(
+        margin: EdgeInsets.zero,
+        elevation: 0,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(color: Colors.grey.shade200),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(
             children: [
@@ -425,6 +428,7 @@ class _QuickActionCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
           ),
         ),
       ),

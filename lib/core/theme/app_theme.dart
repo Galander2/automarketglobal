@@ -31,6 +31,33 @@ abstract final class AppTheme {
     final outline = isDark
         ? Colors.white.withValues(alpha: 0.12)
         : const Color(0xFFE2E8F0);
+    final neonOutline = WidgetStateProperty.resolveWith<BorderSide?>((states) {
+      if (states.contains(WidgetState.disabled)) {
+        return BorderSide(color: outline.withValues(alpha: 0.5));
+      }
+      if (states.contains(WidgetState.hovered) ||
+          states.contains(WidgetState.focused)) {
+        return const BorderSide(color: AppColors.accent, width: 1.6);
+      }
+      return BorderSide(color: outline);
+    });
+    final neonElevation = WidgetStateProperty.resolveWith<double>((states) {
+      if (states.contains(WidgetState.disabled)) return 0;
+      if (states.contains(WidgetState.pressed)) return 3;
+      if (states.contains(WidgetState.hovered) ||
+          states.contains(WidgetState.focused)) {
+        return 12;
+      }
+      return 0;
+    });
+    final neonShadow = WidgetStateProperty.resolveWith<Color>((states) {
+      if (states.contains(WidgetState.hovered) ||
+          states.contains(WidgetState.focused)) {
+        return AppColors.accent.withValues(alpha: 0.55);
+      }
+      return AppColors.primary.withValues(alpha: 0.24);
+    });
+    const buttonAnimationDuration = Duration(milliseconds: 170);
 
     return ThemeData(
       useMaterial3: true,
@@ -114,6 +141,20 @@ abstract final class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
+        ).copyWith(
+          animationDuration: buttonAnimationDuration,
+          elevation: neonElevation,
+          shadowColor: neonShadow,
+          side: neonOutline,
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.pressed)) {
+              return Colors.white.withValues(alpha: 0.18);
+            }
+            if (states.contains(WidgetState.hovered)) {
+              return AppColors.accent.withValues(alpha: 0.13);
+            }
+            return null;
+          }),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -129,6 +170,11 @@ abstract final class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
+        ).copyWith(
+          animationDuration: buttonAnimationDuration,
+          elevation: neonElevation,
+          shadowColor: neonShadow,
+          side: neonOutline,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -143,6 +189,18 @@ abstract final class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
+        ).copyWith(
+          animationDuration: buttonAnimationDuration,
+          elevation: neonElevation,
+          shadowColor: neonShadow,
+          side: neonOutline,
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.hovered) ||
+                states.contains(WidgetState.focused)) {
+              return AppColors.accent.withValues(alpha: isDark ? 0.10 : 0.06);
+            }
+            return Colors.transparent;
+          }),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -152,6 +210,60 @@ abstract final class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+        ).copyWith(
+          animationDuration: buttonAnimationDuration,
+          elevation: neonElevation,
+          shadowColor: neonShadow,
+          side: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.hovered) ||
+                states.contains(WidgetState.focused)) {
+              return const BorderSide(color: AppColors.accent, width: 1.2);
+            }
+            return BorderSide.none;
+          }),
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.hovered) ||
+                states.contains(WidgetState.focused)) {
+              return AppColors.accent.withValues(alpha: isDark ? 0.10 : 0.06);
+            }
+            return Colors.transparent;
+          }),
+        ),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: ButtonStyle(
+          animationDuration: buttonAnimationDuration,
+          foregroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.disabled)) {
+              return AppColors.muted.withValues(alpha: 0.45);
+            }
+            if (states.contains(WidgetState.hovered) ||
+                states.contains(WidgetState.focused)) {
+              return AppColors.accent;
+            }
+            return isDark ? Colors.white : AppColors.ink;
+          }),
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.pressed)) {
+              return AppColors.primary.withValues(alpha: 0.18);
+            }
+            if (states.contains(WidgetState.hovered) ||
+                states.contains(WidgetState.focused)) {
+              return AppColors.accent.withValues(alpha: 0.12);
+            }
+            return Colors.transparent;
+          }),
+          overlayColor: WidgetStatePropertyAll(Colors.transparent),
+          side: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.hovered) ||
+                states.contains(WidgetState.focused)) {
+              return const BorderSide(color: AppColors.accent, width: 1.2);
+            }
+            return BorderSide.none;
+          }),
+          shadowColor: neonShadow,
+          elevation: neonElevation,
+          shape: const WidgetStatePropertyAll(CircleBorder()),
         ),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(

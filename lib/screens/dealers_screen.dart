@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_hover_lift.dart';
 
 class DealersScreen extends StatelessWidget {
   const DealersScreen({super.key});
@@ -45,17 +46,20 @@ class DealersScreen extends StatelessWidget {
         itemCount: dealers.length,
         itemBuilder: (context, index) {
           final dealer = dealers[index];
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            elevation: 0,
-            shape: RoundedRectangleBorder(
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: AppHoverLift(
               borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: Colors.grey[200]!),
-            ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () {},
-              child: Padding(
+              child: Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: Theme.of(context).dividerColor),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => _showDealerDetails(context, dealer),
+                  child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
@@ -127,10 +131,60 @@ class DealersScreen extends StatelessWidget {
                     Icon(Icons.chevron_right, color: Colors.grey[400]),
                   ],
                 ),
+                  ),
+                ),
               ),
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _showDealerDetails(
+    BuildContext context,
+    Map<String, dynamic> dealer,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              dealer['name'] as String,
+              style: Theme.of(sheetContext).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(dealer['desc'] as String),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                const Icon(Icons.star_rounded, color: Colors.amber),
+                const SizedBox(width: 6),
+                Text('${dealer['rating']}'),
+                const SizedBox(width: 24),
+                const Icon(Icons.directions_car_outlined),
+                const SizedBox(width: 6),
+                Text('${dealer['cars']} автомобилей'),
+              ],
+            ),
+            const SizedBox(height: 22),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(sheetContext),
+                child: const Text('Закрыть'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

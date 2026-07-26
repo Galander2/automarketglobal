@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/router/app_routes.dart';
+import 'app_hover_lift.dart';
 
 class AiBanner extends StatelessWidget {
   const AiBanner({super.key});
@@ -72,33 +73,41 @@ class AiBanner extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 14),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pushNamed(context, AppRoutes.aiVinCheck);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.scanner, size: 18, color: Color(0xFF6366F1)),
-                        SizedBox(width: 6),
-                        Text(
-                          'Проверить VIN',
-                          style: TextStyle(
+                AppHoverLift(
+                  borderRadius: BorderRadius.circular(12),
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      Navigator.pushNamed(context, AppRoutes.aiVinCheck);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.scanner,
+                            size: 18,
                             color: Color(0xFF6366F1),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 6),
+                          Text(
+                            'Проверить VIN',
+                            style: TextStyle(
+                              color: Color(0xFF6366F1),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

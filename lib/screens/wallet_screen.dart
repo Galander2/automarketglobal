@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_hover_lift.dart';
 
 class WalletScreen extends StatelessWidget {
   const WalletScreen({super.key});
@@ -104,16 +105,18 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey[200]!),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Padding(
+    return AppHoverLift(
+      borderRadius: BorderRadius.circular(12),
+      child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: Colors.grey[200]!),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onTap,
+          child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
@@ -121,6 +124,7 @@ class _ActionButton extends StatelessWidget {
               const SizedBox(height: 8),
               Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
             ],
+          ),
           ),
         ),
       ),

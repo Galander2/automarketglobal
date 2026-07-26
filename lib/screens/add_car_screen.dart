@@ -5,6 +5,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../core/cars/car_form_validators.dart';
 import '../repositories/car_repository.dart';
+import '../widgets/app_hover_lift.dart';
 
 class AddCarScreen extends StatefulWidget {
   const AddCarScreen({super.key});
@@ -273,24 +274,28 @@ class _AddCarScreenState extends State<AddCarScreen> {
             SizedBox(
               height: 120,
               child: _images.isEmpty
-                  ? GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.add_a_photo,
-                              size: 40,
-                              color: Colors.grey,
-                            ),
-                            SizedBox(height: 8),
-                            Text('Добавить фото'),
-                          ],
+                  ? AppHoverLift(
+                      borderRadius: BorderRadius.circular(12),
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _pickImage,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.add_a_photo,
+                                size: 40,
+                                color: Colors.grey,
+                              ),
+                              SizedBox(height: 8),
+                              Text('Добавить фото'),
+                            ],
+                          ),
                         ),
                       ),
                     )
@@ -337,18 +342,23 @@ class _AddCarScreenState extends State<AddCarScreen> {
                             Positioned(
                               top: 4,
                               right: 4,
-                              child: GestureDetector(
-                                onTap: () => _removeImage(index),
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.close,
-                                    size: 16,
-                                    color: Colors.white,
+                              child: AppHoverLift(
+                                borderRadius: BorderRadius.circular(20),
+                                hoverScale: 1.08,
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () => _removeImage(index),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      size: 16,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
                               ),

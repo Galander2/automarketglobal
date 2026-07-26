@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_theme.dart';
 import '../models/car.dart';
 import '../repositories/favorite_repository.dart';
+import 'app_hover_lift.dart';
 import 'optimized_network_image.dart';
 
 class CarCard extends StatelessWidget {
@@ -20,12 +21,15 @@ class CarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
+    return AppHoverLift(
+      enabled: onTap != null,
+      borderRadius: BorderRadius.circular(20),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        margin: EdgeInsets.zero,
+        child: InkWell(
+          onTap: onTap,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Фото
@@ -142,6 +146,7 @@ class CarCard extends StatelessWidget {
               ),
             ),
           ],
+          ),
         ),
       ),
     );
