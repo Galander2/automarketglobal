@@ -253,7 +253,7 @@ abstract final class AppTheme {
             }
             return Colors.transparent;
           }),
-          overlayColor: WidgetStatePropertyAll(Colors.transparent),
+          overlayColor: const WidgetStatePropertyAll(Colors.transparent),
           side: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.hovered) ||
                 states.contains(WidgetState.focused)) {
