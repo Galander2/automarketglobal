@@ -44,9 +44,19 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   void _scheduleSearch(String _) {
-    setState(() {});
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 350), _loadCars);
+    _debounce = Timer(const Duration(milliseconds: 300), _loadCars);
+  }
+
+  void _submitSearch() {
+    _debounce?.cancel();
+    _loadCars();
+  }
+
+  void _clearSearch() {
+    _debounce?.cancel();
+    _searchController.clear();
+    _loadCars();
   }
 
   Future<void> _loadCars({bool forceRefresh = false}) async {
@@ -118,20 +128,23 @@ class _SearchScreenState extends State<SearchScreen> {
               controller: _searchController,
               textInputAction: TextInputAction.search,
               onChanged: _scheduleSearch,
-              onSubmitted: (_) => _loadCars(),
+              onSubmitted: (_) => _submitSearch(),
               decoration: InputDecoration(
                 hintText: 'Марка, модель или город',
                 prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isEmpty
-                    ? null
-                    : IconButton(
-                        tooltip: 'Очистить',
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          _loadCars();
-                        },
-                      ),
+                suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _searchController,
+                  builder: (context, value, child) {
+                    if (value.text.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    return IconButton(
+                      tooltip: 'Очистить',
+                      icon: const Icon(Icons.clear),
+                      onPressed: _clearSearch,
+                    );
+                  },
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

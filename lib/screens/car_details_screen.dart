@@ -6,6 +6,7 @@ import '../models/car.dart';
 import '../repositories/auth_repository.dart';
 import '../repositories/chat_repository.dart';
 import '../repositories/favorite_repository.dart';
+import '../widgets/optimized_network_image.dart';
 
 class CarDetailsScreen extends StatelessWidget {
   final Car car;
@@ -30,19 +31,11 @@ class CarDetailsScreen extends StatelessWidget {
               background: PageView.builder(
                 itemCount: gallery.length,
                 itemBuilder: (context, index) {
-                  return Image.network(
-                    gallery[index],
+                  return OptimizedNetworkImage(
+                    url: gallery[index],
+                    width: double.infinity,
+                    height: double.infinity,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey.shade300,
-                        child: const Icon(
-                          Icons.directions_car,
-                          size: 80,
-                          color: Colors.grey,
-                        ),
-                      );
-                    },
                   );
                 },
               ),
