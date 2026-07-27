@@ -22,13 +22,27 @@ class OptimizedNetworkImage extends StatelessWidget {
     return RepaintBoundary(
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final logicalWidth = width ??
-              (constraints.hasBoundedWidth ? constraints.maxWidth : 800.0);
+          final logicalWidth = width != null && width!.isFinite
+              ? width!
+              : constraints.hasBoundedWidth
+              ? constraints.maxWidth
+              : 800.0;
           final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
           final decodedWidth = (logicalWidth * devicePixelRatio)
               .round()
               .clamp(1, 1920)
               .toInt();
+          final logicalHeight = height != null && height!.isFinite
+              ? height
+              : constraints.hasBoundedHeight
+              ? constraints.maxHeight
+              : null;
+          final decodedHeight = logicalHeight == null
+              ? null
+              : (logicalHeight * devicePixelRatio)
+                    .round()
+                    .clamp(1, 1920)
+                    .toInt();
 
           if (url.isEmpty) return _placeholder();
 
@@ -38,6 +52,7 @@ class OptimizedNetworkImage extends StatelessWidget {
             height: height,
             fit: fit,
             cacheWidth: kIsWeb ? null : decodedWidth,
+            cacheHeight: kIsWeb ? null : decodedHeight,
             filterQuality: FilterQuality.low,
             gaplessPlayback: true,
             frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {

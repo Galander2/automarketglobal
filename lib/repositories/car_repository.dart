@@ -115,27 +115,12 @@ class CarRepository {
     bool forceRefresh = false,
   }) async {
     final searchQuery = _normalize(query ?? '');
-    final cacheKey = [
-      'search',
-      searchQuery,
-      filters.make,
-      filters.model,
-      filters.country,
-      filters.city,
-      filters.transmission,
-      filters.bodyType,
-      filters.fuelType,
-      filters.minPrice,
-      filters.maxPrice,
-      filters.minYear,
-      filters.maxYear,
-      filters.maxMileage,
-      filters.sortOrder.name,
-      limit,
-    ].join(':');
 
     final cars = await _loadCars(
-      cacheKey: cacheKey,
+      // Search and filter operations are performed locally by CarSearchEngine.
+      // Reuse the same approved-cars snapshot instead of downloading it again
+      // for every typed character or filter combination.
+      cacheKey: 'approved-search-source:$limit',
       forceRefresh: forceRefresh,
       query: _statusQuery('approved', limit),
     );

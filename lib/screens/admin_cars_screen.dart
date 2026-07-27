@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/car.dart';
 import '../repositories/admin_repository.dart';
+import '../widgets/optimized_network_image.dart';
 
 class AdminCarsScreen extends StatefulWidget {
   const AdminCarsScreen({super.key});
@@ -215,16 +216,12 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
               const SizedBox(height: 24),
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  car.imageUrl,
+                child: OptimizedNetworkImage(
+                  url: car.imageUrl,
                   height: 200,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 200,
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.image_not_supported, size: 64),
-                  ),
+                  fallbackIcon: Icons.image_not_supported,
                 ),
               ),
               const SizedBox(height: 16),
@@ -432,20 +429,12 @@ class _AdminCarsScreenState extends State<AdminCarsScreen> {
                           contentPadding: const EdgeInsets.all(12),
                           leading: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              car.imageUrl,
+                            child: OptimizedNetworkImage(
+                              url: car.imageUrl,
                               width: 80,
                               height: 80,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
-                                    width: 80,
-                                    height: 80,
-                                    color: Colors.grey[300],
-                                    child: const Icon(
-                                      Icons.image_not_supported,
-                                    ),
-                                  ),
+                              fallbackIcon: Icons.image_not_supported,
                             ),
                           ),
                           title: Text(
