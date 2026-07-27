@@ -12,8 +12,6 @@ import '../../screens/chat_list_screen.dart';
 import '../../screens/chat_screen.dart';
 import '../../screens/countries_screen.dart';
 import '../../screens/dealers_screen.dart';
-import '../../screens/wallet_screen.dart';
-import '../../screens/delivery_screen.dart';
 import '../../screens/my_publications_screen.dart';
 import '../../screens/ai_vin_check_screen.dart';
 import '../../screens/language_selection_screen.dart';
@@ -78,10 +76,6 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const CountriesScreen());
       case AppRoutes.dealers:
         return MaterialPageRoute(builder: (_) => const DealersScreen());
-      case AppRoutes.wallet:
-        return MaterialPageRoute(builder: (_) => const WalletScreen());
-      case AppRoutes.delivery:
-        return MaterialPageRoute(builder: (_) => const DeliveryScreen());
       case AppRoutes.myPublications:
         return MaterialPageRoute(builder: (_) => const MyPublicationsScreen());
       case AppRoutes.admin:

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -21,7 +22,14 @@ import 'screens/profile_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.web);
+  try {
+    await Firebase.initializeApp(
+      options: kIsWeb ? DefaultFirebaseOptions.web : null,
+    );
+  } on Object {
+    runApp(const _StartupFailureApp());
+    return;
+  }
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -154,13 +162,6 @@ class _MainShellState extends State<MainShell> {
                   onTap: () =>
                       _closeAddMenuAndOpen(sheetContext, AppRoutes.addCar),
                 ),
-                _AddMenuTile(
-                  icon: Icons.local_shipping,
-                  title: l10n.translate('orderDelivery'),
-                  subtitle: l10n.translate('keyDelivery'),
-                  onTap: () =>
-                      _closeAddMenuAndOpen(sheetContext, AppRoutes.delivery),
-                ),
               ],
             ),
           ),
@@ -259,6 +260,51 @@ class _MainShellState extends State<MainShell> {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StartupFailureApp extends StatelessWidget {
+  const _StartupFailureApp();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      home: Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.cloud_off_rounded, size: 64),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Не удалось подключиться к сервисам приложения',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Проверьте интернет и конфигурацию Firebase, затем '
+                      'перезапустите приложение.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -83,18 +83,6 @@ class ProfileScreen extends StatelessWidget {
           _ProfileGroup(
             children: [
               _ProfileMenuItem(
-                icon: Icons.account_balance_wallet_outlined,
-                title: l10n.translate('wallet'),
-                subtitle: 'Баланс и история операций',
-                onTap: () => Navigator.pushNamed(context, AppRoutes.wallet),
-              ),
-              _ProfileMenuItem(
-                icon: Icons.local_shipping_outlined,
-                title: l10n.translate('delivery'),
-                subtitle: 'Перевозка и отслеживание',
-                onTap: () => Navigator.pushNamed(context, AppRoutes.delivery),
-              ),
-              _ProfileMenuItem(
                 icon: Icons.tune_rounded,
                 title: 'Настройки',
                 subtitle: auth.isAdmin

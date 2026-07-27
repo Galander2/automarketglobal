@@ -11,8 +11,6 @@ class AppRoutes {
   static const String chat = '/chat';
   static const String countries = '/countries';
   static const String dealers = '/dealers';
-  static const String wallet = '/wallet';
-  static const String delivery = '/delivery';
   static const String myPublications = '/my-publications';
   static const String admin = '/admin';
   static const String aiVinCheck = '/ai-vin-check';

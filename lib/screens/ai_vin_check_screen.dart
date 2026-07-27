@@ -1,6 +1,11 @@
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'dart:async';
 import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+
+import '../core/cars/vin_validator.dart';
 
 class AiVinCheckScreen extends StatefulWidget {
   const AiVinCheckScreen({super.key});
@@ -10,9 +15,21 @@ class AiVinCheckScreen extends StatefulWidget {
 }
 
 class _AiVinCheckScreenState extends State<AiVinCheckScreen> {
+  static const _resultFields = <String, String>{
+    'Make': 'Марка',
+    'Model': 'Модель',
+    'Model Year': 'Год',
+    'Body Class': 'Кузов',
+    'Vehicle Type': 'Тип автомобиля',
+    'Manufacturer Name': 'Производитель',
+    'Plant Country': 'Страна производства',
+    'Fuel Type - Primary': 'Топливо',
+    'Transmission Style': 'Коробка передач',
+  };
+
   final _vinController = TextEditingController();
   bool _isLoading = false;
-  Map<String, dynamic>? _vinData;
+  Map<String, String>? _vinData;
   String? _error;
 
   @override
@@ -22,22 +39,16 @@ class _AiVinCheckScreenState extends State<AiVinCheckScreen> {
   }
 
   Future<void> _checkVin() async {
-    final vin = _vinController.text.trim().toUpperCase();
-
-    if (vin.isEmpty) {
+    final vin = VinValidator.normalize(_vinController.text);
+    if (!VinValidator.isValid(vin)) {
       setState(() {
-        _error = 'Введите VIN код';
+        _error = 'Введите корректный VIN из 17 символов без I, O и Q.';
+        _vinData = null;
       });
       return;
     }
 
-    if (vin.length != 17) {
-      setState(() {
-        _error = 'VIN должен содержать 17 символов';
-      });
-      return;
-    }
-
+    FocusScope.of(context).unfocus();
     setState(() {
       _isLoading = true;
       _error = null;
@@ -45,261 +56,230 @@ class _AiVinCheckScreenState extends State<AiVinCheckScreen> {
     });
 
     try {
-      final response = await http.get(
-        Uri.parse(
-          'https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/$vin?format=json',
-        ),
+      final uri = Uri.https(
+        'vpic.nhtsa.dot.gov',
+        '/api/vehicles/decodevin/$vin',
+        const {'format': 'json'},
       );
-
-      if (!mounted) return;
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final results = data['Results'] as List;
-
-        final vinInfo = <String, String>{};
-
-        for (var item in results) {
-          final variable = item['Variable'] as String?;
-          final value = item['Value'] as String?;
-
-          if (variable != null && value != null && value.isNotEmpty) {
-            vinInfo[variable] = value;
-          }
-        }
-
-        setState(() {
-          _vinData = vinInfo;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _error = 'Ошибка сервера. Попробуйте снова.';
-          _isLoading = false;
-        });
+      final response = await http.get(uri).timeout(const Duration(seconds: 12));
+      if (response.statusCode != 200) {
+        throw const _VinServiceException();
       }
-    } catch (e) {
+
+      final decoded = jsonDecode(response.body);
+      if (decoded is! Map<String, dynamic>) {
+        throw const FormatException('Unexpected VIN response');
+      }
+      final rawResults = decoded['Results'];
+      if (rawResults is! List) {
+        throw const FormatException('Missing VIN results');
+      }
+
+      final result = <String, String>{};
+      for (final rawItem in rawResults) {
+        if (rawItem is! Map) continue;
+        final variable = rawItem['Variable'];
+        final value = rawItem['Value'];
+        if (variable is! String || value is! String) continue;
+        final label = _resultFields[variable];
+        final cleanValue = value.trim();
+        if (label != null &&
+            cleanValue.isNotEmpty &&
+            cleanValue.toLowerCase() != 'not applicable') {
+          result[label] = cleanValue;
+        }
+      }
+
+      if (result.isEmpty) {
+        throw const _VinServiceException();
+      }
+      if (!mounted) return;
+      setState(() => _vinData = result);
+    } on TimeoutException {
       if (!mounted) return;
       setState(() {
-        _error = 'Ошибка подключения: $e';
-        _isLoading = false;
+        _error = 'Сервис не ответил вовремя. Проверьте интернет и повторите.';
       });
+    } on FormatException {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Сервис вернул некорректные данные. Повторите позже.';
+      });
+    } on _VinServiceException {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Не удалось получить данные VIN. Проверьте код и повторите.';
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Нет подключения к сервису VIN. Повторите позже.';
+      });
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _clear() {
+    _vinController.clear();
+    setState(() {
+      _vinData = null;
+      _error = null;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('AI Проверка VIN'), centerTitle: true),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      appBar: AppBar(title: const Text('Проверка VIN'), centerTitle: true),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
           children: [
-            // AI Banner
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF6366F1),
-                    Color(0xFF8B5CF6),
-                    Color(0xFFEC4899),
-                  ],
+                  colors: [colorScheme.primary, colorScheme.tertiary],
                 ),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withValues(alpha: 0.24),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
-              child: Row(
+              child: const Row(
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'AI VIN Check',
+                        Text(
+                          'VIN Decoder',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 22,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w900,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         Text(
-                          'Проверьте историю автомобиля по VIN коду',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontSize: 13,
-                          ),
+                          'Получите заводские характеристики автомобиля '
+                          'из официального каталога NHTSA.',
+                          style: TextStyle(color: Colors.white),
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.smart_toy,
-                      size: 35,
-                      color: Colors.white,
-                    ),
+                  SizedBox(width: 16),
+                  Icon(
+                    Icons.fact_check_outlined,
+                    color: Colors.white,
+                    size: 48,
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
-
-            // Ввод VIN
-            const Text(
-              'Введите VIN код',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Text(
+              'VIN-код',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             TextField(
               controller: _vinController,
+              enabled: !_isLoading,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp('[A-Za-z0-9]')),
+                LengthLimitingTextInputFormatter(17),
+              ],
               decoration: InputDecoration(
                 hintText: 'Например: 1HGBH41JXMN109186',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                prefixIcon: const Icon(Icons.qr_code),
+                prefixIcon: const Icon(Icons.pin_outlined),
                 suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _vinController.clear();
-                    setState(() {
-                      _vinData = null;
-                      _error = null;
-                    });
-                  },
+                  tooltip: 'Очистить',
+                  onPressed: _isLoading ? null : _clear,
+                  icon: const Icon(Icons.clear_rounded),
                 ),
               ),
-              maxLength: 17,
               textCapitalization: TextCapitalization.characters,
-              onSubmitted: (_) => _checkVin(),
+              autocorrect: false,
+              enableSuggestions: false,
+              onSubmitted: _isLoading ? null : (_) => _checkVin(),
             ),
             const SizedBox(height: 16),
-
-            // Кнопка проверки
             SizedBox(
-              width: double.infinity,
               height: 52,
-              child: ElevatedButton(
+              child: FilledButton.icon(
                 onPressed: _isLoading ? null : _checkVin,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6366F1),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
+                icon: _isLoading
+                    ? const SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.search, size: 20),
-                          SizedBox(width: 8),
-                          Text(
-                            'Проверить VIN',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
+                    : const Icon(Icons.search_rounded),
+                label: Text(_isLoading ? 'Проверяем…' : 'Проверить VIN'),
               ),
             ),
-            const SizedBox(height: 24),
-
-            // Ошибка
-            if (_error != null)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.error_outline, color: Colors.red),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _error!,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
-                ),
+            if (_error != null) ...[
+              const SizedBox(height: 20),
+              _MessageCard(
+                icon: Icons.error_outline_rounded,
+                color: colorScheme.error,
+                message: _error!,
               ),
-
-            // Результаты
-            if (_vinData != null) ...[
-              const Text(
-                'Результаты проверки',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ],
+            if (_vinData case final data?) ...[
+              const SizedBox(height: 24),
+              Text(
+                'Характеристики',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
+              Card(
+                clipBehavior: Clip.antiAlias,
                 child: Column(
-                  children: _vinData!.entries.map((entry) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              entry.key,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 3,
+                  children: data.entries.indexed.map((indexedEntry) {
+                    final index = indexedEntry.$1;
+                    final entry = indexedEntry.$2;
+                    return Column(
+                      children: [
+                        ListTile(
+                          title: Text(entry.key),
+                          trailing: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 260),
                             child: Text(
                               entry.value,
+                              textAlign: TextAlign.end,
                               style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        if (index < data.length - 1) const Divider(height: 1),
+                      ],
                     );
                   }).toList(),
                 ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Данные декодирования не являются отчётом об авариях, '
+                'пробеге или юридической чистоте автомобиля.',
+                style: theme.textTheme.bodySmall,
               ),
             ],
           ],
@@ -307,4 +287,39 @@ class _AiVinCheckScreenState extends State<AiVinCheckScreen> {
       ),
     );
   }
+}
+
+class _MessageCard extends StatelessWidget {
+  const _MessageCard({
+    required this.icon,
+    required this.color,
+    required this.message,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(width: 12),
+          Expanded(child: Text(message)),
+        ],
+      ),
+    );
+  }
+}
+
+class _VinServiceException implements Exception {
+  const _VinServiceException();
 }

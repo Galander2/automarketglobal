@@ -206,10 +206,10 @@ class _HomeScreenState extends State<HomeScreen> {
         route: AppRoutes.dealers,
       ),
       const _HomeAction(
-        icon: Icons.local_shipping_outlined,
-        title: 'Доставка',
-        subtitle: 'Заказать перевозку',
-        route: AppRoutes.delivery,
+        icon: Icons.qr_code_scanner_rounded,
+        title: 'Проверка VIN',
+        subtitle: 'Данные автомобиля',
+        route: AppRoutes.aiVinCheck,
       ),
     ];
 
