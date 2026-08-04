@@ -217,10 +217,8 @@ class CarDetailsScreen extends StatelessWidget {
                           return;
                         }
                         try {
-                          final thread = await ChatRepository().openConversation(
-                            car: car,
-                            buyer: user,
-                          );
+                          final thread = await ChatRepository()
+                              .openConversation(car: car, buyer: user);
                           if (!context.mounted) return;
                           await Navigator.pushNamed(
                             context,
@@ -254,17 +252,13 @@ class CarDetailsScreen extends StatelessWidget {
 }
 
 class _FavoriteDetailsButton extends StatefulWidget {
-  const _FavoriteDetailsButton({
-    required this.userId,
-    required this.carId,
-  });
+  const _FavoriteDetailsButton({required this.userId, required this.carId});
 
   final String? userId;
   final String carId;
 
   @override
-  State<_FavoriteDetailsButton> createState() =>
-      _FavoriteDetailsButtonState();
+  State<_FavoriteDetailsButton> createState() => _FavoriteDetailsButtonState();
 }
 
 class _FavoriteDetailsButtonState extends State<_FavoriteDetailsButton> {
@@ -295,17 +289,11 @@ class _FavoriteDetailsButtonState extends State<_FavoriteDetailsButton> {
   Widget build(BuildContext context) {
     final userId = widget.userId;
     if (userId == null) {
-      return const OutlinedButton(
-        onPressed: null,
-        child: Text('Избранное'),
-      );
+      return const OutlinedButton(onPressed: null, child: Text('Избранное'));
     }
 
     return StreamBuilder<bool>(
-      stream: _repository.watchIsFavorite(
-        userId: userId,
-        carId: widget.carId,
-      ),
+      stream: _repository.watchIsFavorite(userId: userId, carId: widget.carId),
       builder: (context, snapshot) {
         final isLoading =
             snapshot.connectionState == ConnectionState.waiting &&

@@ -21,8 +21,7 @@ class FavoriteRepository {
     FirebaseFirestore firestore, {
     CarRepository? carRepository,
   }) : _firestore = firestore,
-       _carRepository =
-           carRepository ?? CarRepository.withFirestore(firestore);
+       _carRepository = carRepository ?? CarRepository.withFirestore(firestore);
 
   FavoriteRepository._()
     : _firestore = FirebaseFirestore.instance,

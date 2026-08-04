@@ -63,10 +63,7 @@ class InternationalPhoneField extends StatelessWidget {
             border: OutlineInputBorder(),
           ),
           validator: PhoneValidator.compose([
-            PhoneValidator.required(
-              fieldContext,
-              errorText: 'Введите телефон',
-            ),
+            PhoneValidator.required(fieldContext, errorText: 'Введите телефон'),
             PhoneValidator.validMobile(
               fieldContext,
               errorText: 'Неверный мобильный номер для выбранной страны',
@@ -79,14 +76,7 @@ class InternationalPhoneField extends StatelessWidget {
   }
 
   Locale _phoneFieldLocale(Locale locale) {
-    const supportedLanguages = {
-      'ar',
-      'en',
-      'ko',
-      'ru',
-      'uz',
-      'zh',
-    };
+    const supportedLanguages = {'ar', 'en', 'ko', 'ru', 'uz', 'zh'};
     return supportedLanguages.contains(locale.languageCode)
         ? locale
         : const Locale('en');

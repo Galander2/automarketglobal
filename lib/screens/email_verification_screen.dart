@@ -96,7 +96,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                             borderRadius: BorderRadius.circular(30),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.24),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.24,
+                                ),
                                 blurRadius: 24,
                                 offset: const Offset(0, 10),
                               ),

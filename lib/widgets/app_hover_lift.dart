@@ -42,7 +42,8 @@ class _AppHoverLiftState extends State<AppHoverLift> {
 
   @override
   Widget build(BuildContext context) {
-    final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     final colors = Theme.of(context).colorScheme;
     final active = widget.enabled && (_hovered || _pressed);
     final scale = !widget.enabled

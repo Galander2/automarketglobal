@@ -10,6 +10,7 @@ import '../models/car_search_filters.dart';
 import '../repositories/auth_repository.dart';
 import '../repositories/car_repository.dart';
 import '../widgets/car_card.dart';
+import '../widgets/app_state_view.dart';
 import 'vehicle_catalog_screen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -115,10 +116,7 @@ class _SearchScreenState extends State<SearchScreen> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.translate('search')),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text(l10n.translate('search')), centerTitle: true),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -184,9 +182,9 @@ class _SearchScreenState extends State<SearchScreen> {
               children: [
                 Text(
                   _isLoading ? 'Поиск…' : 'Найдено: ${_cars.length}',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 SizedBox(
@@ -228,12 +226,13 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildResults() {
     final userId = context.read<AuthProvider?>()?.currentUser?.uid;
     if (_isLoading && _cars.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const AppStateView(type: AppStateType.loading);
     }
 
     if (_error != null && _cars.isEmpty) {
-      return _MessageState(
-        icon: Icons.cloud_off_outlined,
+      return AppStateView(
+        type: AppStateType.error,
+        title: 'Не удалось выполнить поиск',
         message: _error!,
         actionLabel: 'Повторить',
         onAction: () => _loadCars(forceRefresh: true),
@@ -241,8 +240,9 @@ class _SearchScreenState extends State<SearchScreen> {
     }
 
     if (_cars.isEmpty) {
-      return const _MessageState(
-        icon: Icons.search_off,
+      return const AppStateView(
+        type: AppStateType.empty,
+        title: 'Ничего не найдено',
         message: 'По вашему запросу ничего не найдено',
       );
     }
@@ -301,9 +301,7 @@ class _SearchScreenState extends State<SearchScreen> {
     if (_filters.bodyType.isNotEmpty) labels.add(_filters.bodyType);
     if (_filters.fuelType.isNotEmpty) labels.add(_filters.fuelType);
     if (_filters.minPrice != null || _filters.maxPrice != null) {
-      labels.add(
-        '\$${_filters.minPrice ?? 0}–${_filters.maxPrice ?? '∞'}',
-      );
+      labels.add('\$${_filters.minPrice ?? 0}–${_filters.maxPrice ?? '∞'}');
     }
     if (_filters.minYear != null || _filters.maxYear != null) {
       labels.add('${_filters.minYear ?? '…'}–${_filters.maxYear ?? '…'} г.');
@@ -312,40 +310,5 @@ class _SearchScreenState extends State<SearchScreen> {
       labels.add('до ${_filters.maxMileage} км');
     }
     return labels;
-  }
-}
-
-class _MessageState extends StatelessWidget {
-  const _MessageState({
-    required this.icon,
-    required this.message,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  final IconData icon;
-  final String message;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 52, color: Colors.grey),
-            const SizedBox(height: 12),
-            Text(message, textAlign: TextAlign.center),
-            if (onAction != null) ...[
-              const SizedBox(height: 16),
-              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
-            ],
-          ],
-        ),
-      ),
-    );
   }
 }

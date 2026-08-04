@@ -16,10 +16,7 @@ void main() {
       rating: 4.8,
     );
 
-    final updated = original.copyWith(
-      firstName: 'Ahmad',
-      city: 'Dushanbe',
-    );
+    final updated = original.copyWith(firstName: 'Ahmad', city: 'Dushanbe');
 
     expect(updated.uid, original.uid);
     expect(updated.email, original.email);

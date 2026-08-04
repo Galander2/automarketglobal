@@ -7,10 +7,7 @@ void main() {
   test('normalizes a parsed international number for storage', () {
     final phone = PhoneNumber.parse('+992 900 00 00 00');
 
-    expect(
-      InternationalPhoneField.normalized(phone),
-      '+992900000000',
-    );
+    expect(InternationalPhoneField.normalized(phone), '+992900000000');
   });
 
   test('falls back safely when a legacy profile phone is malformed', () {

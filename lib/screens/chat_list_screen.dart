@@ -64,8 +64,9 @@ class ChatListScreen extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontWeight:
-                            unread > 0 ? FontWeight.w900 : FontWeight.w700,
+                        fontWeight: unread > 0
+                            ? FontWeight.w900
+                            : FontWeight.w700,
                       ),
                     ),
                     subtitle: Padding(

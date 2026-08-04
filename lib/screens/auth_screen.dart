@@ -6,6 +6,7 @@ import '../core/theme/app_theme.dart';
 import '../repositories/auth_repository.dart';
 import '../widgets/app_hover_lift.dart';
 import '../widgets/international_phone_field.dart';
+import '../widgets/premium_car_illustration.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -309,16 +310,15 @@ class _AuthScreenState extends State<AuthScreen> {
                                                 TextFormField(
                                                   controller: _emailController,
                                                   enabled: !busy,
-                                                  decoration:
-                                                      const InputDecoration(
-                                                        labelText: 'Email',
-                                                        hintText:
-                                                            'name@example.com',
-                                                        prefixIcon: Icon(
-                                                          Icons
-                                                              .alternate_email_rounded,
-                                                        ),
-                                                      ),
+                                                  decoration: const InputDecoration(
+                                                    labelText: 'Email',
+                                                    hintText:
+                                                        'name@example.com',
+                                                    prefixIcon: Icon(
+                                                      Icons
+                                                          .alternate_email_rounded,
+                                                    ),
+                                                  ),
                                                   keyboardType: TextInputType
                                                       .emailAddress,
                                                   autofillHints: const [
@@ -347,8 +347,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                                   onSubmitted: _isLogin
                                                       ? _handleSubmit
                                                       : null,
-                                                  validator: (value) =>
-                                                      _isLogin
+                                                  validator: (value) => _isLogin
                                                       ? ((value == null ||
                                                                 value.isEmpty)
                                                             ? 'Введите пароль'
@@ -369,9 +368,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                                     autofillHint: AutofillHints
                                                         .newPassword,
                                                     onToggle: () => setState(
-                                                      () =>
-                                                          _obscureConfirmPassword =
-                                                              !_obscureConfirmPassword,
+                                                      () => _obscureConfirmPassword =
+                                                          !_obscureConfirmPassword,
                                                     ),
                                                     validator: (value) {
                                                       if (value == null ||
@@ -419,7 +417,8 @@ class _AuthScreenState extends State<AuthScreen> {
                                                   )
                                                 : Row(
                                                     mainAxisAlignment:
-                                                        MainAxisAlignment.center,
+                                                        MainAxisAlignment
+                                                            .center,
                                                     children: [
                                                       Text(
                                                         _isLogin
@@ -508,11 +507,7 @@ class _BrandPanel extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0F172A),
-            Color(0xFF1D4ED8),
-            Color(0xFF0891B2),
-          ],
+          colors: [Color(0xFF0F172A), Color(0xFF1D4ED8), Color(0xFF0891B2)],
         ),
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
@@ -528,7 +523,9 @@ class _BrandPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _BrandMark(dark: true),
-          SizedBox(height: 180),
+          SizedBox(height: 42),
+          PremiumCarIllustration(height: 250),
+          SizedBox(height: 34),
           Text(
             'Ваш автомобиль.\nВаш рынок.\nВаш выбор.',
             style: TextStyle(
@@ -842,9 +839,7 @@ class _PasswordField extends StatelessWidget {
           tooltip: obscure ? 'Показать пароль' : 'Скрыть пароль',
           onPressed: enabled ? onToggle : null,
           icon: Icon(
-            obscure
-                ? Icons.visibility_off_outlined
-                : Icons.visibility_outlined,
+            obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
           ),
         ),
       ),

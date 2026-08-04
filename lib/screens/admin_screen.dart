@@ -65,8 +65,8 @@ class _AdminScreenState extends State<AdminScreen> {
     _currentIndex = widget.initialTab < 0
         ? 0
         : widget.initialTab >= _screens.length
-            ? _screens.length - 1
-            : widget.initialTab;
+        ? _screens.length - 1
+        : widget.initialTab;
   }
 
   @override
@@ -74,10 +74,7 @@ class _AdminScreenState extends State<AdminScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final useRail = constraints.maxWidth >= 900;
-        final content = IndexedStack(
-          index: _currentIndex,
-          children: _screens,
-        );
+        final content = IndexedStack(index: _currentIndex, children: _screens);
 
         return Scaffold(
           appBar: AppBar(
