@@ -18,7 +18,22 @@ class _PremiumCarIllustrationState extends State<PremiumCarIllustration>
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(seconds: 4),
-  )..repeat(reverse: true);
+  );
+  bool _reduceMotion = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    if (_reduceMotion == reduceMotion && _controller.isAnimating) return;
+    _reduceMotion = reduceMotion;
+    if (reduceMotion) {
+      _controller.stop();
+      _controller.value = 0.5;
+    } else if (!_controller.isAnimating) {
+      _controller.repeat(reverse: true);
+    }
+  }
 
   @override
   void dispose() {
@@ -28,21 +43,56 @@ class _PremiumCarIllustrationState extends State<PremiumCarIllustration>
 
   @override
   Widget build(BuildContext context) {
-    final disableAnimations = MediaQuery.disableAnimationsOf(context);
     return RepaintBoundary(
       child: SizedBox(
         height: widget.height,
         child: AnimatedBuilder(
           animation: _controller,
           builder: (context, child) {
-            final progress = disableAnimations ? 0.5 : _controller.value;
+            final progress = _reduceMotion ? 0.5 : _controller.value;
             final wave = math.sin(progress * math.pi);
-            return Transform.translate(
-              offset: Offset(0, -4 * wave),
-              child: Transform.scale(
-                scale: 0.985 + (0.015 * wave),
-                child: child,
-              ),
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: widget.height * 0.07,
+                  child: Center(
+                    child: Transform.scale(
+                      scaleX: 1 - (0.05 * wave),
+                      scaleY: 1 - (0.12 * wave),
+                      child: Container(
+                        width: widget.height * 1.55,
+                        height: widget.height * 0.10,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(
+                            alpha: 0.24 - (0.06 * wave),
+                          ),
+                          borderRadius: BorderRadius.circular(999),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.18),
+                              blurRadius: 22 + (8 * wave),
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Transform.translate(
+                  offset: Offset(0, -7 * wave),
+                  child: Transform.rotate(
+                    angle: (progress - 0.5) * 0.008,
+                    child: Transform.scale(
+                      scale: 0.985 + (0.015 * wave),
+                      child: child,
+                    ),
+                  ),
+                ),
+              ],
             );
           },
           child: CustomPaint(
@@ -71,13 +121,6 @@ class _PremiumCarPainter extends CustomPainter {
       (size.height - 250 * scale) / 2,
     );
     canvas.scale(scale);
-
-    canvas.drawOval(
-      const Rect.fromLTWH(80, 196, 400, 30),
-      Paint()
-        ..color = Colors.black.withValues(alpha: 0.25)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
-    );
 
     final body = Path()
       ..moveTo(55, 175)

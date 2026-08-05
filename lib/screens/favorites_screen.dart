@@ -5,8 +5,9 @@ import '../core/router/app_routes.dart';
 import '../models/car.dart';
 import '../repositories/auth_repository.dart';
 import '../repositories/favorite_repository.dart';
-import '../widgets/car_card.dart';
 import '../widgets/app_state_view.dart';
+import '../widgets/app_motion.dart';
+import '../widgets/car_card.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key, this.repository});
@@ -84,15 +85,18 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 itemCount: cars.length,
                 itemBuilder: (context, index) {
                   final car = cars[index];
-                  return CarCard(
+                  return MotionReveal(
                     key: ValueKey(car.id),
-                    car: car,
-                    favoriteUserId: user.uid,
-                    favoriteRepository: _repository,
-                    onTap: () => Navigator.pushNamed(
-                      context,
-                      AppRoutes.carDetails,
-                      arguments: {'car': car},
+                    delay: Duration(milliseconds: 45 * (index > 7 ? 7 : index)),
+                    child: CarCard(
+                      car: car,
+                      favoriteUserId: user.uid,
+                      favoriteRepository: _repository,
+                      onTap: () => Navigator.pushNamed(
+                        context,
+                        AppRoutes.carDetails,
+                        arguments: {'car': car},
+                      ),
                     ),
                   );
                 },

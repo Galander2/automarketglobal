@@ -9,8 +9,9 @@ import '../models/car.dart';
 import '../models/car_search_filters.dart';
 import '../repositories/auth_repository.dart';
 import '../repositories/car_repository.dart';
-import '../widgets/car_card.dart';
 import '../widgets/app_state_view.dart';
+import '../widgets/app_motion.dart';
+import '../widgets/car_card.dart';
 import 'vehicle_catalog_screen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -122,32 +123,34 @@ class _SearchScreenState extends State<SearchScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: TextField(
-              controller: _searchController,
-              textInputAction: TextInputAction.search,
-              onChanged: _scheduleSearch,
-              onSubmitted: (_) => _submitSearch(),
-              decoration: InputDecoration(
-                hintText: 'Марка, модель или город',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: _searchController,
-                  builder: (context, value, child) {
-                    if (value.text.isEmpty) {
-                      return const SizedBox.shrink();
-                    }
-                    return IconButton(
-                      tooltip: 'Очистить',
-                      icon: const Icon(Icons.clear),
-                      onPressed: _clearSearch,
-                    );
-                  },
+            child: AnimatedFocusPanel(
+              child: TextField(
+                controller: _searchController,
+                textInputAction: TextInputAction.search,
+                onChanged: _scheduleSearch,
+                onSubmitted: (_) => _submitSearch(),
+                decoration: InputDecoration(
+                  hintText: 'Марка, модель или город',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _searchController,
+                    builder: (context, value, child) {
+                      if (value.text.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      return IconButton(
+                        tooltip: 'Очистить',
+                        icon: const Icon(Icons.clear),
+                        onPressed: _clearSearch,
+                      );
+                    },
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface,
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                filled: true,
-                fillColor: Theme.of(context).colorScheme.surface,
               ),
             ),
           ),
@@ -217,7 +220,19 @@ class _SearchScreenState extends State<SearchScreen> {
               ],
             ),
           ),
-          Expanded(child: _buildResults()),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 260),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) =>
+                  FadeTransition(opacity: animation, child: child),
+              child: KeyedSubtree(
+                key: ValueKey((_isLoading, _error != null, _cars.length)),
+                child: _buildResults(),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -270,17 +285,20 @@ class _SearchScreenState extends State<SearchScreen> {
             itemCount: _cars.length,
             itemBuilder: (context, index) {
               final car = _cars[index];
-              return CarCard(
+              return MotionReveal(
                 key: ValueKey(car.id),
-                car: car,
-                favoriteUserId: userId,
-                onTap: () {
-                  Navigator.pushNamed(
-                    context,
-                    AppRoutes.carDetails,
-                    arguments: {'car': car},
-                  );
-                },
+                delay: Duration(milliseconds: 45 * (index > 7 ? 7 : index)),
+                child: CarCard(
+                  car: car,
+                  favoriteUserId: userId,
+                  onTap: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.carDetails,
+                      arguments: {'car': car},
+                    );
+                  },
+                ),
               );
             },
           ),

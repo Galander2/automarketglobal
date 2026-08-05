@@ -221,17 +221,29 @@ class _FavoriteButtonState extends State<_FavoriteButton> {
             onPressed: isLoading || snapshot.hasError || _isSaving
                 ? null
                 : () => _toggle(isFavorite),
-            icon: _isSaving || isLoading
-                ? const SizedBox.square(
-                    dimension: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: isFavorite
-                        ? const Color(0xFFE11D48)
-                        : const Color(0xFF475569),
-                  ),
+            icon: AnimatedSwitcher(
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 220),
+              switchInCurve: Curves.easeOutBack,
+              transitionBuilder: (child, animation) => ScaleTransition(
+                scale: animation,
+                child: FadeTransition(opacity: animation, child: child),
+              ),
+              child: _isSaving || isLoading
+                  ? const SizedBox.square(
+                      key: ValueKey('loading'),
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      key: ValueKey(isFavorite),
+                      color: isFavorite
+                          ? const Color(0xFFE11D48)
+                          : const Color(0xFF475569),
+                    ),
+            ),
           );
         },
       ),
