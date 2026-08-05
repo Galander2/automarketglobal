@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -110,9 +111,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Не удалось открыть галерею')),
         );
       }
@@ -130,13 +129,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
     const parallelUploads = 3;
     for (var start = 0; start < _images.length; start += parallelUploads) {
       final proposedEnd = start + parallelUploads;
-      final end = proposedEnd < _images.length
-          ? proposedEnd
-          : _images.length;
+      final end = proposedEnd < _images.length ? proposedEnd : _images.length;
       final batch = _images.sublist(start, end);
-      imageUrls.addAll(
-        await Future.wait(batch.map(_imageService.uploadImage)),
-      );
+      imageUrls.addAll(await Future.wait(batch.map(_imageService.uploadImage)));
     }
 
     return imageUrls;
@@ -231,11 +226,11 @@ class _AddCarScreenState extends State<AddCarScreen> {
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Не удалось опубликовать автомобиль. Повторите позже'),
+            content: Text(
+              'Не удалось опубликовать автомобиль. Повторите позже',
+            ),
           ),
         );
       }
