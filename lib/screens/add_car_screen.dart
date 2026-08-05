@@ -1,10 +1,9 @@
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../core/cars/car_form_validators.dart';
 import '../repositories/car_repository.dart';
+import '../services/cloudinary_image_service.dart';
 import '../widgets/app_hover_lift.dart';
 
 class AddCarScreen extends StatefulWidget {
@@ -17,6 +16,7 @@ class AddCarScreen extends StatefulWidget {
 class _AddCarScreenState extends State<AddCarScreen> {
   final _formKey = GlobalKey<FormState>();
   final _carRepository = CarRepository();
+  final _imageService = CloudinaryImageService();
 
   final _titleController = TextEditingController();
   final _makeController = TextEditingController();
@@ -83,6 +83,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
     _descriptionController.dispose();
     _cityController.dispose();
     _routeController.dispose();
+    _imageService.close();
     super.dispose();
   }
 
@@ -107,11 +108,13 @@ class _AddCarScreenState extends State<AddCarScreen> {
           _images.add(image);
         });
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Ошибка: $e')));
+        ).showSnackBar(
+          const SnackBar(content: Text('Не удалось открыть галерею')),
+        );
       }
     }
   }
@@ -122,31 +125,18 @@ class _AddCarScreenState extends State<AddCarScreen> {
     });
   }
 
-  Future<List<String>> _uploadImages(String sellerId) async {
+  Future<List<String>> _uploadImages() async {
     final List<String> imageUrls = [];
-    for (var index = 0; index < _images.length; index++) {
-      final image = _images[index];
-      final length = await image.length();
-      if (length > 10 * 1024 * 1024) {
-        throw StateError('Каждая фотография должна быть меньше 10 МБ');
-      }
-      final bytes = await image.readAsBytes();
-      final safeName = image.name.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
-      final objectName =
-          '${DateTime.now().microsecondsSinceEpoch}_${index}_$safeName';
-      final reference = FirebaseStorage.instance
-          .ref()
-          .child('car_images')
-          .child(sellerId)
-          .child(objectName);
-      final snapshot = await reference.putData(
-        bytes,
-        SettableMetadata(
-          contentType: image.mimeType ?? 'image/jpeg',
-          cacheControl: 'public,max-age=31536000,immutable',
-        ),
+    const parallelUploads = 3;
+    for (var start = 0; start < _images.length; start += parallelUploads) {
+      final proposedEnd = start + parallelUploads;
+      final end = proposedEnd < _images.length
+          ? proposedEnd
+          : _images.length;
+      final batch = _images.sublist(start, end);
+      imageUrls.addAll(
+        await Future.wait(batch.map(_imageService.uploadImage)),
       );
-      imageUrls.add(await snapshot.ref.getDownloadURL());
     }
 
     return imageUrls;
@@ -185,7 +175,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
         throw StateError('Для публикации необходимо войти в аккаунт');
       }
 
-      final imageUrls = await _uploadImages(sellerId);
+      final imageUrls = await _uploadImages();
 
       if (imageUrls.isEmpty) {
         throw Exception('Не удалось загрузить фото');
@@ -227,11 +217,27 @@ class _AddCarScreenState extends State<AddCarScreen> {
         );
         Navigator.pop(context);
       }
-    } catch (e) {
+    } on CloudinaryUploadException catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Ошибка: $e')));
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    } on StateError catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(
+          const SnackBar(
+            content: Text('Не удалось опубликовать автомобиль. Повторите позже'),
+          ),
+        );
       }
     } finally {
       if (mounted) {
