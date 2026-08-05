@@ -28,7 +28,8 @@ class _VehicleCatalogScreenState extends State<VehicleCatalogScreen> {
     _model = models.contains(widget.initialFilters.model)
         ? widget.initialFilters.model
         : '';
-    _year = widget.initialFilters.minYear != null &&
+    _year =
+        widget.initialFilters.minYear != null &&
             widget.initialFilters.minYear == widget.initialFilters.maxYear
         ? widget.initialFilters.minYear
         : null;
@@ -141,9 +142,9 @@ class _VehicleCatalogScreenState extends State<VehicleCatalogScreen> {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
           child: Text(
             'Выберите марку',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
         ),
         Expanded(
@@ -208,9 +209,9 @@ class _VehicleCatalogScreenState extends State<VehicleCatalogScreen> {
         const SizedBox(height: 18),
         Text(
           'Модель',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 10),
         DropdownButtonFormField<String>(
@@ -231,9 +232,9 @@ class _VehicleCatalogScreenState extends State<VehicleCatalogScreen> {
         const SizedBox(height: 22),
         Text(
           'Год выпуска',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 10),
         DropdownButtonFormField<int>(
@@ -244,15 +245,10 @@ class _VehicleCatalogScreenState extends State<VehicleCatalogScreen> {
             labelText: 'Точный год',
           ),
           items: [
-            const DropdownMenuItem<int>(
-              value: null,
-              child: Text('Все годы'),
-            ),
+            const DropdownMenuItem<int>(value: null, child: Text('Все годы')),
             ...VehicleCatalog.years.map(
-              (year) => DropdownMenuItem<int>(
-                value: year,
-                child: Text('$year'),
-              ),
+              (year) =>
+                  DropdownMenuItem<int>(value: year, child: Text('$year')),
             ),
           ],
           onChanged: (value) => setState(() => _year = value),

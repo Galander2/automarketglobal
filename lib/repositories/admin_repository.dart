@@ -9,11 +9,9 @@ class AdminRepository {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
 
-  AdminRepository({
-    FirebaseFirestore? firestore,
-    FirebaseAuth? auth,
-  }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _auth = auth ?? FirebaseAuth.instance;
+  AdminRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
 
   String get _actorId {
     final uid = _auth.currentUser?.uid;

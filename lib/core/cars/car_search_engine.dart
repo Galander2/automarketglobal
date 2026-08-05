@@ -10,23 +10,31 @@ class CarSearchEngine {
     CarSearchFilters filters = const CarSearchFilters(),
   }) {
     final normalizedQuery = _normalize(query);
-    final result = source.where((car) {
-      final price = _parsePrice(car.price);
-      return _matchesQuery(car, normalizedQuery) &&
-          _contains(car.make.isEmpty ? car.title : car.make, filters.make) &&
-          _contains(car.model.isEmpty ? car.title : car.model, filters.model) &&
-          _equals(car.country, filters.country) &&
-          _contains(car.city, filters.city) &&
-          _equals(car.transmission, filters.transmission) &&
-          _equals(car.bodyType, filters.bodyType) &&
-          _equals(car.fuelType, filters.fuelType) &&
-          (filters.minPrice == null || price >= filters.minPrice!) &&
-          (filters.maxPrice == null || price <= filters.maxPrice!) &&
-          (filters.minYear == null || car.year >= filters.minYear!) &&
-          (filters.maxYear == null || car.year <= filters.maxYear!) &&
-          (filters.maxMileage == null ||
-              car.mileage <= filters.maxMileage!);
-    }).toList(growable: true);
+    final result = source
+        .where((car) {
+          final price = _parsePrice(car.price);
+          return _matchesQuery(car, normalizedQuery) &&
+              _contains(
+                car.make.isEmpty ? car.title : car.make,
+                filters.make,
+              ) &&
+              _contains(
+                car.model.isEmpty ? car.title : car.model,
+                filters.model,
+              ) &&
+              _equals(car.country, filters.country) &&
+              _contains(car.city, filters.city) &&
+              _equals(car.transmission, filters.transmission) &&
+              _equals(car.bodyType, filters.bodyType) &&
+              _equals(car.fuelType, filters.fuelType) &&
+              (filters.minPrice == null || price >= filters.minPrice!) &&
+              (filters.maxPrice == null || price <= filters.maxPrice!) &&
+              (filters.minYear == null || car.year >= filters.minYear!) &&
+              (filters.maxYear == null || car.year <= filters.maxYear!) &&
+              (filters.maxMileage == null ||
+                  car.mileage <= filters.maxMileage!);
+        })
+        .toList(growable: true);
 
     _sort(result, filters.sortOrder, normalizedQuery);
     return List.unmodifiable(result);
@@ -36,10 +44,7 @@ class CarSearchEngine {
       .trim()
       .toLowerCase()
       .replaceAll('ё', 'е')
-      .replaceAll(
-        RegExp(r'[^a-zа-яқғӣӯҳҷәөұүңһі0-9]+', unicode: true),
-        ' ',
-      )
+      .replaceAll(RegExp(r'[^a-zа-яқғӣӯҳҷәөұүңһі0-9]+', unicode: true), ' ')
       .replaceAll(RegExp(r'\s+'), ' ')
       .trim();
 
@@ -55,18 +60,20 @@ class CarSearchEngine {
 
   static bool _matchesQuery(Car car, String query) {
     if (query.isEmpty) return true;
-    final searchable = _normalize([
-      car.title,
-      car.make,
-      car.model,
-      car.year,
-      car.city,
-      car.country,
-      car.transmission,
-      car.bodyType,
-      car.fuelType,
-      car.description,
-    ].join(' '));
+    final searchable = _normalize(
+      [
+        car.title,
+        car.make,
+        car.model,
+        car.year,
+        car.city,
+        car.country,
+        car.transmission,
+        car.bodyType,
+        car.fuelType,
+        car.description,
+      ].join(' '),
+    );
     return query.split(' ').every(searchable.contains);
   }
 
@@ -86,19 +93,14 @@ class CarSearchEngine {
     return score;
   }
 
-  static void _sort(
-    List<Car> cars,
-    CarSortOrder order,
-    String query,
-  ) {
+  static void _sort(List<Car> cars, CarSortOrder order, String query) {
     switch (order) {
       case CarSortOrder.relevance:
         if (query.isEmpty) {
           cars.sort((a, b) => b.createdAt.compareTo(a.createdAt));
         } else {
           cars.sort((a, b) {
-            final score =
-                _relevanceScore(b, query) - _relevanceScore(a, query);
+            final score = _relevanceScore(b, query) - _relevanceScore(a, query);
             return score != 0 ? score : b.createdAt.compareTo(a.createdAt);
           });
         }

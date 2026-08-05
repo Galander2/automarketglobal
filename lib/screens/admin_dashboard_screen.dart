@@ -203,8 +203,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ? 2
             : 1;
         const gap = 12.0;
-        final width =
-            (constraints.maxWidth - (gap * (columns - 1))) / columns;
+        final width = (constraints.maxWidth - (gap * (columns - 1))) / columns;
         final cards = [
           _buildStatCard(
             'Пользователи',
@@ -276,10 +275,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
-                color: scheme.onSurfaceVariant,
-              ),
+              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
             ),
           ],
         ),

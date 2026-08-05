@@ -138,7 +138,9 @@ class UserSettingsScreen extends StatelessWidget {
                 ),
                 title: const Text('Подтверждение email'),
                 subtitle: Text(
-                  user.emailVerified ? 'Email подтверждён' : 'Email не подтверждён',
+                  user.emailVerified
+                      ? 'Email подтверждён'
+                      : 'Email не подтверждён',
                 ),
               ),
             ],
@@ -313,9 +315,9 @@ class _Section extends StatelessWidget {
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
         Card(

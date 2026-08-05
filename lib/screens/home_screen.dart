@@ -8,9 +8,8 @@ import '../repositories/car_repository.dart';
 import '../widgets/car_card.dart';
 import '../widgets/app_hover_lift.dart';
 
-typedef HomeCarsLoader = Future<List<Car>> Function({
-  required bool forceRefresh,
-});
+typedef HomeCarsLoader =
+    Future<List<Car>> Function({required bool forceRefresh});
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.loadCars});
@@ -95,10 +94,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: _SectionHeader(
                     title: 'Новые автомобили',
                     count: snapshot.data?.length,
-                    onViewAll: () => Navigator.pushNamed(
-                      context,
-                      AppRoutes.search,
-                    ),
+                    onViewAll: () =>
+                        Navigator.pushNamed(context, AppRoutes.search),
                   ),
                 ),
                 ..._buildCars(context, snapshot),
@@ -247,9 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
   ) {
     if (snapshot.connectionState == ConnectionState.waiting &&
         !snapshot.hasData) {
-      return const [
-        SliverToBoxAdapter(child: _LoadingCars()),
-      ];
+      return const [SliverToBoxAdapter(child: _LoadingCars())];
     }
 
     if (snapshot.hasError) {
@@ -258,8 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: _HomeMessage(
             icon: Icons.cloud_off_outlined,
             title: 'Не удалось загрузить автомобили',
-            message:
-                'Проверьте подключение к интернету и попробуйте ещё раз.',
+            message: 'Проверьте подключение к интернету и попробуйте ещё раз.',
             actionLabel: 'Повторить',
             onAction: _retry,
           ),
@@ -333,7 +327,11 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, this.count, required this.onViewAll});
+  const _SectionHeader({
+    required this.title,
+    this.count,
+    required this.onViewAll,
+  });
 
   final String title;
   final int? count;
@@ -393,42 +391,45 @@ class _QuickActionCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2563EB).withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(13),
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Icon(action.icon, color: const Color(0xFF2563EB)),
                 ),
-                child: Icon(action.icon, color: const Color(0xFF2563EB)),
-              ),
-              const SizedBox(width: 11),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      action.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      action.subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                    ),
-                  ],
+                const SizedBox(width: 11),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        action.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        action.subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
           ),
         ),
       ),

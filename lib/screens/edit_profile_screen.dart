@@ -300,8 +300,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           labelText: 'Имя',
                           prefixIcon: Icon(Icons.person_outline),
                         ),
-                        validator: (value) =>
-                            AuthValidators.name(value, 'имя'),
+                        validator: (value) => AuthValidators.name(value, 'имя'),
                       ),
                       const SizedBox(height: 4),
                       TextFormField(
@@ -351,9 +350,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         enabled: !authProvider.isLoading,
                         textCapitalization: TextCapitalization.words,
                         textInputAction: TextInputAction.done,
-                        autofillHints: const [
-                          AutofillHints.addressCity,
-                        ],
+                        autofillHints: const [AutofillHints.addressCity],
                         maxLength: 100,
                         onFieldSubmitted: (_) {
                           if (_hasChanges && !authProvider.isLoading) _save();
@@ -380,8 +377,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ],
                       const SizedBox(height: 24),
                       FilledButton.icon(
-                        onPressed:
-                            authProvider.isLoading || !_hasChanges
+                        onPressed: authProvider.isLoading || !_hasChanges
                             ? null
                             : _save,
                         icon: authProvider.isLoading
@@ -512,9 +508,7 @@ class _AccountSecurityCard extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.lock_reset_outlined),
               title: const Text('Изменить пароль'),
-              subtitle: const Text(
-                'Ссылка будет отправлена на ваш email',
-              ),
+              subtitle: const Text('Ссылка будет отправлена на ваш email'),
               trailing: const Icon(Icons.chevron_right),
               enabled: !isLoading,
               onTap: isLoading ? null : onPasswordReset,

@@ -38,21 +38,23 @@ class CarSearchFilters {
   final int? maxMileage;
   final CarSortOrder sortOrder;
 
-  int get activeCount => [
-    make,
-    model,
-    country,
-    city,
-    transmission,
-    bodyType,
-    fuelType,
-    minPrice,
-    maxPrice,
-    minYear,
-    maxYear,
-    maxMileage,
-  ].where((value) => value != null && value.toString().trim().isNotEmpty).length;
+  int get activeCount =>
+      [
+            make,
+            model,
+            country,
+            city,
+            transmission,
+            bodyType,
+            fuelType,
+            minPrice,
+            maxPrice,
+            minYear,
+            maxYear,
+            maxMileage,
+          ]
+          .where((value) => value != null && value.toString().trim().isNotEmpty)
+          .length;
 
-  bool get isEmpty =>
-      activeCount == 0 && sortOrder == CarSortOrder.relevance;
+  bool get isEmpty => activeCount == 0 && sortOrder == CarSortOrder.relevance;
 }

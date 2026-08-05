@@ -32,10 +32,7 @@ void main() {
   );
 
   test('smart query matches all words regardless of their order', () {
-    final result = CarSearchEngine.apply(
-      [rav4, camry],
-      query: 'душанбе camry',
-    );
+    final result = CarSearchEngine.apply([rav4, camry], query: 'душанбе camry');
 
     expect(result.map((car) => car.id), ['camry']);
   });
@@ -59,12 +56,10 @@ void main() {
   });
 
   test('sorts matching cars by price', () {
-    final result = CarSearchEngine.apply(
-      [rav4, camry],
-      filters: const CarSearchFilters(
-        sortOrder: CarSortOrder.priceHighToLow,
-      ),
-    );
+    final result = CarSearchEngine.apply([
+      rav4,
+      camry,
+    ], filters: const CarSearchFilters(sortOrder: CarSortOrder.priceHighToLow));
 
     expect(result.map((car) => car.id), ['rav4', 'camry']);
   });
@@ -97,10 +92,9 @@ void main() {
       fuelType: '',
     );
 
-    final result = CarSearchEngine.apply(
-      [legacy],
-      filters: const CarSearchFilters(make: 'Mercedes', model: 'E 200'),
-    );
+    final result = CarSearchEngine.apply([
+      legacy,
+    ], filters: const CarSearchFilters(make: 'Mercedes', model: 'E 200'));
 
     expect(result.single.id, 'legacy');
   });

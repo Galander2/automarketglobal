@@ -5,11 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   const policy = AdminActionPolicy();
 
-  AppUser user(
-    String id,
-    UserRole role, {
-    bool blocked = false,
-  }) {
+  AppUser user(String id, UserRole role, {bool blocked = false}) {
     return AppUser(
       uid: id,
       firstName: 'Test',

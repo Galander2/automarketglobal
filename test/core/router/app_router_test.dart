@@ -38,10 +38,7 @@ void main() {
     });
 
     testWidgets('generates user settings route', (tester) async {
-      await _expectRouteBuilds<UserSettingsScreen>(
-        tester,
-        AppRoutes.settings,
-      );
+      await _expectRouteBuilds<UserSettingsScreen>(tester, AppRoutes.settings);
     });
 
     testWidgets('generates chat list route', (tester) async {

@@ -27,9 +27,7 @@ void main() {
       return [_testCar];
     }
 
-    await tester.pumpWidget(
-      MaterialApp(home: HomeScreen(loadCars: loader)),
-    );
+    await tester.pumpWidget(MaterialApp(home: HomeScreen(loadCars: loader)));
     await tester.pumpAndSettle();
 
     expect(find.text('Не удалось загрузить автомобили'), findsOneWidget);
@@ -40,7 +38,9 @@ void main() {
     expect(find.text('Toyota Camry 2022'), findsOneWidget);
   });
 
-  testWidgets('home offers publishing when the market is empty', (tester) async {
+  testWidgets('home offers publishing when the market is empty', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: HomeScreen(

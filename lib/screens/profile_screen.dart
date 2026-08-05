@@ -223,9 +223,7 @@ class _ProfileHeader extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: roleColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: roleColor.withValues(alpha: 0.65),
-                  ),
+                  border: Border.all(color: roleColor.withValues(alpha: 0.65)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -306,8 +304,8 @@ class _ProfileGroup extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(22),
         side: BorderSide(
-          color: accent?.withValues(alpha: 0.22) ??
-              Theme.of(context).dividerColor,
+          color:
+              accent?.withValues(alpha: 0.22) ?? Theme.of(context).dividerColor,
         ),
       ),
       clipBehavior: Clip.antiAlias,

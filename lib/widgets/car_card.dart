@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../core/theme/app_theme.dart';
+import '../core/theme/design_tokens.dart';
 import '../models/car.dart';
 import '../repositories/favorite_repository.dart';
 import 'app_hover_lift.dart';
@@ -21,131 +21,139 @@ class CarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return AppHoverLift(
       enabled: onTap != null,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: AppRadii.large,
       child: Card(
         clipBehavior: Clip.antiAlias,
         margin: EdgeInsets.zero,
         child: InkWell(
           onTap: onTap,
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Фото
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20),
-                  ),
-                  child: AspectRatio(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                children: [
+                  AspectRatio(
                     aspectRatio: 16 / 10,
                     child: OptimizedNetworkImage(url: car.imageUrl),
                   ),
-                ),
-                if (favoriteUserId?.isNotEmpty == true)
+                  if (favoriteUserId?.isNotEmpty == true)
+                    PositionedDirectional(
+                      top: AppSpacing.sm,
+                      end: AppSpacing.sm,
+                      child: _FavoriteButton(
+                        userId: favoriteUserId!,
+                        carId: car.id,
+                        repository: favoriteRepository ?? FavoriteRepository(),
+                      ),
+                    ),
                   PositionedDirectional(
-                    top: 10,
-                    end: 10,
-                    child: _FavoriteButton(
-                      userId: favoriteUserId!,
-                      carId: car.id,
-                      repository: favoriteRepository ?? FavoriteRepository(),
+                    start: AppSpacing.sm,
+                    bottom: AppSpacing.sm,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.xs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.68),
+                        borderRadius: AppRadii.small,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.18),
+                        ),
+                      ),
+                      child: Text(
+                        '${car.year}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ),
                   ),
-              ],
-            ),
-
-            // Информация
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                // Заголовок
-                Text(
-                  car.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 6),
-
-                // Цена
-                Text(
-                  '\$${car.price}',
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF2563EB),
-                  ),
-                ),
-                const SizedBox(height: 10),
-
-                // Характеристики
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 8,
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _SpecItem(
-                      icon: Icons.calendar_month_outlined,
-                      text: '${car.year}',
+                    Text(
+                      car.title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    _SpecItem(icon: Icons.speed, text: '${car.mileage} km'),
-                    _SpecItem(
-                      icon: Icons.location_on,
-                      text: car.city.isNotEmpty ? car.city : '—',
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      '\$${car.price}',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: colorScheme.primary,
+                      ),
                     ),
-                  ],
-                ),
-
-                // Страна и статус
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    if (car.route.isNotEmpty)
+                    const SizedBox(height: AppSpacing.sm),
+                    Wrap(
+                      spacing: AppSpacing.md,
+                      runSpacing: AppSpacing.xs,
+                      children: [
+                        _SpecItem(
+                          icon: Icons.speed_rounded,
+                          text: '${car.mileage} km',
+                        ),
+                        _SpecItem(
+                          icon: Icons.location_on_outlined,
+                          text: car.city.isNotEmpty ? car.city : '—',
+                        ),
+                      ],
+                    ),
+                    if (car.route.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.sm),
                       Container(
+                        constraints: const BoxConstraints(maxWidth: 220),
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
+                          horizontal: AppSpacing.sm,
+                          vertical: AppSpacing.xs,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF2563EB,
-                          ).withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(8),
+                          color: colorScheme.primary.withValues(alpha: 0.09),
+                          borderRadius: AppRadii.small,
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.route_rounded,
                               size: 14,
-                              color: AppColors.primary,
+                              color: colorScheme.primary,
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              car.route,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
+                            const SizedBox(width: AppSpacing.xs),
+                            Flexible(
+                              child: Text(
+                                car.route,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: colorScheme.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
+                    ],
                   ],
                 ),
-                ],
               ),
-            ),
-          ],
+            ],
           ),
         ),
       ),
@@ -213,17 +221,29 @@ class _FavoriteButtonState extends State<_FavoriteButton> {
             onPressed: isLoading || snapshot.hasError || _isSaving
                 ? null
                 : () => _toggle(isFavorite),
-            icon: _isSaving || isLoading
-                ? const SizedBox.square(
-                    dimension: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: isFavorite
-                        ? const Color(0xFFE11D48)
-                        : const Color(0xFF475569),
-                  ),
+            icon: AnimatedSwitcher(
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 220),
+              switchInCurve: Curves.easeOutBack,
+              transitionBuilder: (child, animation) => ScaleTransition(
+                scale: animation,
+                child: FadeTransition(opacity: animation, child: child),
+              ),
+              child: _isSaving || isLoading
+                  ? const SizedBox.square(
+                      key: ValueKey('loading'),
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      key: ValueKey(isFavorite),
+                      color: isFavorite
+                          ? const Color(0xFFE11D48)
+                          : const Color(0xFF475569),
+                    ),
+            ),
           );
         },
       ),
@@ -239,16 +259,17 @@ class _SpecItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurfaceVariant;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: Colors.grey[600]),
+        Icon(icon, size: 14, color: color),
         const SizedBox(width: 4),
         Text(
           text,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey[700],
+            color: color,
             fontWeight: FontWeight.w500,
           ),
         ),

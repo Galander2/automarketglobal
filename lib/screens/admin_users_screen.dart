@@ -223,9 +223,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
               ),
               _buildActionTile(
                 icon: user.isBlocked ? Icons.lock_open : Icons.lock,
-                title: user.isBlocked
-                    ? 'Разблокировать'
-                    : 'Заблокировать',
+                title: user.isBlocked ? 'Разблокировать' : 'Заблокировать',
                 color: Colors.orange,
                 onTap: () {
                   Navigator.pop(context);

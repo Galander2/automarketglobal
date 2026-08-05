@@ -10,6 +10,7 @@ import 'repositories/auth_repository.dart';
 import 'core/router/app_routes.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/design_tokens.dart';
 import 'widgets/app_hover_lift.dart';
 import 'screens/auth_screen.dart';
 import 'screens/email_verification_screen.dart';
@@ -74,9 +75,7 @@ class AutoMarketApp extends StatelessWidget {
       home: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
           if (authProvider.isCheckingAuth) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
+            return const _PremiumSplashScreen();
           }
 
           if (authProvider.isAuthenticated) {
@@ -88,6 +87,90 @@ class AutoMarketApp extends StatelessWidget {
 
           return const AuthScreen();
         },
+      ),
+    );
+  }
+}
+
+class _PremiumSplashScreen extends StatefulWidget {
+  const _PremiumSplashScreen();
+
+  @override
+  State<_PremiumSplashScreen> createState() => _PremiumSplashScreenState();
+}
+
+class _PremiumSplashScreenState extends State<_PremiumSplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Theme.of(context).scaffoldBackgroundColor,
+              AppColors.primary.withValues(alpha: 0.12),
+              AppColors.accent.withValues(alpha: 0.08),
+            ],
+          ),
+        ),
+        child: Center(
+          child: FadeTransition(
+            opacity: Tween<double>(begin: 0.58, end: 1).animate(
+              CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 82,
+                  height: 82,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primary, AppColors.accent],
+                    ),
+                    borderRadius: BorderRadius.circular(26),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.30),
+                        blurRadius: 32,
+                        offset: const Offset(0, 14),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.directions_car_filled_rounded,
+                    color: Colors.white,
+                    size: 42,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                Text(
+                  'Auto Market Global',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 18),
+                const SizedBox(
+                  width: 120,
+                  child: LinearProgressIndicator(minHeight: 3),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -172,6 +255,33 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final desktop = constraints.maxWidth >= AppBreakpoints.expanded;
+        if (desktop) {
+          return Scaffold(
+            body: Row(
+              children: [
+                _DesktopNavigation(
+                  currentIndex: currentIndex,
+                  onDestinationSelected: (value) =>
+                      setState(() => currentIndex = value),
+                  onAdd: _openAddMenu,
+                ),
+                const VerticalDivider(width: 1),
+                Expanded(
+                  child: IndexedStack(index: currentIndex, children: screens),
+                ),
+              ],
+            ),
+          );
+        }
+        return _buildCompactScaffold(context, l10n);
+      },
+    );
+  }
+
+  Widget _buildCompactScaffold(BuildContext context, AppLocalizations l10n) {
     return Scaffold(
       body: IndexedStack(index: currentIndex, children: screens),
       floatingActionButton: AppHoverLift(
@@ -264,6 +374,111 @@ class _MainShellState extends State<MainShell> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _DesktopNavigation extends StatelessWidget {
+  const _DesktopNavigation({
+    required this.currentIndex,
+    required this.onDestinationSelected,
+    required this.onAdd,
+  });
+
+  final int currentIndex;
+  final ValueChanged<int> onDestinationSelected;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return SafeArea(
+      right: false,
+      child: Container(
+        width: 248,
+        color: Theme.of(context).colorScheme.surface,
+        padding: const EdgeInsets.fromLTRB(14, 20, 14, 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: _DesktopBrand(),
+            ),
+            const SizedBox(height: 28),
+            Expanded(
+              child: NavigationRail(
+                extended: true,
+                minExtendedWidth: 218,
+                selectedIndex: currentIndex,
+                onDestinationSelected: onDestinationSelected,
+                groupAlignment: -1,
+                labelType: NavigationRailLabelType.none,
+                destinations: [
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.home_outlined),
+                    selectedIcon: const Icon(Icons.home_rounded),
+                    label: Text(l10n.translate('home')),
+                  ),
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.search_rounded),
+                    selectedIcon: const Icon(Icons.manage_search_rounded),
+                    label: Text(l10n.translate('search')),
+                  ),
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.favorite_border_rounded),
+                    selectedIcon: const Icon(Icons.favorite_rounded),
+                    label: Text(l10n.translate('favorites')),
+                  ),
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.person_outline_rounded),
+                    selectedIcon: const Icon(Icons.person_rounded),
+                    label: Text(l10n.translate('profile')),
+                  ),
+                ],
+              ),
+            ),
+            AppHoverLift(
+              borderRadius: BorderRadius.circular(16),
+              child: FilledButton.icon(
+                onPressed: onAdd,
+                icon: const Icon(Icons.add_rounded),
+                label: Text(l10n.translate('addCar')),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DesktopBrand extends StatelessWidget {
+  const _DesktopBrand();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppColors.primary, AppColors.accent],
+            ),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: const Icon(Icons.directions_car_filled, color: Colors.white),
+        ),
+        const SizedBox(width: 11),
+        const Expanded(
+          child: Text(
+            'Auto Market\nGlobal',
+            style: TextStyle(fontWeight: FontWeight.w900, height: 1.05),
+          ),
+        ),
+      ],
     );
   }
 }

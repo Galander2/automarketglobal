@@ -20,11 +20,9 @@ class ChatRepository {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
 
-  ChatRepository({
-    FirebaseFirestore? firestore,
-    FirebaseAuth? auth,
-  }) : _firestore = firestore ?? FirebaseFirestore.instance,
-       _auth = auth ?? FirebaseAuth.instance;
+  ChatRepository({FirebaseFirestore? firestore, FirebaseAuth? auth})
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
 
   CollectionReference<Map<String, dynamic>> get _chats =>
       _firestore.collection('chats');
@@ -48,8 +46,9 @@ class ChatRepository {
         .limit(100)
         .snapshots()
         .map(
-          (snapshot) =>
-              snapshot.docs.map(ChatThread.fromDocument).toList(growable: false),
+          (snapshot) => snapshot.docs
+              .map(ChatThread.fromDocument)
+              .toList(growable: false),
         );
   }
 
@@ -130,7 +129,9 @@ class ChatRepository {
       throw const ChatException('Нет доступа к этому диалогу');
     }
     if (thread.blockedBy.isNotEmpty) {
-      throw const ChatException('Отправка сообщений в этом диалоге заблокирована');
+      throw const ChatException(
+        'Отправка сообщений в этом диалоге заблокирована',
+      );
     }
     if (text.isEmpty) {
       throw const ChatException('Введите сообщение');
