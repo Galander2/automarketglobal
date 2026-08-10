@@ -117,14 +117,17 @@ class _ActionButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           onTap: onTap,
           child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Icon(icon, size: 28, color: const Color(0xFF2563EB)),
-              const SizedBox(height: 8),
-              Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-            ],
-          ),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Icon(icon, size: 28, color: const Color(0xFF2563EB)),
+                const SizedBox(height: 8),
+                Text(
+                  label,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
           ),
         ),
       ),

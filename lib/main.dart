@@ -172,98 +172,159 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Scaffold(
-      body: IndexedStack(index: currentIndex, children: screens),
-      floatingActionButton: AppHoverLift(
-        borderRadius: BorderRadius.circular(32),
-        hoverScale: 1.06,
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.primary, AppColors.accent],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth >= 1024;
+
+        if (isDesktop) {
+          return Scaffold(
+            body: Row(
+              children: [
+                NavigationRail(
+                  selectedIndex: currentIndex,
+                  onDestinationSelected: (int index) {
+                    setState(() {
+                      currentIndex = index;
+                    });
+                  },
+                  backgroundColor: isDark
+                      ? AppColors.darkCanvas
+                      : Theme.of(context).cardColor,
+                  labelType: NavigationRailLabelType.all,
+                  leading: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    child: FloatingActionButton(
+                      tooltip: l10n.translate('addCar'),
+                      onPressed: _openAddMenu,
+                      backgroundColor: AppColors.primary,
+                      child: const Icon(Icons.add_rounded, size: 28),
+                    ),
+                  ),
+                  destinations: [
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.home_outlined),
+                      selectedIcon: const Icon(Icons.home_rounded),
+                      label: Text(l10n.translate('home')),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.search_rounded),
+                      selectedIcon: const Icon(Icons.search_rounded),
+                      label: Text(l10n.translate('search')),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.favorite_border_rounded),
+                      selectedIcon: const Icon(Icons.favorite_rounded),
+                      label: Text(l10n.translate('favorites')),
+                    ),
+                    NavigationRailDestination(
+                      icon: const Icon(Icons.person_outline_rounded),
+                      selectedIcon: const Icon(Icons.person_rounded),
+                      label: Text(l10n.translate('profile')),
+                    ),
+                  ],
+                ),
+                const VerticalDivider(thickness: 1, width: 1),
+                Expanded(
+                  child: IndexedStack(index: currentIndex, children: screens),
+                ),
+              ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.32),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: FloatingActionButton(
-            tooltip: l10n.translate('addCar'),
-            onPressed: _openAddMenu,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            hoverElevation: 0,
-            focusElevation: 0,
-            child: const Icon(Icons.add_rounded, size: 34),
-          ),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: BottomAppBar(
-          height: 78,
-          padding: EdgeInsets.zero,
-          shape: const CircularNotchedRectangle(),
-          notchMargin: 10,
-          elevation: 14,
-          shadowColor: Colors.black.withValues(alpha: 0.16),
-          surfaceTintColor: Colors.transparent,
-          color: Theme.of(context).cardColor,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 860),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _NavItem(
-                      icon: Icons.home_outlined,
-                      selectedIcon: Icons.home_rounded,
-                      label: l10n.translate('home'),
-                      isSelected: currentIndex == 0,
-                      onTap: () => setState(() => currentIndex = 0),
-                    ),
-                  ),
-                  Expanded(
-                    child: _NavItem(
-                      icon: Icons.search_rounded,
-                      selectedIcon: Icons.search_rounded,
-                      label: l10n.translate('search'),
-                      isSelected: currentIndex == 1,
-                      onTap: () => setState(() => currentIndex = 1),
-                    ),
-                  ),
-                  const SizedBox(width: 82),
-                  Expanded(
-                    child: _NavItem(
-                      icon: Icons.favorite_border_rounded,
-                      selectedIcon: Icons.favorite_rounded,
-                      label: l10n.translate('favorites'),
-                      isSelected: currentIndex == 2,
-                      onTap: () => setState(() => currentIndex = 2),
-                    ),
-                  ),
-                  Expanded(
-                    child: _NavItem(
-                      icon: Icons.person_outline_rounded,
-                      selectedIcon: Icons.person_rounded,
-                      label: l10n.translate('profile'),
-                      isSelected: currentIndex == 3,
-                      onTap: () => setState(() => currentIndex = 3),
-                    ),
+          );
+        }
+
+        return Scaffold(
+          body: IndexedStack(index: currentIndex, children: screens),
+          floatingActionButton: AppHoverLift(
+            borderRadius: BorderRadius.circular(32),
+            hoverScale: 1.06,
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: AppGradients.heroPrimary,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.38),
+                    blurRadius: 22,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
+              child: FloatingActionButton(
+                tooltip: l10n.translate('addCar'),
+                onPressed: _openAddMenu,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                hoverElevation: 0,
+                focusElevation: 0,
+                child: const Icon(Icons.add_rounded, size: 34),
+              ),
             ),
           ),
-        ),
-      ),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerDocked,
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: BottomAppBar(
+              height: 78,
+              padding: EdgeInsets.zero,
+              shape: const CircularNotchedRectangle(),
+              notchMargin: 10,
+              elevation: 14,
+              shadowColor: Colors.black.withValues(alpha: 0.16),
+              surfaceTintColor: Colors.transparent,
+              color: Theme.of(context).cardColor,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 860),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _NavItem(
+                          icon: Icons.home_outlined,
+                          selectedIcon: Icons.home_rounded,
+                          label: l10n.translate('home'),
+                          isSelected: currentIndex == 0,
+                          onTap: () => setState(() => currentIndex = 0),
+                        ),
+                      ),
+                      Expanded(
+                        child: _NavItem(
+                          icon: Icons.search_rounded,
+                          selectedIcon: Icons.search_rounded,
+                          label: l10n.translate('search'),
+                          isSelected: currentIndex == 1,
+                          onTap: () => setState(() => currentIndex = 1),
+                        ),
+                      ),
+                      const SizedBox(width: 82),
+                      Expanded(
+                        child: _NavItem(
+                          icon: Icons.favorite_border_rounded,
+                          selectedIcon: Icons.favorite_rounded,
+                          label: l10n.translate('favorites'),
+                          isSelected: currentIndex == 2,
+                          onTap: () => setState(() => currentIndex = 2),
+                        ),
+                      ),
+                      Expanded(
+                        child: _NavItem(
+                          icon: Icons.person_outline_rounded,
+                          selectedIcon: Icons.person_rounded,
+                          label: l10n.translate('profile'),
+                          isSelected: currentIndex == 3,
+                          onTap: () => setState(() => currentIndex = 3),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

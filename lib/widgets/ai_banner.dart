@@ -3,7 +3,9 @@ import '../core/router/app_routes.dart';
 import 'app_hover_lift.dart';
 
 class AiBanner extends StatelessWidget {
-  const AiBanner({super.key});
+  const AiBanner({super.key, this.onTap});
+
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -77,9 +79,10 @@ class AiBanner extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      Navigator.pushNamed(context, AppRoutes.aiVinCheck);
-                    },
+                    onTap:
+                        onTap ??
+                        () =>
+                            Navigator.pushNamed(context, AppRoutes.aiVinCheck),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,

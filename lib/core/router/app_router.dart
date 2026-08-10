@@ -18,7 +18,7 @@ import '../../screens/my_publications_screen.dart';
 import '../../screens/ai_vin_check_screen.dart';
 import '../../screens/language_selection_screen.dart';
 import '../../screens/search_filters_screen.dart';
-import '../../screens/admin_dashboard_screen.dart';
+import '../../screens/admin_screen.dart';
 import '../../screens/admin_users_screen.dart';
 import '../../screens/admin_cars_screen.dart';
 import '../../screens/admin_dealers_screen.dart';
@@ -28,8 +28,8 @@ import '../../screens/admin_markets_screen.dart';
 import '../../models/car.dart';
 import '../../models/car_search_filters.dart';
 import '../../models/chat_thread.dart';
-import '../../models/app_user.dart';
 import '../../widgets/admin_guard.dart';
+import '../security/app_permissions.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -85,7 +85,7 @@ class AppRouter {
       case AppRoutes.myPublications:
         return MaterialPageRoute(builder: (_) => const MyPublicationsScreen());
       case AppRoutes.admin:
-        return _adminRoute(const AdminDashboardScreen());
+        return _adminRoute(const AdminScreen());
       case AppRoutes.aiVinCheck:
         return MaterialPageRoute(builder: (_) => const AiVinCheckScreen());
       case AppRoutes.languageSelection:
@@ -104,26 +104,32 @@ class AppRouter {
       case AppRoutes.adminUsers:
         return _adminRoute(
           const AdminUsersScreen(),
-          permission: (user) => user.role == UserRole.superAdmin,
+          permission: const AppPermissions().canManageUsers,
         );
       case AppRoutes.adminCars:
-        return _adminRoute(const AdminCarsScreen());
+        return _adminRoute(
+          const AdminCarsScreen(),
+          permission: const AppPermissions().canModerateCars,
+        );
       case AppRoutes.adminDealers:
         return _adminRoute(
           const AdminDealersScreen(),
-          permission: (user) => user.role == UserRole.superAdmin,
+          permission: const AppPermissions().canManageDealers,
         );
       case AppRoutes.adminReports:
         return _adminRoute(
           const AdminReportsScreen(),
-          permission: (user) => user.role == UserRole.superAdmin,
+          permission: const AppPermissions().canViewFullReports,
         );
       case AppRoutes.adminComplaints:
-        return _adminRoute(const AdminComplaintsScreen());
+        return _adminRoute(
+          const AdminComplaintsScreen(),
+          permission: const AppPermissions().canReviewComplaints,
+        );
       case AppRoutes.adminMarkets:
         return _adminRoute(
           const AdminMarketsScreen(),
-          permission: (user) => user.role == UserRole.superAdmin,
+          permission: const AppPermissions().canManageMarkets,
         );
       default:
         return _errorRoute('Нет маршрута: ${settings.name}');

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/router/app_routes.dart';
+import '../core/security/app_permissions.dart';
 import '../core/theme/app_theme.dart';
 import '../l10n/app_localizations.dart';
 import '../models/app_user.dart';
@@ -18,17 +19,7 @@ class ProfileScreen extends StatelessWidget {
     final user = auth.currentUser;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.translate('profile')),
-        actions: [
-          IconButton(
-            tooltip: 'Настройки',
-            onPressed: () => Navigator.pushNamed(context, AppRoutes.settings),
-            icon: const Icon(Icons.settings_outlined),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
+      appBar: AppBar(title: Text(l10n.translate('profile'))),
       body: ListView(
         key: const PageStorageKey('profile-scroll'),
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 110),
@@ -104,7 +95,8 @@ class ProfileScreen extends StatelessWidget {
               ),
             ],
           ),
-          if (auth.isAdmin) ...[
+          if (user != null &&
+              const AppPermissions().canViewAdminPanel(user)) ...[
             const SizedBox(height: 22),
             Text(
               'Управление',
@@ -118,8 +110,12 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 _ProfileMenuItem(
                   icon: Icons.admin_panel_settings_outlined,
-                  title: 'Админ-панель',
-                  subtitle: 'Безопасное управление платформой',
+                  title: user.role == UserRole.superAdmin
+                      ? 'Панель супер-администратора'
+                      : 'Панель администратора',
+                  subtitle: user.role == UserRole.superAdmin
+                      ? 'Пользователи, роли, рынки и модерация'
+                      : 'Объявления, жалобы и модерация',
                   accent: AppColors.danger,
                   onTap: () => Navigator.pushNamed(context, AppRoutes.admin),
                 ),
@@ -223,9 +219,7 @@ class _ProfileHeader extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: roleColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: roleColor.withValues(alpha: 0.65),
-                  ),
+                  border: Border.all(color: roleColor.withValues(alpha: 0.65)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -261,16 +255,6 @@ class _ProfileHeader extends StatelessWidget {
               avatar,
               const SizedBox(width: 20),
               Expanded(child: details),
-              IconButton.filledTonal(
-                tooltip: 'Редактировать профиль',
-                onPressed: () =>
-                    Navigator.pushNamed(context, AppRoutes.profileEdit),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.white.withValues(alpha: 0.14),
-                  foregroundColor: Colors.white,
-                ),
-                icon: const Icon(Icons.edit_outlined),
-              ),
             ],
           );
         },
@@ -306,8 +290,8 @@ class _ProfileGroup extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(22),
         side: BorderSide(
-          color: accent?.withValues(alpha: 0.22) ??
-              Theme.of(context).dividerColor,
+          color:
+              accent?.withValues(alpha: 0.22) ?? Theme.of(context).dividerColor,
         ),
       ),
       clipBehavior: Clip.antiAlias,

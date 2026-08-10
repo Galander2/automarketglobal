@@ -90,10 +90,7 @@ class CarRepository {
     );
   }
 
-  Future<List<Car>> getUserCars(
-    String userId, {
-    bool forceRefresh = false,
-  }) {
+  Future<List<Car>> getUserCars(String userId, {bool forceRefresh = false}) {
     return _loadCars(
       cacheKey: 'seller:$userId',
       forceRefresh: forceRefresh,
@@ -125,11 +122,7 @@ class CarRepository {
       query: _statusQuery('approved', limit),
     );
 
-    return CarSearchEngine.apply(
-      cars,
-      query: searchQuery,
-      filters: filters,
-    );
+    return CarSearchEngine.apply(cars, query: searchQuery, filters: filters);
   }
 
   Future<Car?> getCarById(String carId) async {
@@ -205,15 +198,19 @@ class CarRepository {
     final existingRequest = _requestsInProgress[cacheKey];
     if (!forceRefresh && existingRequest != null) return existingRequest;
 
-    final request = query.get().then((snapshot) {
-      final cars = snapshot.docs.map(_docToCar).toList(growable: false);
-      _cache[cacheKey] = _CacheEntry(cars, _cacheLifetime);
-      return cars;
-    }).onError<FirebaseException>((error, stackTrace) {
-      throw CarRepositoryException(_readError(error));
-    }).whenComplete(() {
-      _requestsInProgress.remove(cacheKey);
-    });
+    final request = query
+        .get()
+        .then((snapshot) {
+          final cars = snapshot.docs.map(_docToCar).toList(growable: false);
+          _cache[cacheKey] = _CacheEntry(cars, _cacheLifetime);
+          return cars;
+        })
+        .onError<FirebaseException>((error, stackTrace) {
+          throw CarRepositoryException(_readError(error));
+        })
+        .whenComplete(() {
+          _requestsInProgress.remove(cacheKey);
+        });
 
     _requestsInProgress[cacheKey] = request;
     return request;
@@ -223,10 +220,7 @@ class CarRepository {
       .trim()
       .toLowerCase()
       .replaceAll('ё', 'е')
-      .replaceAll(
-        RegExp(r'[^a-zа-яқғӣӯҳҷәөұүңһі0-9]+', unicode: true),
-        ' ',
-      )
+      .replaceAll(RegExp(r'[^a-zа-яқғӣӯҳҷәөұүңһі0-9]+', unicode: true), ' ')
       .replaceAll(RegExp(r'\s+'), ' ')
       .trim();
 

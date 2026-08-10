@@ -13,10 +13,7 @@ void main() {
   test('BMW catalog contains requested generations and models', () {
     final models = VehicleCatalog.modelsFor('BMW');
 
-    expect(
-      models,
-      containsAll(['5 Series (F10)', 'M5 (F90)', 'X5']),
-    );
+    expect(models, containsAll(['5 Series (F10)', 'M5 (F90)', 'X5']));
   });
 
   test('year catalog includes current year and remains descending', () {

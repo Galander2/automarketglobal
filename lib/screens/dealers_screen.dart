@@ -60,77 +60,77 @@ class DealersScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   onTap: () => _showDealerDetails(context, dealer),
                   child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 32,
-                      backgroundColor: const Color(
-                        0xFF2563EB,
-                      ).withValues(alpha: 0.1),
-                      child: Text(
-                        dealer['name'].toString().substring(0, 1),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2563EB),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            dealer['name'],
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 32,
+                          backgroundColor: const Color(
+                            0xFF2563EB,
+                          ).withValues(alpha: 0.1),
+                          child: Text(
+                            dealer['name'].toString().substring(0, 1),
                             style: const TextStyle(
-                              fontSize: 18,
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
+                              color: Color(0xFF2563EB),
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            dealer['desc'],
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                Icons.star,
-                                size: 16,
-                                color: Colors.amber[700],
-                              ),
-                              const SizedBox(width: 4),
                               Text(
-                                dealer['rating'].toString(),
+                                dealer['name'],
                                 style: const TextStyle(
+                                  fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(width: 16),
-                              Icon(
-                                Icons.directions_car,
-                                size: 16,
-                                color: Colors.grey[600],
-                              ),
-                              const SizedBox(width: 4),
+                              const SizedBox(height: 4),
                               Text(
-                                '${dealer['cars']} авто',
-                                style: TextStyle(color: Colors.grey[600]),
+                                dealer['desc'],
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.star,
+                                    size: 16,
+                                    color: Colors.amber[700],
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    dealer['rating'].toString(),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Icon(
+                                    Icons.directions_car,
+                                    size: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${dealer['cars']} авто',
+                                    style: TextStyle(color: Colors.grey[600]),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                        Icon(Icons.chevron_right, color: Colors.grey[400]),
+                      ],
                     ),
-                    Icon(Icons.chevron_right, color: Colors.grey[400]),
-                  ],
-                ),
                   ),
                 ),
               ),
@@ -141,10 +141,7 @@ class DealersScreen extends StatelessWidget {
     );
   }
 
-  void _showDealerDetails(
-    BuildContext context,
-    Map<String, dynamic> dealer,
-  ) {
+  void _showDealerDetails(BuildContext context, Map<String, dynamic> dealer) {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -157,9 +154,9 @@ class DealersScreen extends StatelessWidget {
           children: [
             Text(
               dealer['name'] as String,
-              style: Theme.of(sheetContext).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+              style: Theme.of(
+                sheetContext,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 8),
             Text(dealer['desc'] as String),

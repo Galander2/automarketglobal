@@ -34,12 +34,7 @@ class _SearchFiltersScreenState extends State<SearchFiltersScreen> {
     'Италия',
     'Великобритания',
   ];
-  static const transmissions = [
-    'Автомат',
-    'Механика',
-    'Вариатор',
-    'Робот',
-  ];
+  static const transmissions = ['Автомат', 'Механика', 'Вариатор', 'Робот'];
   static const bodyTypes = [
     'Седан',
     'Кроссовер',
@@ -51,13 +46,7 @@ class _SearchFiltersScreenState extends State<SearchFiltersScreen> {
     'Пикап',
     'Кабриолет',
   ];
-  static const fuelTypes = [
-    'Бензин',
-    'Дизель',
-    'Гибрид',
-    'Электро',
-    'Газ',
-  ];
+  static const fuelTypes = ['Бензин', 'Дизель', 'Гибрид', 'Электро', 'Газ'];
 
   late final TextEditingController _make;
   late final TextEditingController _model;
@@ -255,11 +244,7 @@ class _SearchFiltersScreenState extends State<SearchFiltersScreen> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        _numberField(
-                          _maxMileage,
-                          'Пробег до',
-                          suffix: 'км',
-                        ),
+                        _numberField(_maxMileage, 'Пробег до', suffix: 'км'),
                       ],
                     ),
                   ),

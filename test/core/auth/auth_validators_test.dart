@@ -29,14 +29,8 @@ void main() {
 
     test('validates optional country and city', () {
       expect(AuthValidators.optionalPlace('', 'Город'), isNull);
-      expect(
-        AuthValidators.optionalPlace('Душанбе', 'Город'),
-        isNull,
-      );
-      expect(
-        AuthValidators.optionalPlace('City<script>', 'Город'),
-        isNotNull,
-      );
+      expect(AuthValidators.optionalPlace('Душанбе', 'Город'), isNull);
+      expect(AuthValidators.optionalPlace('City<script>', 'Город'), isNotNull);
     });
 
     test('normalizes phone before saving', () {

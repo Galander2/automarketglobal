@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../widgets/app_hover_lift.dart';
 import '../core/router/app_routes.dart';
+import '../core/security/app_permissions.dart';
 import '../core/theme/app_theme.dart';
 import '../models/admin_stats.dart';
+import '../repositories/auth_repository.dart';
 import '../repositories/admin_repository.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -203,8 +206,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ? 2
             : 1;
         const gap = 12.0;
-        final width =
-            (constraints.maxWidth - (gap * (columns - 1))) / columns;
+        final width = (constraints.maxWidth - (gap * (columns - 1))) / columns;
         final cards = [
           _buildStatCard(
             'Пользователи',
@@ -276,10 +278,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
-                color: scheme.onSurfaceVariant,
-              ),
+              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -288,51 +287,57 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildMainGrid(BuildContext context) {
+    final user = context.watch<AuthProvider>().currentUser;
+    if (user == null) return const SizedBox.shrink();
+
+    const permissions = AppPermissions();
     final cards = [
-      _AdminCard(
-        icon: Icons.people,
-        title: 'Пользователи',
-        subtitle: 'Управление пользователями',
-        color: const Color(0xFF2563EB),
-        onTap: () {
-          Navigator.pushNamed(context, AppRoutes.adminUsers);
-        },
-      ),
-      _AdminCard(
-        icon: Icons.car_rental,
-        title: 'Автомобили',
-        subtitle: 'Модерация объявлений',
-        color: const Color(0xFF10B981),
-        onTap: () {
-          Navigator.pushNamed(context, AppRoutes.adminCars);
-        },
-      ),
-      _AdminCard(
-        icon: Icons.store,
-        title: 'Дилеры',
-        subtitle: 'Управление дилерами',
-        color: const Color(0xFF8B5CF6),
-        onTap: () {
-          Navigator.pushNamed(context, AppRoutes.adminDealers);
-        },
-      ),
-      _AdminCard(
-        icon: Icons.bar_chart,
-        title: 'Отчёты',
-        subtitle: 'Статистика и аналитика',
-        color: const Color(0xFFF59E0B),
-        onTap: () {
-          Navigator.pushNamed(context, AppRoutes.adminReports);
-        },
-      ),
+      if (permissions.canManageUsers(user))
+        _AdminCard(
+          icon: Icons.people,
+          title: 'Пользователи',
+          subtitle: 'Управление пользователями и ролями',
+          color: const Color(0xFF2563EB),
+          onTap: () => Navigator.pushNamed(context, AppRoutes.adminUsers),
+        ),
+      if (permissions.canModerateCars(user))
+        _AdminCard(
+          icon: Icons.car_rental,
+          title: 'Автомобили',
+          subtitle: 'Модерация объявлений',
+          color: const Color(0xFF10B981),
+          onTap: () => Navigator.pushNamed(context, AppRoutes.adminCars),
+        ),
+      if (permissions.canManageDealers(user))
+        _AdminCard(
+          icon: Icons.store,
+          title: 'Дилеры',
+          subtitle: 'Управление дилерами',
+          color: const Color(0xFF8B5CF6),
+          onTap: () => Navigator.pushNamed(context, AppRoutes.adminDealers),
+        ),
+      if (permissions.canManageMarkets(user))
+        _AdminCard(
+          icon: Icons.public_rounded,
+          title: 'Рынки',
+          subtitle: 'Страны и торговые площадки',
+          color: const Color(0xFF06B6D4),
+          onTap: () => Navigator.pushNamed(context, AppRoutes.adminMarkets),
+        ),
+      if (permissions.canViewFullReports(user))
+        _AdminCard(
+          icon: Icons.bar_chart,
+          title: 'Отчёты',
+          subtitle: 'Статистика и аналитика',
+          color: const Color(0xFFF59E0B),
+          onTap: () => Navigator.pushNamed(context, AppRoutes.adminReports),
+        ),
       _AdminCard(
         icon: Icons.chat,
         title: 'Жалобы',
         subtitle: 'Рассмотрение жалоб',
         color: const Color(0xFFEF4444),
-        onTap: () {
-          Navigator.pushNamed(context, AppRoutes.adminComplaints);
-        },
+        onTap: () => Navigator.pushNamed(context, AppRoutes.adminComplaints),
       ),
     ];
     return LayoutBuilder(

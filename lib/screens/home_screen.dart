@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/router/app_routes.dart';
+import '../core/theme/app_theme.dart';
 import '../models/car.dart';
 import '../repositories/auth_repository.dart';
 import '../repositories/car_repository.dart';
+import '../widgets/ai_banner.dart';
 import '../widgets/car_card.dart';
 import '../widgets/app_hover_lift.dart';
 
-typedef HomeCarsLoader = Future<List<Car>> Function({
-  required bool forceRefresh,
-});
+typedef HomeCarsLoader =
+    Future<List<Car>> Function({required bool forceRefresh});
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.loadCars});
@@ -90,15 +91,22 @@ class _HomeScreenState extends State<HomeScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverToBoxAdapter(child: _buildHeader(context)),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+                    child: AiBanner(
+                      onTap: () =>
+                          Navigator.pushNamed(context, AppRoutes.aiVinCheck),
+                    ),
+                  ),
+                ),
                 SliverToBoxAdapter(child: _buildQuickActions(context)),
                 SliverToBoxAdapter(
                   child: _SectionHeader(
-                    title: 'Новые автомобили',
+                    title: 'Новые объявления',
                     count: snapshot.data?.length,
-                    onViewAll: () => Navigator.pushNamed(
-                      context,
-                      AppRoutes.search,
-                    ),
+                    onViewAll: () =>
+                        Navigator.pushNamed(context, AppRoutes.search),
                   ),
                 ),
                 ..._buildCars(context, snapshot),
@@ -112,67 +120,135 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF1D4ED8), Color(0xFF2563EB), Color(0xFF60A5FA)],
+            colors: [Color(0xFF060B14), Color(0xFF0F172A), Color(0xFF1E293B)],
           ),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.12)
+                : AppColors.primary.withValues(alpha: 0.15),
+            width: 1.5,
+          ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF2563EB).withValues(alpha: 0.24),
-              blurRadius: 24,
-              offset: const Offset(0, 10),
+              color: AppColors.primary.withValues(alpha: 0.20),
+              blurRadius: 30,
+              offset: const Offset(0, 12),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.accent.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.star_rounded,
+                        size: 14,
+                        color: AppColors.accent,
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        'GLOBAL MARKET',
+                        style: TextStyle(
+                          color: AppColors.accent,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
             const Text(
-              'Автомобили со всего мира',
+              'Найдите автомобиль мечты',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 24,
+                fontSize: 26,
                 fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
               ),
             ),
             const SizedBox(height: 6),
             Text(
-              'Проверенные объявления в одном месте',
+              'Проверенные дилеры и продавцы по всему миру',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.88),
+                color: Colors.white.withValues(alpha: 0.75),
                 fontSize: 14,
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 20),
             Semantics(
               button: true,
               label: 'Открыть поиск автомобилей',
               child: Material(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
+                color: isDark ? AppColors.darkSurface : Colors.white,
+                borderRadius: BorderRadius.circular(16),
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                   onTap: () => Navigator.pushNamed(context, AppRoutes.search),
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 15,
+                    ),
                     child: Row(
                       children: [
-                        Icon(Icons.search, color: Color(0xFF2563EB)),
-                        SizedBox(width: 10),
-                        Expanded(
+                        const Icon(
+                          Icons.search_rounded,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
                           child: Text(
-                            'Марка, модель или город',
-                            style: TextStyle(color: Color(0xFF64748B)),
+                            'Марка, модель, VIN или город...',
+                            style: TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
-                        Icon(Icons.arrow_forward, color: Color(0xFF2563EB)),
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.tune_rounded,
+                            size: 18,
+                            color: AppColors.primary,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -247,9 +323,7 @@ class _HomeScreenState extends State<HomeScreen> {
   ) {
     if (snapshot.connectionState == ConnectionState.waiting &&
         !snapshot.hasData) {
-      return const [
-        SliverToBoxAdapter(child: _LoadingCars()),
-      ];
+      return const [SliverToBoxAdapter(child: _LoadingCars())];
     }
 
     if (snapshot.hasError) {
@@ -258,8 +332,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: _HomeMessage(
             icon: Icons.cloud_off_outlined,
             title: 'Не удалось загрузить автомобили',
-            message:
-                'Проверьте подключение к интернету и попробуйте ещё раз.',
+            message: 'Проверьте подключение к интернету и попробуйте ещё раз.',
             actionLabel: 'Повторить',
             onAction: _retry,
           ),
@@ -333,7 +406,11 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, this.count, required this.onViewAll});
+  const _SectionHeader({
+    required this.title,
+    this.count,
+    required this.onViewAll,
+  });
 
   final String title;
   final int? count;
@@ -393,42 +470,45 @@ class _QuickActionCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2563EB).withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(13),
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                  child: Icon(action.icon, color: const Color(0xFF2563EB)),
                 ),
-                child: Icon(action.icon, color: const Color(0xFF2563EB)),
-              ),
-              const SizedBox(width: 11),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      action.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      action.subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                    ),
-                  ],
+                const SizedBox(width: 11),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        action.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        action.subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
           ),
         ),
       ),

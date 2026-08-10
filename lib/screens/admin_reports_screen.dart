@@ -8,11 +8,7 @@ class AdminReportsScreen extends StatefulWidget {
   final AdminRepository? repository;
   final bool embedded;
 
-  const AdminReportsScreen({
-    super.key,
-    this.repository,
-    this.embedded = false,
-  });
+  const AdminReportsScreen({super.key, this.repository, this.embedded = false});
 
   @override
   State<AdminReportsScreen> createState() => _AdminReportsScreenState();
@@ -98,12 +94,15 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
 
     final reviewedCars = stats.approvedCars + stats.soldCars;
     final moderationTotal = reviewedCars + stats.pendingCars;
-    final moderationProgress =
-        moderationTotal == 0 ? 0.0 : reviewedCars / moderationTotal;
-    final publishedShare =
-        stats.totalCars == 0 ? 0.0 : stats.approvedCars / stats.totalCars;
-    final soldShare =
-        stats.totalCars == 0 ? 0.0 : stats.soldCars / stats.totalCars;
+    final moderationProgress = moderationTotal == 0
+        ? 0.0
+        : reviewedCars / moderationTotal;
+    final publishedShare = stats.totalCars == 0
+        ? 0.0
+        : stats.approvedCars / stats.totalCars;
+    final soldShare = stats.totalCars == 0
+        ? 0.0
+        : stats.soldCars / stats.totalCars;
 
     final metrics = <_ReportMetric>[
       _ReportMetric(
@@ -161,9 +160,9 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
         Text(
           'Основная статистика',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                decoration: TextDecoration.none,
-              ),
+            fontWeight: FontWeight.w900,
+            decoration: TextDecoration.none,
+          ),
         ),
         const SizedBox(height: 14),
         _ResponsiveMetricGrid(metrics: metrics),
@@ -171,9 +170,9 @@ class _AdminReportsScreenState extends State<AdminReportsScreen> {
         Text(
           'Состояние платформы',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                decoration: TextDecoration.none,
-              ),
+            fontWeight: FontWeight.w900,
+            decoration: TextDecoration.none,
+          ),
         ),
         const SizedBox(height: 14),
         LayoutBuilder(
@@ -231,10 +230,7 @@ class _ReportHeader extends StatelessWidget {
   final int totalCars;
   final int pendingCars;
 
-  const _ReportHeader({
-    required this.totalCars,
-    required this.pendingCars,
-  });
+  const _ReportHeader({required this.totalCars, required this.pendingCars});
 
   @override
   Widget build(BuildContext context) {
@@ -361,11 +357,10 @@ class _ResponsiveMetricGrid extends StatelessWidget {
         final columns = constraints.maxWidth >= 980
             ? 3
             : constraints.maxWidth >= 580
-                ? 2
-                : 1;
+            ? 2
+            : 1;
         const gap = 12.0;
-        final width =
-            (constraints.maxWidth - gap * (columns - 1)) / columns;
+        final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
         return Wrap(
           spacing: gap,
           runSpacing: gap,
@@ -413,9 +408,9 @@ class _MetricCard extends StatelessWidget {
                   Text(
                     metric.value.toString(),
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: scheme.onSurface,
-                        ),
+                      fontWeight: FontWeight.w900,
+                      color: scheme.onSurface,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -483,10 +478,7 @@ class _ProgressPanel extends StatelessWidget {
                 ),
                 Text(
                   '${(value * 100).round()}%',
-                  style: TextStyle(
-                    color: color,
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: TextStyle(color: color, fontWeight: FontWeight.w900),
                 ),
               ],
             ),
@@ -503,10 +495,7 @@ class _ProgressPanel extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               subtitle,
-              style: TextStyle(
-                color: scheme.onSurfaceVariant,
-                fontSize: 13,
-              ),
+              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
             ),
           ],
         ),

@@ -115,10 +115,7 @@ class _SearchScreenState extends State<SearchScreen> {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.translate('search')),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text(l10n.translate('search')), centerTitle: true),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -184,9 +181,9 @@ class _SearchScreenState extends State<SearchScreen> {
               children: [
                 Text(
                   _isLoading ? 'Поиск…' : 'Найдено: ${_cars.length}',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 SizedBox(
@@ -301,9 +298,7 @@ class _SearchScreenState extends State<SearchScreen> {
     if (_filters.bodyType.isNotEmpty) labels.add(_filters.bodyType);
     if (_filters.fuelType.isNotEmpty) labels.add(_filters.fuelType);
     if (_filters.minPrice != null || _filters.maxPrice != null) {
-      labels.add(
-        '\$${_filters.minPrice ?? 0}–${_filters.maxPrice ?? '∞'}',
-      );
+      labels.add('\$${_filters.minPrice ?? 0}–${_filters.maxPrice ?? '∞'}');
     }
     if (_filters.minYear != null || _filters.maxYear != null) {
       labels.add('${_filters.minYear ?? '…'}–${_filters.maxYear ?? '…'} г.');

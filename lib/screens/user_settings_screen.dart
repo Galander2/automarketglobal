@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/router/app_routes.dart';
-import '../models/app_user.dart';
 import '../repositories/auth_repository.dart';
 import '../services/language_service.dart';
 
@@ -112,188 +111,119 @@ class UserSettingsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Настройки')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: [
-          _Section(
-            title: 'Аккаунт',
-            children: [
-              ListTile(
-                leading: const Icon(Icons.person_outline),
-                title: const Text('Редактировать профиль'),
-                subtitle: Text(user.fullName),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () =>
-                    Navigator.pushNamed(context, AppRoutes.profileEdit),
-              ),
-              ListTile(
-                leading: const Icon(Icons.badge_outlined),
-                title: const Text('Роль и доступ'),
-                subtitle: Text(user.roleTitle),
-              ),
-              ListTile(
-                leading: Icon(
-                  user.emailVerified
-                      ? Icons.verified_user_outlined
-                      : Icons.warning_amber_outlined,
-                ),
-                title: const Text('Подтверждение email'),
-                subtitle: Text(
-                  user.emailVerified ? 'Email подтверждён' : 'Email не подтверждён',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _Section(
-            title: 'Приложение',
-            children: [
-              ListTile(
-                leading: const Icon(Icons.language_outlined),
-                title: const Text('Язык интерфейса'),
-                subtitle: Text(preferences.getLanguageName()),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () =>
-                    Navigator.pushNamed(context, AppRoutes.languageSelection),
-              ),
-              ListTile(
-                leading: const Icon(Icons.palette_outlined),
-                title: const Text('Тема'),
-                trailing: DropdownButton<ThemeMode>(
-                  value: preferences.themeMode,
-                  underline: const SizedBox.shrink(),
-                  onChanged: (value) {
-                    if (value != null) preferences.setThemeMode(value);
-                  },
-                  items: const [
-                    DropdownMenuItem(
-                      value: ThemeMode.system,
-                      child: Text('Системная'),
-                    ),
-                    DropdownMenuItem(
-                      value: ThemeMode.light,
-                      child: Text('Светлая'),
-                    ),
-                    DropdownMenuItem(
-                      value: ThemeMode.dark,
-                      child: Text('Тёмная'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _Section(
-            title: 'Безопасность',
-            children: [
-              ListTile(
-                leading: const Icon(Icons.password_outlined),
-                title: const Text('Изменить пароль'),
-                subtitle: const Text('Получить защищённую ссылку на email'),
-                trailing: const Icon(Icons.chevron_right),
-                enabled: !auth.isLoading,
-                onTap: () => _sendPasswordReset(context, auth),
-              ),
-              const ListTile(
-                leading: Icon(Icons.security_outlined),
-                title: Text('Защита данных'),
-                subtitle: Text(
-                  'Роль и системные права нельзя изменить из профиля',
-                ),
-              ),
-            ],
-          ),
-          if (user.isAdmin) ...[
-            const SizedBox(height: 16),
-            _Section(
-              title: user.role == UserRole.superAdmin
-                  ? 'Управление платформой'
-                  : 'Управление',
-              children: [
-                const _ManagementTile(
-                  icon: Icons.dashboard_outlined,
-                  title: 'Панель управления',
-                  subtitle: 'Сводка и доступные инструменты',
-                  route: AppRoutes.admin,
-                ),
-                const _ManagementTile(
-                  icon: Icons.directions_car_outlined,
-                  title: 'Объявления',
-                  subtitle: 'Проверка и управление публикациями',
-                  route: AppRoutes.adminCars,
-                ),
-                const _ManagementTile(
-                  icon: Icons.report_problem_outlined,
-                  title: 'Жалобы',
-                  subtitle: 'Рассмотрение обращений пользователей',
-                  route: AppRoutes.adminComplaints,
-                ),
-                if (user.role == UserRole.superAdmin) ...[
-                  const _ManagementTile(
-                    icon: Icons.people_outline,
-                    title: 'Пользователи и роли',
-                    subtitle: 'Управление доступом пользователей',
-                    route: AppRoutes.adminUsers,
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 760),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _Section(
+                    title: 'Аккаунт',
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.badge_outlined),
+                        title: Text(user.fullName),
+                        subtitle: Text('${user.roleTitle} · ${user.email}'),
+                      ),
+                      ListTile(
+                        leading: Icon(
+                          user.emailVerified
+                              ? Icons.verified_user_outlined
+                              : Icons.warning_amber_outlined,
+                        ),
+                        title: const Text('Подтверждение email'),
+                        subtitle: Text(
+                          user.emailVerified
+                              ? 'Email подтверждён'
+                              : 'Email не подтверждён',
+                        ),
+                      ),
+                    ],
                   ),
-                  const _ManagementTile(
-                    icon: Icons.storefront_outlined,
-                    title: 'Дилеры',
-                    subtitle: 'Управление дилерами',
-                    route: AppRoutes.adminDealers,
+                  const SizedBox(height: 16),
+                  _Section(
+                    title: 'Приложение',
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.language_outlined),
+                        title: const Text('Язык интерфейса'),
+                        subtitle: Text(preferences.getLanguageName()),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => Navigator.pushNamed(
+                          context,
+                          AppRoutes.languageSelection,
+                        ),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.palette_outlined),
+                        title: const Text('Тема'),
+                        trailing: DropdownButton<ThemeMode>(
+                          value: preferences.themeMode,
+                          underline: const SizedBox.shrink(),
+                          onChanged: (value) {
+                            if (value != null) preferences.setThemeMode(value);
+                          },
+                          items: const [
+                            DropdownMenuItem(
+                              value: ThemeMode.system,
+                              child: Text('Системная'),
+                            ),
+                            DropdownMenuItem(
+                              value: ThemeMode.light,
+                              child: Text('Светлая'),
+                            ),
+                            DropdownMenuItem(
+                              value: ThemeMode.dark,
+                              child: Text('Тёмная'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  const _ManagementTile(
-                    icon: Icons.public_outlined,
-                    title: 'Рынки',
-                    subtitle: 'Настройка доступных рынков',
-                    route: AppRoutes.adminMarkets,
+                  const SizedBox(height: 16),
+                  _Section(
+                    title: 'Безопасность',
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.password_outlined),
+                        title: const Text('Изменить пароль'),
+                        subtitle: const Text(
+                          'Получить защищённую ссылку на email',
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        enabled: !auth.isLoading,
+                        onTap: () => _sendPasswordReset(context, auth),
+                      ),
+                      const ListTile(
+                        leading: Icon(Icons.security_outlined),
+                        title: Text('Защита данных'),
+                        subtitle: Text(
+                          'Роль и системные права нельзя изменить из профиля',
+                        ),
+                      ),
+                    ],
                   ),
-                  const _ManagementTile(
-                    icon: Icons.analytics_outlined,
-                    title: 'Отчёты',
-                    subtitle: 'Статистика и отчётность платформы',
-                    route: AppRoutes.adminReports,
+                  const SizedBox(height: 24),
+                  OutlinedButton.icon(
+                    onPressed: auth.isLoading
+                        ? null
+                        : () => _signOut(context, auth),
+                    icon: const Icon(Icons.logout),
+                    label: const Text('Выйти из аккаунта'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
                   ),
                 ],
-              ],
-            ),
-          ],
-          const SizedBox(height: 24),
-          OutlinedButton.icon(
-            onPressed: auth.isLoading ? null : () => _signOut(context, auth),
-            icon: const Icon(Icons.logout),
-            label: const Text('Выйти из аккаунта'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.red,
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ManagementTile extends StatelessWidget {
-  const _ManagementTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.route,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String route;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      subtitle: Text(subtitle),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () => Navigator.pushNamed(context, route),
     );
   }
 }
@@ -313,9 +243,9 @@ class _Section extends StatelessWidget {
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
         ),
         Card(

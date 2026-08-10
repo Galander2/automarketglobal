@@ -96,7 +96,10 @@ class _ChatScreenState extends State<ChatScreen> {
             Text(widget.thread.carTitle, overflow: TextOverflow.ellipsis),
             Text(
               uid == widget.thread.buyerId ? 'Продавец' : 'Покупатель',
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.normal,
+              ),
             ),
           ],
         ),
@@ -106,9 +109,7 @@ class _ChatScreenState extends State<ChatScreen> {
             itemBuilder: (_) => [
               PopupMenuItem(
                 value: 'block',
-                child: Text(
-                  _blockedByMe ? 'Разблокировать' : 'Заблокировать',
-                ),
+                child: Text(_blockedByMe ? 'Разблокировать' : 'Заблокировать'),
               ),
             ],
           ),

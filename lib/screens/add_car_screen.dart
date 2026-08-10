@@ -38,12 +38,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
   String? _selectedBodyType;
   String? _selectedFuelType;
 
-  static const _transmissions = [
-    'Автомат',
-    'Механика',
-    'Вариатор',
-    'Робот',
-  ];
+  static const _transmissions = ['Автомат', 'Механика', 'Вариатор', 'Робот'];
   static const _bodyTypes = [
     'Седан',
     'Кроссовер',
@@ -55,13 +50,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
     'Пикап',
     'Кабриолет',
   ];
-  static const _fuelTypes = [
-    'Бензин',
-    'Дизель',
-    'Гибрид',
-    'Электро',
-    'Газ',
-  ];
+  static const _fuelTypes = ['Бензин', 'Дизель', 'Гибрид', 'Электро', 'Газ'];
 
   final List<String> _countries = [
     'Таджикистан',
@@ -457,8 +446,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
               label: 'Тип топлива',
               value: _selectedFuelType,
               values: _fuelTypes,
-              onChanged: (value) =>
-                  setState(() => _selectedFuelType = value),
+              onChanged: (value) => setState(() => _selectedFuelType = value),
             ),
 
             const SizedBox(height: 16),

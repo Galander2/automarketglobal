@@ -76,10 +76,7 @@ class CountriesScreen extends StatelessWidget {
                           const SizedBox(height: 4),
                           const Text(
                             'Открыть рынок автомобилей',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
+                            style: TextStyle(fontSize: 14, color: Colors.grey),
                           ),
                         ],
                       ),
