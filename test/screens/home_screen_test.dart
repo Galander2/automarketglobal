@@ -18,7 +18,7 @@ void main() {
     await _scrollUntilVisible(tester, find.text('Toyota Camry 2022'));
 
     expect(find.text('Toyota Camry 2022'), findsOneWidget);
-    expect(find.text('Новые автомобили (1)'), findsOneWidget);
+    expect(find.text('Новые объявления (1)'), findsOneWidget);
   });
 
   testWidgets('home retries loading after an error', (tester) async {
@@ -37,11 +37,10 @@ void main() {
     expect(errorText, findsOneWidget);
 
     final retryButton = find.text('Повторить');
-    if (retryButton.evaluate().isNotEmpty) {
-      await tester.tap(retryButton);
-    } else {
-      await tester.tap(find.byTooltip('Обновить').first);
-    }
+    expect(retryButton, findsOneWidget);
+    await tester.ensureVisible(retryButton);
+    await tester.pumpAndSettle();
+    await tester.tap(retryButton);
     await tester.pumpAndSettle();
 
     await _scrollUntilVisible(tester, find.text('Toyota Camry 2022'));
