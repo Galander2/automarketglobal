@@ -28,6 +28,14 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool? _darkAppearance;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _darkAppearance ??=
+        MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+  }
 
   @override
   void dispose() {
@@ -192,54 +200,95 @@ class _AuthScreenState extends State<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final darkAppearance = _darkAppearance ?? true;
+    return Theme(
+      data: darkAppearance ? AppTheme.dark() : AppTheme.light(),
+      child: Builder(
+        builder: (themedContext) => _buildContent(themedContext),
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final busy = _isLoading || authProvider.isLoading;
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).scaffoldBackgroundColor,
-              Theme.of(context).colorScheme.primary.withValues(alpha: 0.06),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final wide = constraints.maxWidth >= 940;
-              return SingleChildScrollView(
-                padding: EdgeInsets.symmetric(
-                  horizontal: wide ? 48 : 18,
-                  vertical: wide ? 40 : 20,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: Theme.of(context).brightness == Brightness.dark
+                      ? const [
+                          Color(0xFF090711),
+                          Color(0xFF20103D),
+                          Color(0xFF351425),
+                        ]
+                      : const [
+                          Color(0xFFF7F3FF),
+                          Color(0xFFECE2FF),
+                          Color(0xFFFFE5D5),
+                        ],
                 ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: constraints.maxHeight > (wide ? 80 : 40)
-                        ? constraints.maxHeight - (wide ? 80 : 40)
-                        : 0,
-                  ),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1180),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          if (wide) ...[
-                            const Expanded(child: _BrandPanel()),
-                            const SizedBox(width: 56),
-                          ],
-                          Expanded(
+              ),
+              child: CustomPaint(
+                painter: _AuthBackdropPainter(
+                  dark: Theme.of(context).brightness == Brightness.dark,
+                ),
+                child: SafeArea(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final wide = constraints.maxWidth >= 940;
+                      return SingleChildScrollView(
+                        padding: EdgeInsets.fromLTRB(
+                          wide ? 48 : 18,
+                          wide ? 40 : 72,
+                          wide ? 48 : 18,
+                          wide ? 40 : 24,
+                        ),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight:
+                                constraints.maxHeight - (wide ? 80 : 96) > 0
+                                ? constraints.maxHeight - (wide ? 80 : 96)
+                                : 0,
+                          ),
+                          child: Center(
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 520),
-                              child: Card(
-                                child: Padding(
-                                  padding: EdgeInsets.all(wide ? 34 : 22),
-                                  child: AutofillGroup(
-                                    child: Form(
+                              constraints: const BoxConstraints(maxWidth: 1180),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  if (wide) ...[
+                                    const Expanded(child: _BrandPanel()),
+                                    const SizedBox(width: 56),
+                                  ],
+                                  Expanded(
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 520,
+                                      ),
+                                      child: Card(
+                                        elevation: 0,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            28,
+                                          ),
+                                          side: BorderSide(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .outlineVariant
+                                                .withValues(alpha: 0.55),
+                                          ),
+                                        ),
+                                        child: Padding(
+                                          padding: EdgeInsets.all(wide ? 34 : 22),
+                                          child: AutofillGroup(
+                                            child: Form(
                                       key: _formKey,
                                       child: Column(
                                         crossAxisAlignment:
@@ -402,53 +451,67 @@ class _AuthScreenState extends State<AuthScreen> {
                                             )
                                           else
                                             const SizedBox(height: 20),
-                                          FilledButton(
-                                            onPressed: busy
-                                                ? null
-                                                : _handleSubmit,
-                                            child: busy
-                                                ? const SizedBox.square(
-                                                    dimension: 22,
-                                                    child:
-                                                        CircularProgressIndicator(
-                                                          strokeWidth: 2.4,
-                                                          color: Colors.white,
+                                          AppHoverLift(
+                                            enabled: !busy,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            hoverScale: 1.018,
+                                            child: FilledButton(
+                                              onPressed: busy
+                                                  ? null
+                                                  : _handleSubmit,
+                                              child: busy
+                                                  ? const SizedBox.square(
+                                                      dimension: 22,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                            strokeWidth: 2.4,
+                                                            color: Colors.white,
+                                                          ),
+                                                    )
+                                                  : Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Text(
+                                                          _isLogin
+                                                              ? 'Войти'
+                                                              : 'Создать аккаунт',
                                                         ),
-                                                  )
-                                                : Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Text(
-                                                        _isLogin
-                                                            ? 'Войти'
-                                                            : 'Создать аккаунт',
-                                                      ),
-                                                      const SizedBox(width: 8),
-                                                      const Icon(
-                                                        Icons
-                                                            .arrow_forward_rounded,
-                                                        size: 20,
-                                                      ),
-                                                    ],
-                                                  ),
+                                                        const SizedBox(width: 8),
+                                                        const Icon(
+                                                          Icons
+                                                              .arrow_forward_rounded,
+                                                          size: 20,
+                                                        ),
+                                                      ],
+                                                    ),
+                                            ),
                                           ),
                                           const SizedBox(height: 22),
                                           const _DividerLabel(),
                                           const SizedBox(height: 18),
-                                          OutlinedButton(
-                                            onPressed: busy
-                                                ? null
-                                                : _handleGoogleSignIn,
-                                            child: const Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                _GoogleMark(),
-                                                SizedBox(width: 12),
-                                                Text('Продолжить с Google'),
-                                              ],
+                                          AppHoverLift(
+                                            enabled: !busy,
+                                            borderRadius: BorderRadius.circular(
+                                              16,
+                                            ),
+                                            hoverScale: 1.018,
+                                            child: OutlinedButton(
+                                              onPressed: busy
+                                                  ? null
+                                                  : _handleGoogleSignIn,
+                                              child: const Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  _GoogleMark(),
+                                                  SizedBox(width: 12),
+                                                  Text('Продолжить с Google'),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                           const SizedBox(height: 18),
@@ -474,24 +537,129 @@ class _AuthScreenState extends State<AuthScreen> {
                                             ],
                                           ),
                                         ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
+                                ],
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              );
-            },
+              ),
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.paddingOf(context).top + 14,
+            right: 18,
+            child: _AppearanceButton(
+              dark: _darkAppearance ?? true,
+              onPressed: busy
+                  ? null
+                  : () => setState(
+                      () => _darkAppearance = !(_darkAppearance ?? true),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AppearanceButton extends StatelessWidget {
+  const _AppearanceButton({required this.dark, required this.onPressed});
+
+  final bool dark;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = Theme.of(context).colorScheme.onSurface;
+    return AppHoverLift(
+      enabled: onPressed != null,
+      borderRadius: BorderRadius.circular(16),
+      hoverScale: 1.06,
+      child: Material(
+        color: Theme.of(context).cardColor.withValues(alpha: 0.86),
+        borderRadius: BorderRadius.circular(16),
+        elevation: 8,
+        shadowColor: const Color(0xFF8D4DFF).withValues(alpha: 0.25),
+        child: IconButton(
+          tooltip: dark ? 'Включить светлую тему' : 'Включить тёмную тему',
+          onPressed: onPressed,
+          icon: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            transitionBuilder: (child, animation) => RotationTransition(
+              turns: Tween<double>(begin: 0.75, end: 1).animate(animation),
+              child: FadeTransition(opacity: animation, child: child),
+            ),
+            child: Icon(
+              dark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+              key: ValueKey(dark),
+              color: dark ? const Color(0xFFFFB15C) : foreground,
+            ),
           ),
         ),
       ),
     );
+  }
+}
+
+class _AuthBackdropPainter extends CustomPainter {
+  const _AuthBackdropPainter({required this.dark});
+
+  final bool dark;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final gridPaint = Paint()
+      ..color = (dark ? Colors.white : const Color(0xFF472B75)).withValues(
+        alpha: dark ? 0.045 : 0.07,
+      )
+      ..strokeWidth = 1;
+    const gridSize = 56.0;
+    for (double x = 0; x <= size.width; x += gridSize) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+    }
+    for (double y = 0; y <= size.height; y += gridSize) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    void drawGlow(Offset center, double radius, Color color) {
+      final rect = Rect.fromCircle(center: center, radius: radius);
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [color, color.withValues(alpha: 0)],
+          ).createShader(rect),
+      );
+    }
+
+    drawGlow(
+      Offset(size.width * 0.12, size.height * 0.1),
+      size.shortestSide * 0.42,
+      const Color(0xFF8D4DFF).withValues(alpha: dark ? 0.22 : 0.18),
+    );
+    drawGlow(
+      Offset(size.width * 0.88, size.height * 0.88),
+      size.shortestSide * 0.5,
+      const Color(0xFFFF814A).withValues(alpha: dark ? 0.18 : 0.2),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _AuthBackdropPainter oldDelegate) {
+    return oldDelegate.dark != dark;
   }
 }
 
@@ -507,14 +675,20 @@ class _BrandPanel extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF0F172A), Color(0xFF1D4ED8), Color(0xFF0891B2)],
+          colors: [Color(0xFF100B1E), Color(0xFF35165C), Color(0xFF7B294C)],
         ),
         borderRadius: BorderRadius.circular(32),
+        border: Border.all(color: Colors.white24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.22),
-            blurRadius: 42,
+            color: const Color(0xFF8D4DFF).withValues(alpha: 0.28),
+            blurRadius: 48,
             offset: const Offset(0, 20),
+          ),
+          BoxShadow(
+            color: const Color(0xFFFF8A42).withValues(alpha: 0.16),
+            blurRadius: 52,
+            offset: const Offset(22, -10),
           ),
         ],
       ),
@@ -590,12 +764,25 @@ class _BrandMark extends StatelessWidget {
           width: 46,
           height: 46,
           decoration: BoxDecoration(
-            color: dark ? Colors.white : AppColors.primary,
+            gradient: dark
+                ? const LinearGradient(
+                    colors: [Color(0xFF8D4DFF), Color(0xFFFF7A45)],
+                  )
+                : null,
+            color: dark ? null : AppColors.primary,
             borderRadius: BorderRadius.circular(15),
+            boxShadow: dark
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFFFF8A42).withValues(alpha: 0.26),
+                      blurRadius: 18,
+                    ),
+                  ]
+                : null,
           ),
           child: Icon(
             Icons.directions_car_filled_rounded,
-            color: dark ? AppColors.primary : Colors.white,
+            color: Colors.white,
           ),
         ),
         const SizedBox(width: 12),
